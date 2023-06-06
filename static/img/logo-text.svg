@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 180 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <g transform="matrix(0.0275012,0,0,0.0275012,-2.23996,-1.28464)">
+        <g transform="matrix(1.50356,0,0,1.41225,-195.396,-226.097)">
+            <rect x="222.587" y="217.624" width="495.789" height="610.029" style="fill:none;stroke:white;stroke-width:34.12px;"/>
+        </g>
+        <g transform="matrix(1.52537,0,0,1.42678,-200.3,-221.91)">
+            <path d="M222.62,517.488L588.085,212.473L222.62,212.473L222.62,517.488Z" style="fill:none;stroke:white;stroke-width:33.7px;"/>
+        </g>
+        <g transform="matrix(1.52537,0,0,1.42678,-200.3,-221.91)">
+            <path d="M302.61,212.473L711.321,527.084L711.321,212.473L273.458,575.88" style="fill:none;stroke:white;stroke-width:33.7px;"/>
+        </g>
+        <g transform="matrix(1.52537,0,0,1.42678,-200.3,-221.91)">
+            <path d="M711.321,212.473L273.458,575.88L437.926,693.07" style="fill:none;stroke:white;stroke-width:33.7px;"/>
+        </g>
+        <g transform="matrix(1.52537,0,0,1.42678,-200.3,-221.91)">
+            <path d="M512,634.761L343.814,517.488" style="fill:none;stroke:white;stroke-width:33.7px;"/>
+        </g>
+        <g transform="matrix(1.52537,0,0,1.42678,-200.3,-221.91)">
+            <path d="M711.321,588.547L433.03,816.29" style="fill:none;stroke:white;stroke-width:33.7px;"/>
+        </g>
+        <g transform="matrix(1.52537,0,0,1.42678,-200.3,-221.91)">
+            <path d="M591.551,686.563L711.321,767.686" style="fill:none;stroke:white;stroke-width:33.7px;"/>
+        </g>
+        <g transform="matrix(1.52537,0,0,1.42678,-200.3,-221.91)">
+            <path d="M679.705,502.747L281.391,816.29" style="fill:none;stroke:white;stroke-width:33.7px;"/>
+        </g>
+    </g>
+    <g transform="matrix(2.42712,0,0,2.42712,-38.4226,2.61319)">
+        <g transform="matrix(12,0,0,12,90.8326,8.54175)">
+        </g>
+        <text x="30.797px" y="8.542px" style="font-family:'NettoOT', 'Netto OT';font-size:12px;fill:white;">ALEX Upload</text>
+    </g>
+</svg>
