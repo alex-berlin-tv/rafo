@@ -18,6 +18,8 @@
 
     <link href="{{ url_for('static', path='/css/bulma.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', path='/css/fontawesome.min.css') }}" rel="stylesheet">
+    {% block head %}
+    {% endblock %}
 </head>
 
 <body>
@@ -42,14 +44,18 @@
             </div>
         </div>
     </nav>
-    <div class="container mt-6">
-        <div class="columns is-mobile">
-            <div class="column"></div>
-            <div class="column is-10-tablet is-11-mobile">
-                {% block content %}
-                {% endblock %}
+    <main>
+        <div class="container mt-6">
+            <div class="columns is-mobile">
+                <div class="column"></div>
+                <div class="column is-10-tablet is-11-mobile">
+                    {% block content %}
+                    {% endblock %}
+                </div>
+                <div class="column"></div>
             </div>
-            <div class="column"></div>
         </div>
-    </div>
+    </main>
 </body>
+{% block script_footer %}
+{% endblock %}

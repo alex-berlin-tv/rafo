@@ -1,0 +1,148 @@
+{% extends "base.html.jinja2" %}
+{% block head %}
+<script src="{{ url_for('static', path='/js/alpine.min.js') }}" defer></script>
+{% endblock %}
+{% block content %}
+<div class="content" x-data="data()" x-init="fetch_data()">
+    <div class="notification is-warning" x-show="!data_loaded && !fetch_error">
+        Bitte warten, die Daten werden geladen...
+    </div>
+    <template x-if="fetch_error">
+        <div class="notification is-danger" x-show="fetch_error">
+            <p><b>Formular konnte nicht geladen werden (Fehler <span x-text="fetch_error.status"></span>)</b></p>
+            <p>Unter dieser URL kann kein Formular gefunden werden. Stelle bitte sicher, dass du den Link korrekt
+                kopiert
+                hast und probiere es nochmals.</p>
+            <p>TODO: Show specifc error message.</p>
+        </div>
+    </template>
+
+    <div x-show="data_loaded && !fetch_error">
+        <h1>Uploadformular</h1>
+        <form>
+            <div class="field">
+                <label class="label" for="producer">Produzent:in</label>
+                <div class="control has-icons-left">
+                    <input class="input" id="producer" name="producer" type="text" x-model="producer_name" disabled>
+                    <span class="icon is-small is-left"><i class="fa-regular fa-user"></i></span>
+                </div>
+                <p class="help">Der Uploadlink ist für dich personalisiert.</p>
+            </div>
+            <div class="field">
+                <label class="label" for="show">Format</label>
+                <div class="control has-icons-left">
+                    <div class="select">
+                        <select x-model="show" id="show" name="show" required>
+                            <template x-if="available_shows.length > 1">
+                                <option disabled selected value="">Format auswählen</option>
+                            </template>
+                            <template x-for="show in available_shows">
+                                <option :value="show.uuid" x-text="show.name"></option>
+                            </template>
+                            <p class="help">Wähle bitte das Format aus.</p>
+                        </select>
+                    </div>
+                    <div class="icon is-small is-left"><i class="fa-solid fa-tower-broadcast"></i></div>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label" for="datetime">Geplantes Sendedatum- und Zeit</label>
+                <div class="control has-icons-left">
+                    <input class="input" id="datetime" name="datetime" type="datetime-local" x-model="datetime"
+                        required>
+                    <div class="icon is-small is-left"><i class="fa-solid fa-file"></i></div>
+                </div>
+                <p class="help">Wann wird deine Sendung gemäss Vereinbarung mit der Sendeabwicklung ausgestrahlt werden?
+                    Verpflichtend.</p>
+            </div>
+            <div class="field">
+                <label class="label" for="title">Sendungstitel</label>
+                <div class="control has-icons-left">
+                    <input class="input" id="title" name="title" type="text" x-model="title" minlength="10"
+                        maxlength="200" required>
+                    <div class="icon is-small is-left"><i class="fa-solid fa-file"></i></div>
+                </div>
+                <p class="help">Der Titel deiner Episode. <i>Verpflichtend, zwischen 10 und 200 Zeichen lang.</i></p>
+            </div>
+            <div class="field">
+                <label class="label" for="description">Beschreibung</label>
+                <div class="control">
+                    <textarea class="textarea" id="description" name="description" type="text" x-model="title"
+                        minlength="10" maxlength="1000" required></textarea>
+                </div>
+                <p class="help">Beschreibe den Inhalt deiner Sendung. <i>Verpflichtend, mindestens 10 Zeichen lang.</i>
+                </p>
+            </div>
+            <div class="field">
+                <label class="label" for="description">Datei</label>
+                <div class="file has-name is-small is-fullwidth">
+                    <label class="file-label">
+                        <input class="file-input" id="file" name="file" type="file" x-model="file" accept=".mp3,.wav"
+                            required />
+                        <span class="file-cta">
+                            <span class="file-icon is-small">
+                                <i class="fas fa-upload"></i>
+                            </span>
+                            <span class="file-label">Datei auswählen</span>
+                        </span>
+                        <span class="file-name" x-text="get_file_name(file)"></span>
+                    </label>
+                </div>
+                <p class="help">Lade hier das Audiofile deiner Sendung hoch. <i>Verpflichtend.</i></p>
+            </div>
+            <div class="field is-grouped">
+                <div class="control">
+                    <button class="button is-link">Abschicken</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block script_footer %}
+<script>
+    function data() {
+        return {
+            data_loaded: false,
+            fetch_error: "",
+            producer_name: "",
+            producer_uuid: "{{producer_uuid}}",
+            show: null,
+            available_shows: {},
+            datetime: {},
+            title: null,
+            description: null,
+            file: null,
+            form_data: {
+                producer: "{{producer_uuid}}",
+                show: null,
+            },
+            fetch_data() {
+                fetch(`../api/producer_for_upload/${this.producer_uuid}`)
+                    .then(res => {
+                        if (!res.ok) {
+                            this.fetch_error = res;
+                            console.log(this.fetch_error);
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        this.data_loaded = true;
+                        this.producer_name = data.producer_name;
+                        this.available_shows = data.shows;
+                    });
+            },
+            get_file_name(path) {
+                if (path === null) {
+                    return "";
+                }
+                const segments = path.split("\\");
+                if (segments.length === 0) {
+                    return "";
+                }
+                return segments[segments.length - 1];
+            },
+        }
+    }
+</script>
+{% endblock %}
