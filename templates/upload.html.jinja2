@@ -19,7 +19,7 @@
 
     <div x-show="data_loaded && !fetch_error">
         <h1>Uploadformular</h1>
-        <form>
+        <form id="form" enctype="multipart/form-data" @submit="upload()">
             <div class="field">
                 <label class="label" for="producer">Produzent:in</label>
                 <div class="control has-icons-left">
@@ -53,7 +53,8 @@
                     <div class="icon is-small is-left"><i class="fa-solid fa-file"></i></div>
                 </div>
                 <p class="help">Wann wird deine Sendung gemäss Vereinbarung mit der Sendeabwicklung ausgestrahlt werden?
-                    Verpflichtend.</p>
+                    <i>Pflichtfeld.</i>
+                </p>
             </div>
             <div class="field">
                 <label class="label" for="title">Sendungstitel</label>
@@ -62,15 +63,15 @@
                         maxlength="200" required>
                     <div class="icon is-small is-left"><i class="fa-solid fa-file"></i></div>
                 </div>
-                <p class="help">Der Titel deiner Episode. <i>Verpflichtend, zwischen 10 und 200 Zeichen lang.</i></p>
+                <p class="help">Der Titel deiner Episode. <i>Pflichtfeld, zwischen 10 und 200 Zeichen lang.</i></p>
             </div>
             <div class="field">
                 <label class="label" for="description">Beschreibung</label>
                 <div class="control">
-                    <textarea class="textarea" id="description" name="description" type="text" x-model="title"
+                    <textarea class="textarea" id="description" name="description" type="text" x-model="description"
                         minlength="10" maxlength="1000" required></textarea>
                 </div>
-                <p class="help">Beschreibe den Inhalt deiner Sendung. <i>Verpflichtend, mindestens 10 Zeichen lang.</i>
+                <p class="help">Beschreibe den Inhalt deiner Sendung. <i>Pflichtfeld, mindestens 10 Zeichen lang.</i>
                 </p>
             </div>
             <div class="field">
@@ -88,11 +89,18 @@
                         <span class="file-name" x-text="get_file_name(file)"></span>
                     </label>
                 </div>
-                <p class="help">Lade hier das Audiofile deiner Sendung hoch. <i>Verpflichtend.</i></p>
+                <p class="help">Lade hier das Audiofile deiner Sendung hoch. <i>Pflichtfeld.</i></p>
+            </div>
+            <div class="field">
+                <label class="label" for="comment">Kommentar</label>
+                <div class="control">
+                    <textarea class="textarea" id="comment" name="comment" type="text" maxlength="1000"></textarea>
+                </div>
+                <p class="help">Optionaler Kommentar.</p>
             </div>
             <div class="field is-grouped">
                 <div class="control">
-                    <button class="button is-link">Abschicken</button>
+                    <input class="button is-link" type="submit" />
                 </div>
             </div>
         </form>
@@ -142,6 +150,19 @@
                 }
                 return segments[segments.length - 1];
             },
+            upload() {
+                const form = document.getElementById("form");
+                const xhr = new XMLHttpRequest();
+                var data = new FormData(form);
+                data.append("producer", this.producer_uuid);
+                xhr.onreadystatechange = function () {
+                    // alert("jap, hat funktioniert");
+                }
+                xhr.open("POST", `../api/upload/${this.producer_uuid}`, false)
+                const file_name = data.get("file").name.replace(/[^\x00-\x7F]/g, "");
+                xhr.setRequestHeader("file_name", file_name);
+                xhr.send(data);
+            }
         }
     }
 </script>

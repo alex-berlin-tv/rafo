@@ -3,3 +3,5 @@ port = 8000
 project_name = "Radioupload"
 producer_table = "Produzenten"
 show_table = "Formate"
+episode_table = "Episoden"
+max_file_size = 4
