@@ -9,7 +9,7 @@ from nocodb.infra.requests_client import NocoDBRequestsClient
 from pydantic import BaseModel, Field
 
 
-def get_nocodb_client():
+def get_nocodb_client() -> NocoDBRequestsClient:
     token = settings["nocodb_api_key"]
     if not isinstance(token, str):
         raise ValueError("invalid nocodb token, not a string")
@@ -19,7 +19,7 @@ def get_nocodb_client():
     )
 
 
-def get_nocodb_project(project_name):
+def get_nocodb_project(project_name) -> NocoDBProject:
     return NocoDBProject("noco", project_name)
 
 
@@ -34,6 +34,8 @@ def get_nocodb_data(project_name: str, table_name: str, filter_obj: Optional[Whe
 
 class NocoEpisode(BaseModel):
     noco_id: int = Field(alias="Id")
+    created_at: Optional[datetime] = Field(alias="CreatedAt")
+    updated_at: Optional[datetime] = Field(alias="UpdatedAt")
     title: str = Field(alias="Titel")
     description: str = Field(alias="Beschreibung")
     comment_producer: Optional[str] = Field(alias="Kommentar Produzent")
@@ -85,6 +87,7 @@ class NocoEpisodeNew(BaseModel):
             column_name="Eingereicht von",
             ref_row_id=producer.noco_id,
         )
+        return episode.noco_id
 
 
 class NocoProducer(BaseModel):

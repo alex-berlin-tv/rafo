@@ -4,4 +4,5 @@ project_name = "Radioupload"
 producer_table = "Produzenten"
 show_table = "Formate"
 episode_table = "Episoden"
-max_file_size = 4
+max_file_size = 2
+raw_column = "Quelldatei"

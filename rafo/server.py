@@ -140,11 +140,11 @@ async def upload_file(
         planned_broadcast_at=planned_broadcast_at.strftime("%Y-%m-%d %H:%M:%S%z"),  # type: ignore
         comment=comment_target.value.decode(),  # type: ignore
     )
-    worker = FileWorker(file_path)
-    # background_tasks.add_task(worker.upload_raw)
+    episode_id = episode.add_to_noco(producer_target.value.decode(), show_target.value.decode())
+    worker = FileWorker(file_path, episode_id)
+    background_tasks.add_task(worker.upload_raw)
     # background_tasks.add_task(worker.generate_waveform)
     # background_tasks.add_task(worker.optimize_file)
-    episode.add_to_noco(producer_target.value.decode(), show_target.value.decode())
-    os.remove(file_path)
-    os.rmdir(temp_folder)
+    # os.remove(file_path)
+    # os.rmdir(temp_folder)
     
