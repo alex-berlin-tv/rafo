@@ -144,6 +144,3 @@ async def upload_file(
     episode_id = episode.add_to_noco(producer_target.value.decode(), show_target.value.decode())
     worker = FileWorker(file_path, episode_id)
     background_tasks.add_task(worker.upload_raw)
-    return RedirectResponse(
-        url=f"{request.base_url}/upload/{uuid}"
-    )
