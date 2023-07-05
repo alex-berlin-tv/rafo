@@ -9,6 +9,7 @@ from pathlib import Path
 import tempfile
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.requests import ClientDisconnect
@@ -143,8 +144,6 @@ async def upload_file(
     episode_id = episode.add_to_noco(producer_target.value.decode(), show_target.value.decode())
     worker = FileWorker(file_path, episode_id)
     background_tasks.add_task(worker.upload_raw)
-    # background_tasks.add_task(worker.generate_waveform)
-    # background_tasks.add_task(worker.optimize_file)
-    # os.remove(file_path)
-    # os.rmdir(temp_folder)
-    
+    return RedirectResponse(
+        url=f"{request.base_url}/upload/{uuid}"
+    )
