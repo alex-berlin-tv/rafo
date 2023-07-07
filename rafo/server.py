@@ -4,9 +4,9 @@ from model import NocoEpisodeNew, ProducerUploadData
 
 import datetime
 from uuid import uuid4
-import os
 from pathlib import Path
 import tempfile
+import time
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
@@ -142,6 +142,7 @@ async def upload_file(
         planned_broadcast_at=planned_broadcast_at.strftime("%Y-%m-%d %H:%M:%S%z"),  # type: ignore
         comment=comment_target.value.decode(),  # type: ignore
     )
+    time.sleep(4)
     episode_id = episode.add_to_noco(producer_target.value.decode(), show_target.value.decode())
     worker = FileWorker(file_path, episode_id)
     background_tasks.add_task(worker.upload_raw)
