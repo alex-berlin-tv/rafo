@@ -42,6 +42,7 @@ async def upload(
     data = {
         "request": request,
         "producer_uuid": uuid,
+        "dev_mode": settings.dev_mode,
     }
     return templates.TemplateResponse("upload.html.jinja2", data)
 
@@ -144,3 +145,6 @@ async def upload_file(
     episode_id = episode.add_to_noco(producer_target.value.decode(), show_target.value.decode())
     worker = FileWorker(file_path, episode_id)
     background_tasks.add_task(worker.upload_raw)
+    return {
+        "success": True,
+    }

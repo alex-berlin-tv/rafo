@@ -6,3 +6,4 @@ show_table = "Formate"
 episode_table = "Episoden"
 max_file_size = 2
 raw_column = "Quelldatei"
+dev_mode = true

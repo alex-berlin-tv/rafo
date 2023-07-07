@@ -7,6 +7,11 @@
     <div class="notification is-warning" x-show="!data_loaded && !fetch_error">
         Bitte warten, die Daten werden geladen...
     </div>
+    <div class="notification is-primary" x-show="success">
+        <button class="delete" @click="success=false"></button>
+        <p><b>Upload erfolgreich abgeschlossen</b></p>
+        <p>Wir haben deine Sendung erhalten, vielen Dank!</p>
+    </div>
     <template x-if="fetch_error">
         <div class="notification is-danger" x-show="fetch_error">
             <p><b>Formular konnte nicht geladen werden (Fehler <span x-text="fetch_error.status"></span>)</b></p>
@@ -20,6 +25,13 @@
     <div x-show="data_loaded && !fetch_error">
         <h1>Uploadformular</h1>
         <form id="form" enctype="multipart/form-data" @submit="upload()">
+            <template x-if="dev_mode">
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-link is-light" @click="test_fill()">Testdaten</button>
+                    </div>
+                </div>
+            </template>
             <div class="field">
                 <label class="label" for="producer">Produzent:in</label>
                 <div class="control has-icons-left">
@@ -94,13 +106,17 @@
             <div class="field">
                 <label class="label" for="comment">Kommentar</label>
                 <div class="control">
-                    <textarea class="textarea" id="comment" name="comment" type="text" maxlength="1000"></textarea>
+                    <textarea class="textarea" id="comment" name="comment" type="text" x-model="comment"
+                        maxlength="1000"></textarea>
                 </div>
                 <p class="help">Optionaler Kommentar.</p>
             </div>
             <div class="field is-grouped">
                 <div class="control">
                     <input class="button is-link" type="submit" />
+                </div>
+                <div class="control">
+                    <button class="button is-link is-light" @click="reset()">Zurücksetzen</button>
                 </div>
             </div>
         </form>
@@ -121,10 +137,14 @@
             title: null,
             description: null,
             file: null,
+            comment: "",
             form_data: {
                 producer: "{{producer_uuid}}",
                 show: null,
             },
+            success: false,
+            bla: false,
+            dev_mode: "{{dev_mode}}",
             fetch_data() {
                 fetch(`../api/producer_for_upload/${this.producer_uuid}`)
                     .then(res => {
@@ -151,18 +171,37 @@
                 return segments[segments.length - 1];
             },
             upload() {
+                event.preventDefault();
                 const form = document.getElementById("form");
                 const xhr = new XMLHttpRequest();
                 var data = new FormData(form);
                 data.append("producer", this.producer_uuid);
-                xhr.onreadystatechange = function () {
-                    // alert("jap, hat funktioniert");
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        this.reset();
+                        this.success = JSON.parse(xhr.response).success;
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                    }
                 }
                 xhr.open("POST", `../api/upload/${this.producer_uuid}`, false)
                 const file_name = data.get("file").name.replace(/[^\x00-\x7F]/g, "");
                 xhr.setRequestHeader("file_name", file_name);
                 xhr.send(data);
-            }
+            },
+            reset() {
+                this.datetime = {};
+                this.title = "";
+                this.description = "";
+                this.file = null;
+                this.comment = "";
+            },
+            test_fill() {
+                this.datetime = "2023-08-01T10:00";
+                this.title = "Ein Testeintrag";
+                this.description = "Heute ist ein wunderschöner Tag, die Sonne scheint hell am Himmel und die Vögel zwitschern fröhlich. Doch gleichzeitig liegt eine düstere Stimmung in der Luft, als ob etwas Schreckliches passieren wird.";
+                this.file = null;
+                this.comment = "Die Natur zeigt sich von ihrer besten Seite, mit blühenden Blumen und saftigem Grün. Aber zugleich sehe ich die zerstörerischen Auswirkungen des Klimawandels, wie Waldbrände und schmelzende Gletscher, die mich verzweifeln lassen.";
+            },
         }
     }
 </script>
