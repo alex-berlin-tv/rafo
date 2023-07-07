@@ -6,4 +6,5 @@ show_table = "Formate"
 episode_table = "Episoden"
 max_file_size = 2
 raw_column = "Quelldatei"
+waveform_column = "Waveform"
 dev_mode = true

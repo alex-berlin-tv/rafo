@@ -1,4 +1,3 @@
-from email import message
 from config import settings
 from file_worker import FileWorker
 from model import NocoEpisodeNew, ProducerUploadData
@@ -7,7 +6,6 @@ import datetime
 from uuid import uuid4
 from pathlib import Path
 import tempfile
-import time
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
@@ -93,7 +91,7 @@ async def upload_file(
     body_validator = MaxBodySizeValidator(max_file_size)
     # TODO: Change this to tmp folder
     uuid = str(uuid4())
-    temp_folder = tempfile.mkdtemp()
+    temp_folder = Path(tempfile.mkdtemp())
     file_path = Path(temp_folder, uuid)
     file_target = FileTarget(
         str(file_path), validator=MaxSizeValidator(max_file_size))
@@ -150,10 +148,12 @@ async def upload_file(
         planned_broadcast_at=planned_broadcast_at.strftime("%Y-%m-%d %H:%M:%S%z"),  # type: ignore
         comment=comment_target.value.decode(),  # type: ignore
     )
-    time.sleep(4)
     episode_id = episode.add_to_noco(producer_target.value.decode(), show_target.value.decode())
-    worker = FileWorker(file_path, episode_id)
+    worker = FileWorker(file_path, temp_folder, episode_id)
     background_tasks.add_task(worker.upload_raw)
+    background_tasks.add_task(worker.generate_waveform)
+    background_tasks.add_task(worker.optimize_file)
+    background_tasks.add_task(worker.delete_temp_folder_on_completion)
     return {
         "success": True,
     }
