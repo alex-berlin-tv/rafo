@@ -16,9 +16,12 @@
         <div class="notification is-danger" x-show="fetch_error">
             <p><b>Formular konnte nicht geladen werden (Fehler <span x-text="fetch_error.status"></span>)</b></p>
             <p>Unter dieser URL kann kein Formular gefunden werden. Stelle bitte sicher, dass du den Link korrekt
-                kopiert
-                hast und probiere es nochmals.</p>
-            <p>TODO: Show specifc error message.</p>
+                kopiert hast und probiere es nochmals. Wenn das Problem fortbesteht und du dir sicher bist, dass du den
+                korrekten Link verwendest, melde dich bitte unter <a
+                    href="mailto:sendeabwicklung@alex-berlin.de">sendeabwicklung@alex-berlin.de</a>. Bitte kopiere in
+                diese Nachricht die komplette Fehlermeldung (alles aus der roten Box), damit wir dir helfen können.</p>
+            <p class="is-size-7">Fehlergrund: <span x-text="fetch_error.statusText"></span>. Id: <span
+                    x-text="producer_uuid"></span>.</p>
         </div>
     </template>
 
@@ -113,7 +116,8 @@
             </div>
             <div class="field mb-5" x-show="upload_running">
                 <p class="label">Bitte warten, Upload läuft...</p>
-                <progress class="progress is-primary" :value="upload_progress" max="100" x-text="`${upload_progress}%`"></progress>
+                <progress class="progress is-primary" :value="upload_progress" max="100"
+                    x-text="`${upload_progress}%`"></progress>
                 <p x-show="wait_for_server">Daten werden auf dem Server verarbeitet...</p>
             </div>
             <div class="field is-grouped">
