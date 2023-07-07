@@ -20,7 +20,7 @@
                 korrekten Link verwendest, melde dich bitte unter <a
                     href="mailto:sendeabwicklung@alex-berlin.de">sendeabwicklung@alex-berlin.de</a>. Bitte kopiere in
                 diese Nachricht die komplette Fehlermeldung (alles aus der roten Box), damit wir dir helfen können.</p>
-            <p class="is-size-7">Fehlergrund: <span x-text="fetch_error.statusText"></span>. Id: <span
+            <p class="is-size-7">Fehlergrund: <span x-text="fetch_error_detail"></span>. Id: <span
                     x-text="producer_uuid"></span>.</p>
         </div>
     </template>
@@ -137,7 +137,8 @@
     function data() {
         return {
             data_loaded: false,
-            fetch_error: "",
+            fetch_error: null,
+            fetch_error_detail: "",
             producer_name: "",
             producer_uuid: "{{producer_uuid}}",
             show: null,
@@ -162,14 +163,18 @@
                     .then(res => {
                         if (!res.ok) {
                             this.fetch_error = res;
-                            console.log(this.fetch_error);
                         }
                         return res.json();
                     })
                     .then(data => {
-                        this.data_loaded = true;
-                        this.producer_name = data.producer_name;
-                        this.available_shows = data.shows;
+                        if (this.fetch_error === null) {
+                            this.data_loaded = true;
+                            this.producer_name = data.producer_name;
+                            this.available_shows = data.shows;
+                        }
+                        else if ("detail" in data) {
+                            this.fetch_error_detail = data.detail;
+                        }
                     });
             },
             get_file_name(path) {

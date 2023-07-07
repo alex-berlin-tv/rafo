@@ -65,7 +65,7 @@ class NocoEpisodeNew(BaseModel):
         project = get_nocodb_project(settings["project_name"])
         episode_data = client.table_row_create(
             project,
-            settings.episode_table, # type: ignore
+            settings.episode_table,  # type: ignore
             self.dict(by_alias=True)
         )
         episode = NocoEpisode.parse_obj(episode_data)
@@ -73,7 +73,7 @@ class NocoEpisodeNew(BaseModel):
         show = NocoShow.from_nocodb_by_uuid(show_uuid)
         client.table_row_relation_create(
             project,
-            settings.episode_table, # type: ignore
+            settings.episode_table,  # type: ignore
             relation_type="mm",
             row_id=episode.noco_id,
             column_name="Format",
@@ -81,7 +81,7 @@ class NocoEpisodeNew(BaseModel):
         )
         client.table_row_relation_create(
             project,
-            settings.episode_table, # type: ignore
+            settings.episode_table,  # type: ignore
             relation_type="mm",
             row_id=episode.noco_id,
             column_name="Eingereicht von",
@@ -103,8 +103,8 @@ class NocoProducer(BaseModel):
     @classmethod
     def from_nocodb_by_uuid(cls, uuid: str):
         raw = get_nocodb_data(
-            settings.project_name, # type: ignore
-            settings.producer_table, # type: ignore
+            settings.project_name,  # type: ignore
+            settings.producer_table,  # type: ignore
             filter_obj=EqFilter("UUID", uuid),
         )
         if len(raw["list"]) != 1:
@@ -124,8 +124,8 @@ class NocoShow(BaseModel):
     @classmethod
     def from_nocodb_by_uuid(cls, uuid: str):
         raw = get_nocodb_data(
-            settings.project_name, # type: ignore
-            settings.show_table, # type: ignore
+            settings.project_name,  # type: ignore
+            settings.show_table,  # type: ignore
             filter_obj=EqFilter("UUID", uuid),
         )
         if len(raw["list"]) != 1:
@@ -139,7 +139,8 @@ class NocoShows(BaseModel):
     @classmethod
     def from_nocodb(cls, ids: Optional[list[int]] = None):
         if ids is None:
-            raise NotImplementedError("getting shows without id is not implemented sorry")
+            raise NotImplementedError(
+                "getting shows without id is not implemented sorry")
         raw = get_nocodb_data(
             settings["project_name"],
             settings["show_table"],
@@ -154,7 +155,7 @@ class NocoShows(BaseModel):
 
 class ShowFormData(BaseModel):
     uuid: str
-    name: str 
+    name: str
 
 
 class ProducerUploadData(BaseModel):
@@ -172,7 +173,8 @@ class ProducerUploadData(BaseModel):
         if len(producer_data["list"]) != 1:
             raise KeyError("no producer found")
         producer = NocoProducer.parse_obj(producer_data["list"][0])
-        show_ids = [show["Id"] for show in producer_data["list"][0][f"{settings['show_table']} List"]]
+        show_ids = [show["Id"] for show in producer_data["list"]
+                    [0][f"{settings['show_table']} List"]]
         shows_src = NocoShows.from_nocodb(ids=show_ids)
         shows = []
         for show in shows_src.__root__:

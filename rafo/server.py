@@ -1,3 +1,4 @@
+from email import message
 from config import settings
 from file_worker import FileWorker
 from model import NocoEpisodeNew, ProducerUploadData
@@ -12,6 +13,7 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from nocodb.exceptions import NocoDBAPIError
 from starlette.requests import ClientDisconnect
 from streaming_form_data import StreamingFormDataParser
 from streaming_form_data.targets import FileTarget, ValueTarget
@@ -56,6 +58,12 @@ async def producer_for_upload_info(
     except KeyError:
         raise HTTPException(
             status_code=404, detail=f"Unter dieser URL kann kein Formular gefunden werden. Stelle bitte sicher, dass du den Link korrekt kopiert hast und probiere es nochmals.")
+    except NocoDBAPIError as e:
+        # TODO: Log this
+        raise HTTPException(
+            status_code=500,
+            detail=f"NocoDBAPIError. Message: {e}. Response Text: {e.response_text}",
+        )
     return data
 
 
