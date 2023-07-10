@@ -1,5 +1,6 @@
 from config import settings
 from file_worker import FileWorker
+from mail import Mail
 from model import NocoEpisodeNew, ProducerUploadData
 
 import datetime
@@ -150,10 +151,13 @@ async def upload_file(
     )
     episode_id = episode.add_to_noco(producer_target.value.decode(), show_target.value.decode())
     worker = FileWorker(file_path, temp_folder, episode_id)
+    mail = Mail.from_settings()
     background_tasks.add_task(worker.upload_raw)
     background_tasks.add_task(worker.generate_waveform)
     background_tasks.add_task(worker.optimize_file)
     background_tasks.add_task(worker.delete_temp_folder_on_completion)
+    background_tasks.add_task(mail.send_on_upload_internal, episode_id)
+    background_tasks.add_task(mail.send_on_upload_external, episode_id)
     return {
         "success": True,
     }

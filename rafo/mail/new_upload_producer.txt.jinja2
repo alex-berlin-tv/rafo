@@ -1,0 +1,18 @@
+{%- if dev_mode %}***rafo läuft im Entwicklungsmodus; dies ist also eine Testmail.***{% endif %}
+
+Hallo {{ producer.first_name }} {{ producer.last_name }},
+
+Wir haben den Upload deiner Sendung erhalten. Vielen Dank! Hier nochmals eine Zusammenfassung:
+
+FORMAT: {{ show.name }}
+PRODUZENT:IN: {{ producer.first_name }} {{ producer.last_name }}
+SENDEDATUM: {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}
+TITEL: {{ episode.title }}
+BESCHREIBUNG: {{ episode.description }}
+{%- if episode.comment_producer %}KOMMENTAR: {{ episode.comment_producer }}{% endif %}
+
+Bitte melde dich bei Fragen bei {{ contact_mail }}.
+
+
+Liebe Grüße,
+Die Sendeabwicklung von ALEX Berlin

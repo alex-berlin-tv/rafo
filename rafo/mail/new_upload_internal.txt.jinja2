@@ -1,0 +1,16 @@
+{%- if dev_mode %}***rafo läuft im Entwicklungsmodus; dies ist also eine Testmail.***{% endif %}
+
+Hallo Sendeabwicklung,
+
+Es wurde am {{ episode.created_at.strftime("%d.%m.%Y") }} um {{ episode.created_at.strftime("%H:%M") }} von {{ producer.first_name }} {{ producer.last_name }} eine neue Sendung auf {{ site_url }} hochgeladen:
+
+ID: e-{{ "%05d" % episode.noco_id }}
+FORMAT: {{ show.name }} (s-{{ "%03d" % show.noco_id }})
+PRODUZENT:IN: {{ producer.first_name }} {{ producer.last_name }} (p-{{ "%03d" % producer.noco_id }})
+SENDEDATUM: {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}
+TITEL: {{ episode.title }}
+BESCHREIBUNG: {{ episode.description }}
+{%- if episode.comment_producer %}KOMMENTAR: {{ episode.comment_producer }}{% endif %}
+
+Es grüßt,
+rafo

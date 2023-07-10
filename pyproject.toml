@@ -4,7 +4,7 @@ authors = [
     {name = "Irvin Hostettler, ALEX Berlin", email = "hostettler@alex-berlin.de"}
 ]
 description = "Collect files and metadata for a radio show uses NocoDB as backend"
-dynamic = ["version"]
+version = "0.1.0"
 dependencies = [
     "click",
     "dynaconf",    
@@ -13,6 +13,3 @@ dependencies = [
     "Jinja2",    
     "nocodb",    
 ]
-
-[tool.setuptools.dynamic]
-version = {attr = "rafo.VERSION"}
