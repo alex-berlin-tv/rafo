@@ -1,0 +1,18 @@
+[project]
+name = "rafo"
+authors = [
+    {name = "Irvin Hostettler, ALEX Berlin", email = "hostettler@alex-berlin.de"}
+]
+description = "Collect files and metadata for a radio show uses NocoDB as backend"
+dynamic = ["version"]
+dependencies = [
+    "click",
+    "dynaconf",    
+    "fastapi",    
+    "ffmpeg-python",    
+    "Jinja2",    
+    "nocodb",    
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "rafo.VERSION"}
