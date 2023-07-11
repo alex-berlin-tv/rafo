@@ -208,7 +208,7 @@ class NocoEpisodeNew(BaseModel):
     comment: str = Field(alias="Kommentar Produzent")
 
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
 
     def add_to_noco(self, producer_uuid: str, show_uuid: str):
         client = get_nocodb_client()
