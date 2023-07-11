@@ -1,4 +1,5 @@
 nocodb_url = "https://db.alex-berlin.de"
+base_url = "https://upload.alex-berlin.de"
 port = 8000
 project_name = "Radioupload"
 producer_table = "Produzenten"

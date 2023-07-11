@@ -44,6 +44,7 @@ async def upload(
         "request": request,
         "producer_uuid": uuid,
         "dev_mode": settings.dev_mode,
+        "base_url": settings.base_url,
     }
     return templates.TemplateResponse("upload.html.jinja2", data)
 

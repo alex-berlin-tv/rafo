@@ -11,7 +11,7 @@ dependencies = [
     "fastapi",
     "ffmpeg-python",
     "Jinja2",
-    "nocodb@git+https://github.com/alex-berlin-tv/python-nocodb#egg=relation_create",
+    "nocodb@git+ssh://git@github.com/alex-berlin-tv/python-nocodb.git#branch=relation_create",
     "streaming_form_data",
     "uvicorn",
 ]

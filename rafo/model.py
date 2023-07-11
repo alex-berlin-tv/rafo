@@ -132,8 +132,8 @@ class ProducerUploadData(BaseModel):
 
 class NocoEpisode(BaseModel):
     noco_id: int = Field(alias="Id")
-    created_at: Optional[datetime] = Field(alias="CreatedAt")
-    updated_at: Optional[datetime] = Field(alias="UpdatedAt")
+    created_at: Optional[datetime] = Field(alias="CreatedAt", default=None)
+    updated_at: Optional[datetime] = Field(alias="UpdatedAt", default=None)
     title: str = Field(alias="Titel")
     description: str = Field(alias="Beschreibung")
     comment_producer: Optional[str] = Field(alias="Kommentar Produzent")
