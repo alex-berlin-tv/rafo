@@ -1,10 +1,11 @@
-import jinja2
-from config import settings
-from model import NocoEpisode
+from ..config import settings
+from ..model import NocoEpisode
 
 from email.message import EmailMessage
 import smtplib
 import ssl
+
+import jinja2
 
 
 class Mail:

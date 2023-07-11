@@ -1,6 +1,6 @@
-from config import settings
-from model import get_nocodb_client, get_nocodb_project
-from noco_upload import Upload
+from .config import settings
+from .model import get_nocodb_client, get_nocodb_project
+from .noco_upload import Upload
 
 from pathlib import Path
 import shutil

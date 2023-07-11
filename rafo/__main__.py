@@ -12,7 +12,7 @@ def cli():
 @click.command()
 def run():
     """Starts the web-server."""
-    uvicorn.run("server:app", reload=True, port=settings.port) # type: ignore
+    uvicorn.run("rafo.server:app", reload=True, port=settings.port) # type: ignore
 
 
 @click.command()
