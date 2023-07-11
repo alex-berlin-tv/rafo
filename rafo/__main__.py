@@ -14,9 +14,9 @@ def run():
     """Starts the web-server."""
     uvicorn.run(
         "rafo.server:app",
-        reload=True,
+        reload=settings.dev_mode, # type: ignore
         port=settings.port, # type: ignore
-        proxy_headers=True # type: ignore
+        proxy_headers=True
     )
 
 
