@@ -1,7 +1,7 @@
-from config import settings
-from file_worker import FileWorker
-from mail import Mail
-from model import NocoEpisodeNew, ProducerUploadData
+from .config import settings
+from .file_worker import FileWorker
+from .mail import Mail
+from .model import NocoEpisodeNew, ProducerUploadData
 
 import datetime
 from uuid import uuid4

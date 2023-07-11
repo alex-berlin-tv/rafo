@@ -1,4 +1,4 @@
-from config import settings
+from .config import settings
 
 from typing import Any, Optional
 from datetime import datetime
@@ -152,7 +152,7 @@ class NocoEpisode(BaseModel):
         raw = get_nocodb_data(
             settings.project_name,  # type: ignore
             settings.episode_table,  # type: ignore
-            filter_obj=EqFilter("Id", id),
+            filter_obj=EqFilter("Id", str(id)),
         )
         if len(raw["list"]) != 1:
             raise KeyError(f"no episode for Id {id} found")

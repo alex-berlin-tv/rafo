@@ -1,8 +1,7 @@
-from config import settings
-from model import NocoEpisode
+from .config import settings
+from .model import NocoEpisode
 
 import click
-import requests
 import uvicorn
 
 @click.group()
@@ -21,7 +20,11 @@ def test():
     episode = NocoEpisode.from_nocodb_by_uuid("fd1c1b27-4d1f-4f92-8e4a-d87b5b7f907b")
 
 
-if __name__ == "__main__":
+def main():
     cli.add_command(run)
     cli.add_command(test)
     cli()
+
+
+if __name__ == "__main__":
+    main()
