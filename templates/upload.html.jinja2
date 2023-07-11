@@ -1,6 +1,6 @@
 {% extends "base.html.jinja2" %}
 {% block head %}
-<script src="{{ url_for('static', path='/js/alpine.min.js') }}" defer></script>
+<script src="/static/js/alpine.min.js" defer></script>
 {% endblock %}
 {% block content %}
 <div class="content" x-data="data()" x-init="fetch_data()">
