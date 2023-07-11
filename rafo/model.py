@@ -6,7 +6,7 @@ from datetime import datetime
 from nocodb.nocodb import APIToken, NocoDBProject, WhereFilter
 from nocodb.filters import EqFilter
 from nocodb.infra.requests_client import NocoDBRequestsClient
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 
 
 def get_nocodb_client() -> NocoDBRequestsClient:
@@ -75,8 +75,8 @@ class NocoShow(BaseModel):
         return cls.parse_obj(raw["list"][0])
 
 
-class NocoShows(BaseModel):
-    __root__: list[NocoShow]
+class NocoShows(RootModel[list[NocoShow]]):
+    root: list[NocoShow]
 
     @classmethod
     def from_nocodb(cls, ids: Optional[list[int]] = None):
@@ -88,10 +88,10 @@ class NocoShows(BaseModel):
             settings["show_table"],
         )
         data = cls.parse_obj(raw["list"])
-        filtered = NocoShows(__root__=[])
-        for item in data.__root__:
+        filtered = NocoShows(root=[])
+        for item in data.root:
             if item.noco_id in ids:
-                filtered.__root__.append(item)
+                filtered.root.append(item)
         return filtered
 
 
@@ -119,7 +119,7 @@ class ProducerUploadData(BaseModel):
                     [0][f"{settings['show_table']} List"]]
         shows_src = NocoShows.from_nocodb(ids=show_ids)
         shows = []
-        for show in shows_src.__root__:
+        for show in shows_src.root:
             shows.append(ShowFormData(
                 uuid=show.uuid,
                 name=show.name,
