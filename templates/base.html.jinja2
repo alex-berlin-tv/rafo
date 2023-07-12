@@ -18,25 +18,26 @@
 
     <link href="/static/css/bulma.min.css" rel="stylesheet">
     <link href="/static/css/fontawesome.min.css" rel="stylesheet">
+    <script src="/static/js/alpine.min.js" defer></script>
     {% block head %}
     {% endblock %}
 </head>
 
 <body>
-    <nav class="navbar is-info" role="navigation" aria-label="main navigation">
+    <nav class="navbar is-info" x-data="{open: false}" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
             <a class="navbar-item" href="/">
                 <img src="/static/img/logo-text.svg" width="180" height="28">
             </a>
 
-            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false"
-                data-target="navbarBasicExample">
+            <a role="button" :class="['navbar-burger', open ? 'is-active' : '']" aria-label="menu" aria-expanded="false"
+                data-target="navbar" @click="open = !open">
                 <span aria-hidden="true"></span>
                 <span aria-hidden="true"></span>
                 <span aria-hidden="true"></span>
             </a>
         </div>
-        <div id="navbarBasicExample" class="navbar-menu">
+        <div id="navbar" :class="['navbar-menu', open ? 'is-active' : '']">
             <div class="navbar-end">
                 <a class="navbar-item" href="/help">
                     <i class="fa-regular fa-circle-question mx-1"></i> Hilfe

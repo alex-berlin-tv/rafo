@@ -1,7 +1,4 @@
 {% extends "base.html.jinja2" %}
-{% block head %}
-<script src="/static/js/alpine.min.js" defer></script>
-{% endblock %}
 {% block content %}
 <div class="content" x-data="data()" x-init="fetch_data()">
     <div class="notification is-warning" x-show="!data_loaded && !fetch_error">
@@ -166,7 +163,6 @@
                 show: null,
             },
             success: false,
-            bla: false,
             dev_mode: "{{dev_mode}}",
             upload_running: false,
             upload_progress: 0,
