@@ -1,5 +1,6 @@
 from .config import settings
-from .model import NocoEpisode
+
+import logging
 
 import click
 import uvicorn
@@ -16,13 +17,14 @@ def run():
         "rafo.server:app",
         reload=settings.dev_mode, # type: ignore
         port=settings.port, # type: ignore
-        proxy_headers=True
+        proxy_headers=True,
+        log_level=settings.log_level, # type: ignore
     )
 
 
 @click.command()
 def test():
-    episode = NocoEpisode.from_nocodb_by_uuid("fd1c1b27-4d1f-4f92-8e4a-d87b5b7f907b")
+    pass
 
 
 def main():

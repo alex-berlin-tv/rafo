@@ -1,13 +1,13 @@
 from .config import settings
+from .log import logger
 
-from typing import Any, Optional
 from datetime import datetime
+from typing import Any, Optional
 
 from nocodb.nocodb import APIToken, NocoDBProject, WhereFilter
 from nocodb.filters import EqFilter
 from nocodb.infra.requests_client import NocoDBRequestsClient
 from pydantic import BaseModel, Field, RootModel
-
 
 def get_nocodb_client() -> NocoDBRequestsClient:
     token = settings["nocodb_api_key"]
@@ -25,6 +25,7 @@ def get_nocodb_project(project_name) -> NocoDBProject:
 
 def get_nocodb_data(project_name: str, table_name: str, filter_obj: Optional[WhereFilter] = None) -> Any:
     client = get_nocodb_client()
+    logger.debug(f"NocoDB table_row_list for {project_name}/{table_name} with filter {filter_obj}")
     return client.table_row_list(
         get_nocodb_project(project_name),
         table_name,
@@ -171,12 +172,13 @@ class NocoEpisode(BaseModel):
 
     def get_producer(self) -> "NocoProducer":
         client = get_nocodb_client()
+        logger.debug(f"NocoDB table_row_nested_relations_list for {settings.project_name}/{settings.episode_table} for Field '{settings.producer_column}'")
         raw = client.table_row_nested_relations_list(
             get_nocodb_project(settings.project_name),
             settings.episode_table, # type: ignore
             "mm",
             self.noco_id,
-            "Eingereicht von"
+            settings.producer_column, # type: ignore
         )
         if len(raw["list"]) < 1:
             raise ValueError(f"no producer linked in episode with id {self.noco_id}")
@@ -186,12 +188,13 @@ class NocoEpisode(BaseModel):
     
     def get_show(self) -> "NocoShow":
         client = get_nocodb_client()
+        logger.debug(f"NocoDB table_row_nested_relations_list for {settings.project_name}/{settings.episode_table} for Field '{settings.show_column}'")
         raw = client.table_row_nested_relations_list(
             get_nocodb_project(settings.project_name),
             settings.episode_table, # type: ignore
             "mm",
             self.noco_id,
-            "Format"
+            settings.show_column, # type: ignore
         )
         if len(raw["list"]) < 1:
             raise ValueError(f"no show linked in episode with id {self.noco_id}")
@@ -212,7 +215,8 @@ class NocoEpisodeNew(BaseModel):
 
     def add_to_noco(self, producer_uuid: str, show_uuid: str):
         client = get_nocodb_client()
-        project = get_nocodb_project(settings["project_name"])
+        project = get_nocodb_project(settings.project_name)
+        logger.debug(f"NocoDB table_row_create for {settings.project_name}/{settings.episode_table}")
         episode_data = client.table_row_create(
             project,
             settings.episode_table,  # type: ignore
@@ -221,21 +225,23 @@ class NocoEpisodeNew(BaseModel):
         episode = NocoEpisode.parse_obj(episode_data)
         producer = NocoProducer.from_nocodb_by_uuid(producer_uuid)
         show = NocoShow.from_nocodb_by_uuid(show_uuid)
+        logger.debug(f"NocoDB table_row_relation_create for {settings.project_name}/{settings.episode_table} for Field '{settings.show_column}'")
         client.table_row_relation_create(
             project,
-            settings.episode_table,  # type: ignore
-            relation_type="mm",
-            row_id=episode.noco_id,
-            column_name="Format",
-            ref_row_id=show.noco_id,
+            settings.episode_table, # type: ignore
+            "mm",
+            episode.noco_id,
+            settings.show_column, # type: ignore
+            show.noco_id,
         )
+        logger.debug(f"NocoDB table_row_relation_create for {settings.project_name}/{settings.episode_table} for Field '{settings.producer_column}'")
         client.table_row_relation_create(
             project,
-            settings.episode_table,  # type: ignore
-            relation_type="mm",
-            row_id=episode.noco_id,
-            column_name="Eingereicht von",
-            ref_row_id=producer.noco_id,
+            settings.episode_table, # type: ignore
+            "mm",
+            episode.noco_id,
+            settings.producer_column, # type: ignore
+            producer.noco_id,
         )
         return episode.noco_id
 
