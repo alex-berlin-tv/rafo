@@ -1,5 +1,6 @@
 from .config import settings
 from .file_worker import FileWorker
+from .log import logger
 from .mail import Mail
 from .model import NocoEpisodeNew, ProducerUploadData
 
@@ -94,6 +95,7 @@ async def upload_file(
     # TODO: Change this to tmp folder
     uuid = str(uuid4())
     temp_folder = Path(tempfile.mkdtemp())
+    logger.debug(f"Temp folder {temp_folder} created")
     file_path = Path(temp_folder, uuid)
     file_target = FileTarget(
         str(file_path), validator=MaxSizeValidator(max_file_size))

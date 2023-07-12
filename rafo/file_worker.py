@@ -1,4 +1,6 @@
+from os import execlp
 from .config import settings
+from .log import logger
 from .model import get_nocodb_client, get_nocodb_project
 from .noco_upload import Upload
 
@@ -25,12 +27,14 @@ class FileWorker:
         )
 
     def upload_raw(self):
+        logger.debug(f"About to upload raw file {self.raw_file}")
         self.upload.upload_file(
             self.raw_file,
             settings.episode_table,  # type: ignore
             settings.raw_column,  # type: ignore
             self.episode_id,
         )
+        logger.info(f"Raw file {self.raw_file} uploaded to NocoDB")
         with self.count_lock:
             self.finished_workers += 1
 
@@ -41,24 +45,31 @@ class FileWorker:
         height: int = 252,
         color: str = "#3399cc"
     ):
-        output_path = self.temp_folder / Path("raw_waveform.png")
-        out, err = ffmpeg.input(
-            str(self.raw_file)
-        ).filter(
-            "aformat", channel_layouts="mono",
-        ).filter(
-            "compand", gain=gain,
-        ).filter(
-            "showwavespic", s=f"{width}x{height}", colors=color,
-        ).output(
-            str(output_path), vframes=1,
-        ).overwrite_output().run()
-        self.upload.upload_file(
-            output_path,
-            settings.episode_table, # type: ignore
-            settings.waveform_column, # type: ignore
-            self.episode_id,
-        )
+        logger.debug(f"About to generate waveform for {self.raw_file}")
+        try:
+            output_path = self.temp_folder / Path("raw_waveform.png")
+            out, err = ffmpeg.input(
+                str(self.raw_file)
+            ).filter(
+                "aformat", channel_layouts="mono",
+            ).filter(
+                "compand", gain=gain,
+            ).filter(
+                "showwavespic", s=f"{width}x{height}", colors=color,
+            ).output(
+                str(output_path), vframes=1,
+            ).overwrite_output().run()
+            self.upload.upload_file(
+                output_path,
+                settings.episode_table, # type: ignore
+                settings.waveform_column, # type: ignore
+                self.episode_id,
+            )
+        except Exception:
+            with self.count_lock:
+                self.finished_workers += 1
+            raise
+        logger.info(f"Waveform generated for {self.raw_file} and written to {output_path}")
         with self.count_lock:
             self.finished_workers += 1
 
@@ -69,4 +80,5 @@ class FileWorker:
     def delete_temp_folder_on_completion(self):
         while self.finished_workers != 3:
             pass
+        logger.debug(f"Delete temp folder {self.temp_folder}")
         shutil.rmtree(self.temp_folder)
