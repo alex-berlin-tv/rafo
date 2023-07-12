@@ -7,19 +7,29 @@
     <div class="notification is-warning" x-show="!data_loaded && !fetch_error">
         Bitte warten, die Daten werden geladen...
     </div>
-    <div class="notification is-primary" x-show="success">
-        <button class="delete" @click="success=false"></button>
-        <p><b>Upload erfolgreich abgeschlossen</b></p>
-        <p>Wir haben deine Sendung erhalten, vielen Dank!</p>
+    <div :class="['modal', success ? 'is-active' : '']" x-show="true">
+        <div class="modal-background" @click="success=false"></div>
+        <div class="modal-content">
+            <div class="notification is-primary">
+                <p><b>Upload erfolgreich abgeschlossen</b></p>
+                <p>Wir haben deine Sendung erhalten, vielen Dank!</p>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close" @click="success=false"></button>
     </div>
     <template x-if="fetch_error">
         <div class="notification is-danger" x-show="fetch_error">
-            <p><b>Formular konnte nicht geladen werden (Fehler <span x-text="fetch_error.status"></span>)</b></p>
-            <p>Unter dieser URL kann kein Formular gefunden werden. Stelle bitte sicher, dass du den Link korrekt
-                kopiert hast und probiere es nochmals. Wenn das Problem fortbesteht und du dir sicher bist, dass du den
+            <p><b>Formular konnte nicht geladen werden (Fehler <span x-text="fetch_error.status"></span>)</b>
+            </p>
+            <p>Unter dieser URL kann kein Formular gefunden werden. Stelle bitte sicher, dass du den Link
+                korrekt
+                kopiert hast und probiere es nochmals. Wenn das Problem fortbesteht und du dir sicher bist, dass
+                du den
                 korrekten Link verwendest, melde dich bitte unter <a
-                    href="mailto:sendeabwicklung@alex-berlin.de">sendeabwicklung@alex-berlin.de</a>. Bitte kopiere in
-                diese Nachricht die komplette Fehlermeldung (alles aus der roten Box), damit wir dir helfen können.</p>
+                    href="mailto:sendeabwicklung@alex-berlin.de">sendeabwicklung@alex-berlin.de</a>. Bitte
+                kopiere in
+                diese Nachricht die komplette Fehlermeldung (alles aus der roten Box), damit wir dir helfen
+                können.</p>
             <p class="is-size-7">Fehlergrund: <span x-text="fetch_error_detail"></span>. Id: <span
                     x-text="producer_uuid"></span>.</p>
         </div>
@@ -67,7 +77,8 @@
                         :disabled="upload_running">
                     <div class="icon is-small is-left"><i class="fa-solid fa-file"></i></div>
                 </div>
-                <p class="help">Wann wird deine Sendung gemäss Vereinbarung mit der Sendeabwicklung ausgestrahlt werden?
+                <p class="help">Wann wird deine Sendung gemäss Vereinbarung mit der Sendeabwicklung ausgestrahlt
+                    werden?
                     <i>Pflichtfeld.</i>
                 </p>
             </div>
@@ -78,7 +89,8 @@
                         maxlength="200" required :disabled="upload_running">
                     <div class="icon is-small is-left"><i class="fa-solid fa-file"></i></div>
                 </div>
-                <p class="help">Der Titel deiner Episode. <i>Pflichtfeld, zwischen 10 und 200 Zeichen lang.</i></p>
+                <p class="help">Der Titel deiner Episode. <i>Pflichtfeld, zwischen 10 und 200 Zeichen lang.</i>
+                </p>
             </div>
             <div class="field">
                 <label class="label" for="description">Beschreibung</label>
@@ -86,7 +98,8 @@
                     <textarea class="textarea" id="description" name="description" type="text" x-model="description"
                         minlength="10" maxlength="1000" required :disabled="upload_running"></textarea>
                 </div>
-                <p class="help">Beschreibe den Inhalt deiner Sendung. <i>Pflichtfeld, mindestens 10 Zeichen lang.</i>
+                <p class="help">Beschreibe den Inhalt deiner Sendung. <i>Pflichtfeld, mindestens 10 Zeichen
+                        lang.</i>
                 </p>
             </div>
             <div class="field">
@@ -211,7 +224,7 @@
                         this.upload_running = false;
                         this.upload_progress = 0;
                         this.wait_for_server = false;
-                        window.scrollTo({ top: 0, behavior: "smooth" });
+                        window.scrollTo(0, 0);
                     }
                 };
                 xhr.open("POST", `../api/upload/${this.producer_uuid}`, true);
