@@ -1,7 +1,8 @@
 from ..config import settings
 from ..model import NocoEpisode
 
-from email.message import EmailMessage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 import smtplib
 import ssl
 
@@ -35,12 +36,13 @@ class Mail:
             settings.smtp_port,  # type: ignore
         )
 
-    def send(self, recipient: str, subject: str, message: str):
-        msg = EmailMessage()
-        msg.set_content(message)
+    def send(self, recipient: str, subject: str, html: str, plain: str):
+        msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = self.sender_address
         msg["To"] = recipient
+        msg.attach(MIMEText(plain, "plain"))
+        msg.attach(MIMEText(html, "html"))
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL(self.host, self.port, context=context) as server:
             server.login(self.user, self.password)
@@ -60,16 +62,19 @@ class Mail:
         episode = NocoEpisode.from_nocodb_by_id(episode_id)
         producer = episode.get_producer()
         show = episode.get_show()
-        message = self.__get_template("new_upload_internal.txt.jinja2").render(
-            episode=episode,
-            producer=producer,
-            show=show,
-            dev_mode=settings.dev_mode, # type: ignore
-        )
+        data = {
+            "episode": episode,
+            "producer": producer,
+            "show": show,
+            "dev_mode": settings.dev_mode, # type: ignore
+        }
+        plain = self.__get_template("new_upload_internal.txt.jinja2").render(data)
+        html = self.__get_template("new_upload_internal.html.jinja2").render(data)
         self.send(
             settings.on_upload_mail, # type: ignore
             f"e-{episode.noco_id:04d}: Neuer Upload {show.name}",
-            message
+            plain,
+            html,
         )
 
     def send_on_upload_external(
@@ -79,17 +84,20 @@ class Mail:
         episode = NocoEpisode.from_nocodb_by_id(episode_id)
         producer = episode.get_producer()
         show = episode.get_show()
-        message = self.__get_template("new_upload_producer.txt.jinja2").render(
-            episode=episode,
-            producer=producer,
-            show=show,
-            dev_mode=settings.dev_mode, # type: ignore
-            contact_mail=settings.contact_mail, # type: ignore
-        )
+        data = {
+            "episode": episode,
+            "producer": producer,
+            "show": show,
+            "dev_mode": settings.dev_mode, # type: ignore
+            "contact_mail": settings.contact_mail, # type: ignore
+        }
+        plain = self.__get_template("new_upload_producer.txt.jinja2").render(data)
+        html = self.__get_template("new_upload_producer.html.jinja2").render(data)
         self.send(
             producer.email,
             "Sendung erfolgreich hochgeladen",
-            message,
+            plain,
+            html,
         )
 
     @staticmethod

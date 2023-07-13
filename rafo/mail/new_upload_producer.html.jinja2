@@ -1,0 +1,31 @@
+<html>
+
+<head></head>
+
+<body>
+    <p><i>{%- if dev_mode %}***rafo läuft im Entwicklungsmodus; dies ist also eine Testmail.***{% endif %}</i></p>
+
+    <p>Hallo {{ producer.first_name }} {{ producer.last_name }},</p>
+
+    <p>Wir haben den Upload deiner Sendung erhalten. Vielen Dank! Hier nochmals eine Zusammenfassung:</p>
+
+    <p>
+        <b>ID:</b> e-{{ "%05d" % episode.noco_id }}<br>
+        <b>FORMAT:</b> {{ show.name }} (s-{{ "%03d" % show.noco_id }})<br>
+        <b>PRODUZENT:IN:</b> {{ producer.first_name }} {{ producer.last_name }} (p-{{ "%03d" % producer.noco_id }})<br>
+        <b>SENDEDATUM:</b> {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}<br>
+        <b>TITEL:</b> {{ episode.title }}<br>
+        <b>BESCHREIBUNG:</b> {{ episode.description }}
+        {%- if episode.comment_producer %}<br><b>KOMMENTAR:</b> {{ episode.comment_producer }}{% endif %}
+    </p>
+
+    <p>Bitte melde dich bei Fragen bei {{ contact_mail }}.</p>
+
+
+    <p>
+        Liebe Grüße,<br>
+        Die Sendeabwicklung von ALEX Berlin
+    </p>
+</body>
+
+</html>
