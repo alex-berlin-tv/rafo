@@ -6,6 +6,7 @@ from email.mime.text import MIMEText
 import smtplib
 import ssl
 
+import emails
 import jinja2
 
 
@@ -15,12 +16,14 @@ class Mail:
     def __init__(
         self,
         sender_address: str,
+        sender_name: str,
         host: str,
         user: str,
         password: str,
         port: int,
     ):
         self.sender_address = sender_address
+        self.sender_name = sender_name
         self.host = host
         self.user = user
         self.password = password
@@ -29,24 +32,31 @@ class Mail:
     @classmethod
     def from_settings(cls):
         return cls(
-            settings.smtp_sender_address,  # type: ignore
-            settings.smtp_host,  # type: ignore
-            settings.smtp_user,  # type: ignore
-            settings.smtp_password,  # type: ignore
-            settings.smtp_port,  # type: ignore
+            settings.smtp_sender_address, # type: ignore
+            settings.on_upload_sender_name, # type: ignore 
+            settings.smtp_host, # type: ignore
+            settings.smtp_user, # type: ignore
+            settings.smtp_password, # type: ignore
+            settings.smtp_port, # type: ignore
         )
 
     def send(self, recipient: str, subject: str, html: str, plain: str):
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = self.sender_address
-        msg["To"] = recipient
-        msg.attach(MIMEText(plain, "plain"))
-        msg.attach(MIMEText(html, "html"))
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL(self.host, self.port, context=context) as server:
-            server.login(self.user, self.password)
-            server.send_message(msg)
+        msg = emails.Message(
+            subject=subject,
+            html=html,
+            text=plain,
+            mail_from=(self.sender_name, self.sender_address),
+        )
+        msg.send(
+            to=recipient,
+            smtp={
+                "host": self.host,
+                "port": self.port,
+                "ssl": True,
+                "user": self.user,
+                "password": self.password,
+            }
+        )
 
     def send_upload_link(self, recipient: str, producer: str):
         raise NotImplemented()
@@ -73,8 +83,8 @@ class Mail:
         self.send(
             settings.on_upload_mail, # type: ignore
             f"e-{episode.noco_id:04d}: Neuer Upload {show.name}",
-            plain,
             html,
+            plain,
         )
 
     def send_on_upload_external(
@@ -96,8 +106,8 @@ class Mail:
         self.send(
             producer.email,
             "Sendung erfolgreich hochgeladen",
-            plain,
             html,
+            plain,
         )
 
     @staticmethod

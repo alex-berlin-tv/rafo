@@ -11,6 +11,7 @@ waveform_column = "Waveform"
 producer_column = "Eingereicht von"
 show_column = "Format"
 on_upload_mail = "sendeabwicklung@alex-berlin.de"
+on_upload_sender_name = "Sendeabwicklung ALEX Berlin"
 contact_mail = "sendeabwicklung@alex-berlin.de"
 dev_mode = true
 log_level = "debug"
