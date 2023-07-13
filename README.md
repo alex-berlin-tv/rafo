@@ -38,9 +38,6 @@ Start rafo with:
 rafo run
 ```
 
-Translated with www.DeepL.com/Translator (free version)
-
-
 ## Configuration of NocoDB
 
 rafo uses the application NocoDB as a backend for the data. For this to work correctly, the following structures must be created:
