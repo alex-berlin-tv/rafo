@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="misc/logo.svg" height="200"/>
+  <img src="misc/logo.svg" height="150"/>
 </p>
 
 # rafo
