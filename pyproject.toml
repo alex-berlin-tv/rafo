@@ -8,7 +8,7 @@ version = "0.1.0"
 dependencies = [
     "click",
     "dynaconf",
-    "emails"
+    "emails",
     "fastapi",
     "ffmpeg-python",
     "Jinja2",
