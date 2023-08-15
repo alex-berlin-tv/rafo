@@ -1,7 +1,5 @@
 from .config import settings
 
-import logging
-
 import click
 import uvicorn
 
@@ -15,10 +13,10 @@ def run():
     """Starts the web-server."""
     uvicorn.run(
         "rafo.server:app",
-        reload=settings.dev_mode, # type: ignore
-        port=settings.port, # type: ignore
+        reload=settings.dev_mode,
+        port=settings.port,
         proxy_headers=True,
-        log_level=settings.log_level, # type: ignore
+        log_level=settings.log_level,
     )
 
 

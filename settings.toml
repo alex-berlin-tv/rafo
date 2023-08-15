@@ -1,3 +1,4 @@
+[rafo]
 nocodb_url = "https://db.alex-berlin.de"
 base_url = "https://upload.alex-berlin.de"
 port = 8000

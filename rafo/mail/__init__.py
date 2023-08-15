@@ -32,12 +32,12 @@ class Mail:
     @classmethod
     def from_settings(cls):
         return cls(
-            settings.smtp_sender_address, # type: ignore
-            settings.on_upload_sender_name, # type: ignore 
-            settings.smtp_host, # type: ignore
-            settings.smtp_user, # type: ignore
-            settings.smtp_password, # type: ignore
-            settings.smtp_port, # type: ignore
+            settings.smtp_sender_address,
+            settings.on_upload_sender_name, 
+            settings.smtp_host,
+            settings.smtp_user,
+            settings.smtp_password,
+            settings.smtp_port,
         )
 
     def send(self, recipient: str, subject: str, html: str, plain: str):
@@ -76,12 +76,12 @@ class Mail:
             "episode": episode,
             "producer": producer,
             "show": show,
-            "dev_mode": settings.dev_mode, # type: ignore
+            "dev_mode": settings.dev_mode,
         }
         plain = self.__get_template("new_upload_internal.txt.jinja2").render(data)
         html = self.__get_template("new_upload_internal.html.jinja2").render(data)
         self.send(
-            settings.on_upload_mail, # type: ignore
+            settings.on_upload_mail,
             f"e-{episode.noco_id:04d}: Neuer Upload {show.name}",
             html,
             plain,
@@ -98,8 +98,8 @@ class Mail:
             "episode": episode,
             "producer": producer,
             "show": show,
-            "dev_mode": settings.dev_mode, # type: ignore
-            "contact_mail": settings.contact_mail, # type: ignore
+            "dev_mode": settings.dev_mode,
+            "contact_mail": settings.contact_mail,
         }
         plain = self.__get_template("new_upload_producer.txt.jinja2").render(data)
         html = self.__get_template("new_upload_producer.html.jinja2").render(data)

@@ -89,7 +89,7 @@ async def upload_file(
     uuid: str,
     background_tasks: BackgroundTasks,
 ):
-    max_file_size = 1024 * 1024 * 1024 * settings.max_file_size  # type: ignore
+    max_file_size = 1024 * 1024 * 1024 * settings.max_file_size 
     body_validator = MaxBodySizeValidator(max_file_size)
     # TODO: Change this to tmp folder
     uuid = str(uuid4())
@@ -144,12 +144,12 @@ async def upload_file(
     comment = comment_target.value.decode()
     if comment == "":
         comment = None
-    episode = NocoEpisodeNew(  # type: ignore
-        title=title_target.value.decode(),  # type: ignore
-        uuid=uuid,  # type: ignore
-        description=description_target.value.decode(),  # type: ignore
-        planned_broadcast_at=planned_broadcast_at.strftime("%Y-%m-%d %H:%M:%S%z"),  # type: ignore
-        comment=comment_target.value.decode(),  # type: ignore
+    episode = NocoEpisodeNew( 
+        title=title_target.value.decode(), 
+        uuid=uuid, 
+        description=description_target.value.decode(), 
+        planned_broadcast_at=planned_broadcast_at.strftime("%Y-%m-%d %H:%M:%S%z"), 
+        comment=comment_target.value.decode(), 
     )
     episode_id = episode.add_to_noco(producer_target.value.decode(), show_target.value.decode())
     worker = FileWorker(file_path, temp_folder, episode_id)

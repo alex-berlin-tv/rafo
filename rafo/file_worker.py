@@ -20,8 +20,8 @@ class FileWorker:
         self.count_lock = threading.Lock()
         self.finished_workers = 0
         self.upload = Upload(
-            settings.nocodb_url,  # type: ignore
-            settings.nocodb_api_key,  # type: ignore
+            settings.nocodb_url,
+            settings.nocodb_api_key, 
             get_nocodb_client(),
             get_nocodb_project(settings.project_name),
         )
@@ -30,8 +30,8 @@ class FileWorker:
         logger.debug(f"About to upload raw file {self.raw_file}")
         self.upload.upload_file(
             self.raw_file,
-            settings.episode_table,  # type: ignore
-            settings.raw_column,  # type: ignore
+            settings.episode_table, 
+            settings.raw_column, 
             self.episode_id,
         )
         logger.info(f"Raw file {self.raw_file} uploaded to NocoDB")
@@ -61,8 +61,8 @@ class FileWorker:
             ).overwrite_output().run()
             self.upload.upload_file(
                 output_path,
-                settings.episode_table, # type: ignore
-                settings.waveform_column, # type: ignore
+                settings.episode_table,
+                settings.waveform_column,
                 self.episode_id,
             )
         except Exception:

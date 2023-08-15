@@ -14,7 +14,7 @@ def get_nocodb_client() -> NocoDBRequestsClient:
     if not isinstance(token, str):
         raise ValueError("invalid nocodb token, not a string")
     return NocoDBRequestsClient(
-        APIToken(token),  # type: ignore
+        APIToken(token), 
         settings["nocodb_url"],
     )
 
@@ -45,8 +45,8 @@ class NocoProducer(BaseModel):
     @classmethod
     def from_nocodb_by_uuid(cls, uuid: str):
         raw = get_nocodb_data(
-            settings.project_name,  # type: ignore
-            settings.producer_table,  # type: ignore
+            settings.project_name, 
+            settings.producer_table, 
             filter_obj=EqFilter("UUID", uuid),
         )
         if len(raw["list"]) != 1:
@@ -67,8 +67,8 @@ class NocoShow(BaseModel):
     @classmethod
     def from_nocodb_by_uuid(cls, uuid: str):
         raw = get_nocodb_data(
-            settings.project_name,  # type: ignore
-            settings.show_table,  # type: ignore
+            settings.project_name, 
+            settings.show_table, 
             filter_obj=EqFilter("UUID", uuid),
         )
         if len(raw["list"]) != 1:
@@ -129,7 +129,7 @@ class ProducerUploadData(BaseModel):
         return cls(
             producer_name=f"{producer.first_name} {producer.last_name}",
             shows=shows,
-            dev_mode=settings.dev_mode, # type: ignore
+            dev_mode=settings.dev_mode,
         )
 
 
@@ -153,8 +153,8 @@ class NocoEpisode(BaseModel):
     @classmethod
     def from_nocodb_by_id(cls, id: int):
         raw = get_nocodb_data(
-            settings.project_name,  # type: ignore
-            settings.episode_table,  # type: ignore
+            settings.project_name, 
+            settings.episode_table, 
             filter_obj=EqFilter("Id", str(id)),
         )
         if len(raw["list"]) != 1:
@@ -164,8 +164,8 @@ class NocoEpisode(BaseModel):
     @classmethod
     def from_nocodb_by_uuid(cls, uuid: str):
         raw = get_nocodb_data(
-            settings.project_name,  # type: ignore
-            settings.episode_table,  # type: ignore
+            settings.project_name, 
+            settings.episode_table, 
             filter_obj=EqFilter("UUID", uuid),
         )
         if len(raw["list"]) != 1:
@@ -176,11 +176,11 @@ class NocoEpisode(BaseModel):
         client = get_nocodb_client()
         logger.debug(f"NocoDB table_row_nested_relations_list for {settings.project_name}/{settings.episode_table} for Field '{settings.producer_column}'")
         raw = client.table_row_nested_relations_list(
-            get_nocodb_project(settings.project_name), # type: ignore
-            settings.episode_table, # type: ignore
+            get_nocodb_project(settings.project_name),
+            settings.episode_table,
             "mm",
             self.noco_id,
-            settings.producer_column, # type: ignore
+            settings.producer_column,
         )
         if len(raw["list"]) < 1:
             raise ValueError(f"no producer linked in episode with id {self.noco_id}")
@@ -192,11 +192,11 @@ class NocoEpisode(BaseModel):
         client = get_nocodb_client()
         logger.debug(f"NocoDB table_row_nested_relations_list for {settings.project_name}/{settings.episode_table} for Field '{settings.show_column}'")
         raw = client.table_row_nested_relations_list(
-            get_nocodb_project(settings.project_name), # type: ignore
-            settings.episode_table, # type: ignore
+            get_nocodb_project(settings.project_name),
+            settings.episode_table,
             "mm",
             self.noco_id,
-            settings.show_column, # type: ignore
+            settings.show_column,
         )
         if len(raw["list"]) < 1:
             raise ValueError(f"no show linked in episode with id {self.noco_id}")
@@ -217,11 +217,11 @@ class NocoEpisodeNew(BaseModel):
 
     def add_to_noco(self, producer_uuid: str, show_uuid: str):
         client = get_nocodb_client()
-        project = get_nocodb_project(settings.project_name) # type: ignore
+        project = get_nocodb_project(settings.project_name)
         logger.debug(f"NocoDB table_row_create for {settings.project_name}/{settings.episode_table}")
         episode_data = client.table_row_create(
             project,
-            settings.episode_table,  # type: ignore
+            settings.episode_table, 
             self.dict(by_alias=True)
         )
         episode = NocoEpisode.model_validate(episode_data)
@@ -230,19 +230,19 @@ class NocoEpisodeNew(BaseModel):
         logger.debug(f"NocoDB table_row_relation_create for {settings.project_name}/{settings.episode_table} for Field '{settings.show_column}'")
         client.table_row_relation_create(
             project,
-            settings.episode_table, # type: ignore
+            settings.episode_table,
             "mm",
             episode.noco_id,
-            settings.show_column, # type: ignore
+            settings.show_column,
             show.noco_id,
         )
         logger.debug(f"NocoDB table_row_relation_create for {settings.project_name}/{settings.episode_table} for Field '{settings.producer_column}'")
         client.table_row_relation_create(
             project,
-            settings.episode_table, # type: ignore
+            settings.episode_table,
             "mm",
             episode.noco_id,
-            settings.producer_column, # type: ignore
+            settings.producer_column,
             producer.noco_id,
         )
         return episode.noco_id
