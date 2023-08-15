@@ -10,12 +10,12 @@ from nocodb.infra.requests_client import NocoDBRequestsClient
 from pydantic import BaseModel, Field, RootModel
 
 def get_nocodb_client() -> NocoDBRequestsClient:
-    token = settings["nocodb_api_key"]
+    token = settings.nocodb_api_key
     if not isinstance(token, str):
         raise ValueError("invalid nocodb token, not a string")
     return NocoDBRequestsClient(
         APIToken(token), 
-        settings["nocodb_url"],
+        settings.nocodb_url,
     )
 
 
@@ -85,8 +85,8 @@ class NocoShows(RootModel[list[NocoShow]]):
             raise NotImplementedError(
                 "getting shows without id is not implemented sorry")
         raw = get_nocodb_data(
-            settings["project_name"],
-            settings["show_table"],
+            settings.project_name,
+            settings.show_table,
         )
         data = cls.model_validate(raw["list"])
         filtered = NocoShows(root=[])
@@ -110,15 +110,15 @@ class ProducerUploadData(BaseModel):
     @classmethod
     def from_nocodb(cls, producer_uuid: str):
         producer_data = get_nocodb_data(
-            settings["project_name"],
-            settings["producer_table"],
+            settings.project_name,
+            settings.producer_table,
             filter_obj=EqFilter("UUID", producer_uuid),
         )
         if len(producer_data["list"]) != 1:
             raise KeyError("no producer found")
         producer = NocoProducer.model_validate(producer_data["list"][0])
         show_ids = [show["Id"] for show in producer_data["list"]
-                    [0][f"{settings['show_table']} List"]]
+                    [0][f"{settings.show_table} List"]]
         shows_src = NocoShows.from_nocodb(ids=show_ids)
         shows = []
         for show in shows_src.root:
