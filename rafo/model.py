@@ -105,6 +105,7 @@ class ProducerUploadData(BaseModel):
     """Contains all information needed by the client in the upload form."""
     producer_name: str
     shows: Optional[list[ShowFormData]]
+    dev_mode: bool
 
     @classmethod
     def from_nocodb(cls, producer_uuid: str):
@@ -128,6 +129,7 @@ class ProducerUploadData(BaseModel):
         return cls(
             producer_name=f"{producer.first_name} {producer.last_name}",
             shows=shows,
+            dev_mode=settings.dev_mode, # type: ignore
         )
 
 

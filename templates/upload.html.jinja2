@@ -163,7 +163,7 @@
                 show: null,
             },
             success: false,
-            dev_mode: "{{dev_mode}}",
+            dev_mode: false,
             upload_running: false,
             upload_progress: 0,
             wait_for_server: false,
@@ -180,6 +180,7 @@
                             this.data_loaded = true;
                             this.producer_name = data.producer_name;
                             this.available_shows = data.shows;
+                            this.dev_mode = data.dev_mode;
                         }
                         else if ("detail" in data) {
                             this.fetch_error_detail = data.detail;
