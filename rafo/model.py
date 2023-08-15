@@ -79,26 +79,17 @@ class NocoShow(BaseModel):
 class NocoShows(RootModel[list[NocoShow]]):
     root: list[NocoShow]
 
-    @classmethod
-    def from_nocodb(cls, ids: Optional[list[int]] = None):
-        if ids is None:
-            raise NotImplementedError(
-                "getting shows without id is not implemented sorry")
-        raw = get_nocodb_data(
-            settings.project_name,
-            settings.show_table,
-        )
-        data = cls.model_validate(raw["list"])
-        filtered = NocoShows(root=[])
-        for item in data.root:
-            if item.noco_id in ids:
-                filtered.root.append(item)
-        return filtered
-
 
 class ShowFormData(BaseModel):
     uuid: str
     name: str
+
+    @classmethod
+    def from_noco_show(cls, show: NocoShow):
+        return cls(
+            uuid=show.uuid,
+            name=show.name,
+        )
 
 
 class ProducerUploadData(BaseModel):
@@ -117,18 +108,17 @@ class ProducerUploadData(BaseModel):
         if len(producer_data["list"]) != 1:
             raise KeyError("no producer found")
         producer = NocoProducer.model_validate(producer_data["list"][0])
-        show_ids = [show["Id"] for show in producer_data["list"]
-                    [0][f"{settings.show_table} List"]]
-        shows_src = NocoShows.from_nocodb(ids=show_ids)
-        shows = []
-        for show in shows_src.root:
-            shows.append(ShowFormData(
-                uuid=show.uuid,
-                name=show.name,
-            ))
+        shows_raw = get_nocodb_client().table_row_nested_relations_list(
+            get_nocodb_project(settings.project_name),
+            settings.producer_table,
+            "mm",
+            producer.noco_id,
+            settings.show_table,
+        )
+        shows = NocoShows.model_validate(shows_raw["list"])
         return cls(
             producer_name=f"{producer.first_name} {producer.last_name}",
-            shows=shows,
+            shows=[ShowFormData.from_noco_show(show) for show in shows.root],
             dev_mode=settings.dev_mode,
         )
 
@@ -222,7 +212,7 @@ class NocoEpisodeNew(BaseModel):
         episode_data = client.table_row_create(
             project,
             settings.episode_table, 
-            self.dict(by_alias=True)
+            self.model_dump(by_alias=True)
         )
         episode = NocoEpisode.model_validate(episode_data)
         producer = NocoProducer.from_nocodb_by_uuid(producer_uuid)
