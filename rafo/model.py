@@ -147,7 +147,7 @@ class OptimizingState(str, Enum):
     RUNNING = "Läuft"
     DONE = "Fertig"
     SEE_LOG = "Fertig – Siehe Log"
-    CROPPED = "Fertig – Stille entfernt"
+    ERROR = "Fehler"
 
 
 class NocoEpisode(BaseModel):
@@ -221,13 +221,31 @@ class NocoEpisode(BaseModel):
             raise ValueError(f"more than one show linked in episode with id {self.noco_id}")
         return NocoShow.model_validate(raw["list"][0])
 
-    def update_state_waveform(self, status: WaveformState):
+    def update_state_waveform(self, state: WaveformState):
         """Updates the state indicator for the waveform worker."""
         get_nocodb_client().table_row_update(
             get_nocodb_project(),
             settings.episode_table,
             self.noco_id,
-            {"Status Waveform": status.value},
+            {"Status Waveform": state.value},
+        )
+    
+    def update_state_optimizing(self, state: OptimizingState):
+        """Updates the state indicator for the optimizing worker."""
+        get_nocodb_client().table_row_update(
+            get_nocodb_project(),
+            settings.episode_table,
+            self.noco_id,
+            {"Status Optimierung": state.value},
+        )
+    
+    def update_optimizing_log(self, log: str):
+        """Updates the content of the optimizing log field."""
+        get_nocodb_client().table_row_update(
+            get_nocodb_project(),
+            settings.episode_table,
+            self.noco_id,
+            {"Log Optimierung": log}
         )
 
     def file_name_prefix(self) -> str:

@@ -1,16 +1,13 @@
-from os import execlp
-from typing import Optional
 from .config import settings
-from .ffmpeg import Waveform
+from .ffmpeg import Metadata, Optimize, Silence, Waveform
 from .log import logger
-from .model import get_nocodb_client, get_nocodb_project, NocoEpisode, WaveformState
+from .model import get_nocodb_client, get_nocodb_project, NocoEpisode, OptimizingState, WaveformState
 from .noco_upload import Upload
 
 from pathlib import Path
 import shutil
 import threading
-
-import ffmpeg
+from typing import Optional
 
 
 class FileWorker:
@@ -32,16 +29,7 @@ class FileWorker:
 
     def upload_raw(self):
         logger.debug(f"About to upload raw file {self.raw_file}")
-        named_file = self.raw_file.with_name(self.__file_name("raw", None)).with_suffix(self.raw_file.suffix)
-        shutil.copy(self.raw_file, named_file)
-        self.upload.upload_file(
-            named_file,
-            self.__file_name("raw", self.raw_file.suffix),
-            settings.episode_table, 
-            settings.raw_column, 
-            self.episode_id,
-        )
-        logger.info(f"Raw file {self.raw_file} uploaded to NocoDB")
+        self.__upload_named_file(self.raw_file, "raw", "Quelldatei")
         with self.count_lock:
             self.finished_workers += 1
         
@@ -49,17 +37,7 @@ class FileWorker:
         if self.cover_file is None:
             logger.debug("No cover file available to be uploaded")
             return
-        logger.debug(f"About to upload cover file {self.cover_file}")
-        named_file = self.cover_file.with_name(self.__file_name("cover", None)).with_suffix(self.cover_file.suffix)
-        shutil.copy(self.cover_file, named_file)
-        self.upload.upload_file(
-            named_file,
-            self.__file_name("cover", self.raw_file.suffix),
-            settings.episode_table,
-            "Cover",
-            self.episode_id,
-        )
-        logger.info(f"Cover file {self.cover_file} uploaded to NocoDB")
+        self.__upload_named_file(self.cover_file, "cover", "Cover")
         with self.count_lock:
             self.finished_workers += 1
 
@@ -70,8 +48,8 @@ class FileWorker:
         height: int = 252,
         color: str = "#3399cc"
     ):
-        waveform = Waveform(gain, width, height, color)
         self.__episode().update_state_waveform(WaveformState.RUNNING)
+        waveform = Waveform(gain, width, height, color)
         file_name = self.__file_name("waveform-raw", ".png")
         output_path = self.temp_folder / file_name
         try:
@@ -100,14 +78,61 @@ class FileWorker:
             self.finished_workers += 1
 
     def optimize_file(self):
+        self.__episode().update_state_optimizing(OptimizingState.RUNNING)
+        file_name = self.__file_name("optimized", ".mp3")
+        output_path = self.temp_folder / file_name
+        try:
+            silence = Silence(self.raw_file)
+            optimize = Optimize(self.raw_file, silence)
+            optimize.run(output_path)
+            duration = Metadata(output_path).formatted_duration()
+
+            log = silence.log()
+            if log == "":
+                self.__episode().update_state_optimizing(OptimizingState.DONE)
+            else:
+                self.__episode().update_state_optimizing(OptimizingState.SEE_LOG)
+
+            log = f"{log}\nFinal running time: {duration}"
+            self.__episode().update_optimizing_log(log) 
+
+            self.__upload_named_file(output_path, "opt", "Optimierte Datei")
+
+        except Exception:
+            self.__episode().update_state_optimizing(OptimizingState.ERROR)
+            with self.count_lock:
+                self.finished_workers += 1
+
         with self.count_lock:
             self.finished_workers += 1
+
 
     def delete_temp_folder_on_completion(self):
         while self.finished_workers != 4:
             pass
         logger.debug(f"Delete temp folder {self.temp_folder}")
         shutil.rmtree(self.temp_folder)
+    
+    def __upload_named_file(
+        self,
+        file: Path,
+        name: str,
+        column_id: str,
+    ):
+        """Upload files with the required name-schema from the temp folder."""
+
+        logger.debug(f"About to upload {name} file {self.cover_file}")
+        named_file = file.with_name(self.__file_name(name, None)).with_suffix(file.suffix)
+        shutil.copy(file, named_file)
+        self.upload.upload_file(
+            named_file,
+            self.__file_name(name, self.raw_file.suffix),
+            settings.episode_table,
+            column_id,
+            self.episode_id,
+        )
+        logger.info(f"{name.title()} file {self.cover_file} uploaded to NocoDB")
+
     
     def __episode(self) -> NocoEpisode:
         """Provides the (cached) Episode."""

@@ -44,6 +44,7 @@ class Metadata:
     """Get metadata."""
 
     def __init__(self, input_file: Path):
+        logger.debug(f"About to run ffprobe for {input_file}")
         self.data = ffmpeg.probe(input_file)
 
     def duration(self) -> float:
@@ -147,6 +148,7 @@ class Silence:
 
     @staticmethod
     def __run_silence_detection(input_file: Path) -> list[str]:
+        logger.debug("About to run ffmpeg with silencedetect")
         popen = subprocess.Popen(
             (ffmpeg
                 .input(str(input_file))
@@ -199,9 +201,11 @@ class Optimize:
         input_options = {}
         start_silence = self.__silence.start_silence()
         if start_silence and start_silence.end > settings.audio_crop_allowance:
+            logger.info(f"Found silence at the start with a duration of {start_silence.duration}, will crop")
             input_options["ss"] = start_silence.end - settings.audio_crop_allowance
         end_silence = self.__silence.end_silence()
         if end_silence:
+            logger.info(f"Found silence at the end with a duration of {end_silence.duration}, will crop")
             input_options["to"] = end_silence.start + settings.audio_crop_allowance
 
         ffmpeg.input(
