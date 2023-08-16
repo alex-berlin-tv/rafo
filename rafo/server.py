@@ -98,6 +98,9 @@ async def upload_file(
     file_path = Path(temp_folder, uuid)
     file_target = FileTarget(
         str(file_path), validator=MaxSizeValidator(max_file_size))
+    cover_path = Path(temp_folder, str(uuid4()))
+    cover_target = FileTarget(
+        str(cover_path), validator=MaxSizeValidator(max_file_size))
     show_target = ValueTarget()
     producer_target = ValueTarget()
     title_target = ValueTarget()
@@ -107,6 +110,7 @@ async def upload_file(
     try:
         parser = StreamingFormDataParser(headers=request.headers)
         parser.register("file", file_target)
+        parser.register("cover", cover_target)
         parser.register("show", show_target)
         parser.register("producer", producer_target)
         parser.register("title", title_target)
@@ -129,10 +133,17 @@ async def upload_file(
             status_code=500, detail=f"error while file upload, {e}")
     if not file_target.multipart_filename:
         raise HTTPException(
-            status_code=422, detail="File/multipart filename missing")
-    path_with_extension = file_path.with_suffix(Path(file_target.multipart_filename).suffix)
-    file_path.rename(path_with_extension)
-    file_path = path_with_extension
+            status_code=422, detail="File/multipart name for audio file missing")
+    file_path_with_extension = file_path.with_suffix(Path(file_target.multipart_filename).suffix)
+    file_path.rename(file_path_with_extension)
+    file_path = file_path_with_extension
+
+    if cover_target.multipart_filename is not None:
+        cover_path_with_extension = cover_path.with_suffix(Path(cover_target.multipart_filename).suffix)
+        cover_path.rename(cover_path_with_extension)
+        cover_path = cover_path_with_extension
+    else:
+        cover_path = None
     try:
         planned_broadcast_at = datetime.datetime.strptime(
             planned_broadcast_target.value.decode(),
@@ -152,9 +163,10 @@ async def upload_file(
         comment=comment_target.value.decode(),  # type: ignore
     )
     episode_id = episode.add_to_noco(producer_target.value.decode(), show_target.value.decode())
-    worker = FileWorker(file_path, temp_folder, episode_id)
+    worker = FileWorker(file_path, cover_path, temp_folder, episode_id)
     mail = Mail.from_settings()
     background_tasks.add_task(worker.upload_raw)
+    background_tasks.add_task(worker.upload_cover)
     background_tasks.add_task(worker.generate_waveform)
     background_tasks.add_task(worker.optimize_file)
     background_tasks.add_task(worker.delete_temp_folder_on_completion)

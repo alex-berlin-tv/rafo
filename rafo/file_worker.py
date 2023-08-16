@@ -13,8 +13,9 @@ import ffmpeg
 
 
 class FileWorker:
-    def __init__(self, raw_file: Path, temp_folder: Path, episode_id: int):
+    def __init__(self, raw_file: Path, cover_file: Optional[Path], temp_folder: Path, episode_id: int):
         self.raw_file = raw_file
+        self.cover_file = cover_file
         self.temp_folder = temp_folder
         self.episode_id = episode_id
         self.count_lock = threading.Lock()
@@ -42,6 +43,22 @@ class FileWorker:
         logger.info(f"Raw file {self.raw_file} uploaded to NocoDB")
         with self.count_lock:
             self.finished_workers += 1
+        
+    def upload_cover(self):
+        if self.cover_file is None:
+            logger.debug("No cover file available to be uploaded")
+            return
+        logger.debug(f"About to upload cover file {self.cover_file}")
+        named_file = self.cover_file.with_name(self.__file_name("cover", None)).with_suffix(self.cover_file.suffix)
+        shutil.copy(self.cover_file, named_file)
+        self.upload.upload_file(
+            named_file,
+            self.__file_name("cover", self.raw_file.suffix),
+            settings.episode_table,
+            "Cover",
+            self.episode_id,
+        )
+        logger.info(f"Cover file {self.cover_file} uploaded to NocoDB")
 
     def generate_waveform(
         self,

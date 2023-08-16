@@ -100,7 +100,7 @@
                 </p>
             </div>
             <div class="field">
-                <label class="label" for="description">Datei</label>
+                <label class="label" for="file">Datei</label>
                 <div class="file has-name is-small is-fullwidth">
                     <label class="file-label">
                         <input class="file-input" id="file" name="file" type="file" x-model="file" accept=".mp3,.wav"
@@ -115,6 +115,23 @@
                     </label>
                 </div>
                 <p class="help">Lade hier das Audiofile deiner Sendung hoch. <i>Pflichtfeld.</i></p>
+            </div>
+            <div class="field">
+                <label class="label" for="cover">Coverfoto</label>
+                <div class="file has-name is-small is-fullwidth">
+                    <label class="file-label">
+                        <input class="file-input" id="cover" name="cover" type="file" x-model="cover" accept=".jpg,.jpeg,.png"
+                            :disabled="upload_running" />
+                        <span class="file-cta">
+                            <span class="file-icon is-small">
+                                <i class="fas fa-upload"></i>
+                            </span>
+                            <span class="file-label">Datei auswählen</span>
+                        </span>
+                        <span class="file-name" x-text="get_file_name(cover)"></span>
+                    </label>
+                </div>
+                <p class="help">Ein optionales Coverfoto für die Sendung.</p>
             </div>
             <div class="field mb-5">
                 <label class="label" for="comment">Kommentar</label>
@@ -158,6 +175,7 @@
             title: null,
             description: null,
             file: null,
+            cover: null,
             comment: "",
             form_data: {
                 producer: "{{producer_uuid}}",
@@ -238,6 +256,7 @@
                 this.title = "";
                 this.description = "";
                 this.file = null;
+                this.cover = null;
                 this.comment = "";
             },
             test_fill() {
