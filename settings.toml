@@ -18,3 +18,6 @@ dev_mode = true
 log_level = "debug"
 noise_tolerance = "-60dB"
 silence_duration = 1
+bit_rate = "320k"
+sample_rate = 44100
+audio_crop_allowance = 0.5

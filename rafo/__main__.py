@@ -1,5 +1,5 @@
 from .config import settings
-from .ffmpeg import Silence, Metadata
+from .ffmpeg import Metadata, Optimize, Silence 
 
 from pathlib import Path
 
@@ -25,7 +25,10 @@ def run():
 @app.command()
 def test(path: Path):
     silence = Silence(path)
-    print(silence.log())
+    optimize = Optimize(path, silence)
+    out = Path("test_upload/out.mp3")
+    print(optimize.run(out))
+    print(Metadata(out).formatted_duration())
 
 
 if __name__ == "__main__":

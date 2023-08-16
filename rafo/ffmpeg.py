@@ -47,8 +47,16 @@ class Metadata:
         self.data = ffmpeg.probe(input_file)
 
     def duration(self) -> float:
+        """Duration of the media file in seconds."""
         return float(self.data["streams"][0]["duration"])
-
+    
+    def formatted_duration(self) -> str:
+        """Human readable duration in the HH:MM.ss format."""
+        seconds = self.duration()
+        hours, remainder = divmod(seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
+        
 
 class SilencePart:
     """States the position and duration of silence."""
@@ -125,6 +133,8 @@ class Silence:
         """
         rsl: list[str] = []
         start_silence = self.start_silence()
+        if self.whole_file_is_silence():
+            return f"- Whole file appears to be silence"
         if start_silence:
             rsl.append(f"- Silence found and removed at the start ({start_silence})")
         end_silence = self.end_silence()
@@ -132,8 +142,6 @@ class Silence:
             rsl.append(f"- Silence found and removed at the end ({end_silence})")
         for silence in self.intermediate_silences():
             rsl.append(f"- Intermediate silence found, this has to be resolved manually ({silence}) ")
-        if self.whole_file_is_silence():
-            rsl.append(f"- Whole file appears to be silence")
         return "\n".join(rsl)
         
 
@@ -168,3 +176,42 @@ class Silence:
                 rsl[silence_index].end = end
                 rsl[silence_index].duration = end - rsl[silence_index].start
         return rsl
+
+
+class Optimize:
+    """
+    Tries to automatically optimize an audio file. It does the following:
+
+    - Crop silence at the start of the file.
+    - Crop silence at the end of the file.
+    - Applies the default bit and sample rate (taken from the config file).
+    - Converts the file to mp3
+    - Writes the filename as title into the metadata (this is needed as otherwise
+    mAirList cannot read the file.)
+    """
+    
+    def __init__(self, input_file: Path, silence: Silence):
+        self.__input_file = input_file
+        self.__silence = silence
+    
+    def run(self, output_file: Path):
+        """ Applies the optimization."""
+        input_options = {}
+        start_silence = self.__silence.start_silence()
+        if start_silence and start_silence.end > settings.audio_crop_allowance:
+            input_options["ss"] = start_silence.end - settings.audio_crop_allowance
+        end_silence = self.__silence.end_silence()
+        if end_silence:
+            input_options["to"] = end_silence.start + settings.audio_crop_allowance
+
+        ffmpeg.input(
+            str(self.__input_file),
+            **input_options
+        ).audio.filter(
+            "loudnorm"
+        ).output(
+            str(output_file),
+            audio_bitrate=settings.bit_rate,
+            ar=settings.sample_rate,
+            metadata=f"title={output_file.stem}"
+        ).run()

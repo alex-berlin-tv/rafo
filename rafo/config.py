@@ -24,6 +24,16 @@ class Settings:
     """Noise levels below this threshold are considered silence."""
     silence_duration: int
     """Minimal duration of a silence in seconds to be reported."""
+    bit_rate: str
+    """Bit rate for optimized audio."""
+    sample_rate: int
+    """Sample rate for optimized audio."""
+    audio_crop_allowance: float
+    """
+    When automatically cutting away silence the given duration of silence will remain.
+    This is to prevent to harsh/fast cut ins.
+    """
+
     nocodb_api_key: str
     smtp_sender_address: str
     smtp_host: str
