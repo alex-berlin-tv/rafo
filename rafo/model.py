@@ -135,11 +135,11 @@ class ProducerUploadData(BaseModel):
         )
 
 
-class ProcessWorkerState(str, Enum):
-    PENDING = "Warten"
+class WorkerState(str, Enum):
+    PENDING = "Ausstehend"
     RUNNING = "Läuft"
     DONE = "Fertig"
-    CANCELED = "Abgebrochen"
+    ERROR = "Fehler"
 
 
 class NocoEpisode(BaseModel):
@@ -213,6 +213,15 @@ class NocoEpisode(BaseModel):
             raise ValueError(f"more than one show linked in episode with id {self.noco_id}")
         return NocoShow.model_validate(raw["list"][0])
 
+    def update_state_waveform(self, status: WorkerState):
+        """Updates the state indicator for the waveform worker."""
+        get_nocodb_client().table_row_update(
+            get_nocodb_project(),
+            settings.episode_table,
+            self.noco_id,
+            {"Status Waveform": status.value},
+        )
+
     def file_name_prefix(self) -> str:
         """Canonical filename for a given Episode."""
         date = self.planned_broadcast_at.strftime("%Y-%m-%d_%H-%M")
@@ -226,6 +235,8 @@ class NocoEpisodeNew(BaseModel):
     description: str = Field(alias="Beschreibung")
     planned_broadcast_at: str = Field(alias="Geplante Ausstrahlung")
     comment: str = Field(alias="Kommentar Produzent")
+    state_waveform: Optional[str] = Field(alias="Status Waveform", default=WorkerState.PENDING)
+    state_optimizing: Optional[str] = Field(alias="Status Optimierung", default=WorkerState.PENDING)
 
     class Config:
         populate_by_name = True

@@ -2,7 +2,7 @@ from os import execlp
 from typing import Optional
 from .config import settings
 from .log import logger
-from .model import get_nocodb_client, get_nocodb_project, NocoEpisode
+from .model import get_nocodb_client, get_nocodb_project, NocoEpisode, WorkerState
 from .noco_upload import Upload
 
 from pathlib import Path
@@ -25,7 +25,8 @@ class FileWorker:
             get_nocodb_client(),
             get_nocodb_project(),
         )
-        self.file_name_prefix: Optional[str] = None
+        self.__cached_episode: Optional[NocoEpisode] = None
+        self.__file_name_prefix: Optional[str] = None
 
     def upload_raw(self):
         logger.debug(f"About to upload raw file {self.raw_file}")
@@ -50,6 +51,7 @@ class FileWorker:
         color: str = "#3399cc"
     ):
         logger.debug(f"About to generate waveform for {self.raw_file}")
+        self.__episode().update_state_waveform(WorkerState.RUNNING)
         file_name = self.__file_name("waveform-raw", ".png")
         try:
             output_path = self.temp_folder / Path(file_name)
@@ -74,7 +76,12 @@ class FileWorker:
         except Exception:
             with self.count_lock:
                 self.finished_workers += 1
+            self.__episode().update_state_waveform(WorkerState.ERROR)
             raise
+        if err is not None:
+            self.__episode().update_state_waveform(WorkerState.ERROR)
+        else:
+            self.__episode().update_state_waveform(WorkerState.DONE)
         logger.info(f"Waveform generated for {self.raw_file} and written to {output_path}")
         with self.count_lock:
             self.finished_workers += 1
@@ -89,6 +96,12 @@ class FileWorker:
         logger.debug(f"Delete temp folder {self.temp_folder}")
         shutil.rmtree(self.temp_folder)
     
+    def __episode(self) -> NocoEpisode:
+        """Provides the (cached) Episode."""
+        if self.__cached_episode is None:
+            self.__cached_episode = NocoEpisode.from_nocodb_by_id(self.episode_id)
+        return self.__cached_episode
+    
     def __file_name(self, slug: str, extension: Optional[str]) -> str:
         """
         Cached method for getting a file name. Has to be cached as multiple methods
@@ -101,7 +114,6 @@ class FileWorker:
             extension = ""
         elif extension[0] != ".":
             extension = f".{extension}"
-        if self.file_name_prefix is None:
-            episode = NocoEpisode.from_nocodb_by_id(self.episode_id)
-            self.file_name_prefix = episode.file_name_prefix()
-        return f"{self.file_name_prefix}_{slug}{extension}"
+        if self.__file_name_prefix is None:
+            self.__file_name_prefix = self.__episode().file_name_prefix()
+        return f"{self.__file_name_prefix}_{slug}{extension}"
