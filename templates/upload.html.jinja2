@@ -144,6 +144,7 @@
 {% endblock %}
 {% block script_footer %}
 <script>
+    var glob_upload_running = false;
     function data() {
         return {
             data_loaded: false,
@@ -181,7 +182,7 @@
                             this.producer_name = data.producer_name;
                             this.available_shows = data.shows;
                             this.dev_mode = data.dev_mode;
-                            window.addEventListener("beforeunload", this.confirm_close);
+                            window.addEventListener('beforeunload', this.confirm_close);
                         }
                         else if ("detail" in data) {
                             this.fetch_error_detail = data.detail;
@@ -215,11 +216,13 @@
                 xhr.onreadystatechange = () => {
                     if (xhr.readyState === 1) {
                         this.upload_running = true;
+                        glob_upload_running = true;
                     }
                     if (xhr.readyState === 4 && xhr.status === 200) {
                         this.reset();
                         this.success = JSON.parse(xhr.response).success;
                         this.upload_running = false;
+                        glob_upload_running = false;
                         this.upload_progress = 0;
                         this.wait_for_server = false;
                         window.scrollTo(0, 0);
@@ -245,7 +248,7 @@
                 this.comment = "Die Natur zeigt sich von ihrer besten Seite, mit blühenden Blumen und saftigem Grün. Aber zugleich sehe ich die zerstörerischen Auswirkungen des Klimawandels, wie Waldbrände und schmelzende Gletscher, die mich verzweifeln lassen.";
             },
             confirm_close(event) {
-                if(this.upload_running) {
+                if(glob_upload_running) {
                     event.preventDefault();
                     event.returnValue("Der Upload ist noch nicht abgeschlossen. Bist du dir sicher, dass du den Upload abrechen möchtest?");
                 }
