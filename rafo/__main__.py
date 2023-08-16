@@ -1,4 +1,7 @@
 from .config import settings
+from .ffmpeg import Silence
+
+from pathlib import Path
 
 import click
 import uvicorn
@@ -22,7 +25,10 @@ def run():
 
 @click.command()
 def test():
-    pass
+    silence = Silence()
+    parts = silence.run(Path("misc/optimize_test.wav"))
+    for part in parts.root:
+        print(f"{part.start}, {part.end}, {part.duration}")
 
 
 def main():
