@@ -146,9 +146,8 @@ class OptimizingState(str, Enum):
     PENDING = "Ausstehend"
     RUNNING = "Läuft"
     DONE = "Fertig"
+    SEE_LOG = "Fertig – Siehe Log"
     CROPPED = "Fertig – Stille entfernt"
-    SILENCE = "Fertig – Stille gefunden"
-    ERROR = "Fehler"
 
 
 class NocoEpisode(BaseModel):

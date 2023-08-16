@@ -27,13 +27,11 @@ def test(path: Path):
     silence = Silence(path)
 
     print(f"Start {silence.start_silence()}")
-    parts = silence.intermediate_silences()
-    if parts:
-        for part in parts:
-            print(f"Intermediate {part.start}, {part.end}, {part.duration}")
+    
+    for part in silence.intermediate_silences():
+        print(f"Intermediate {part}")
     print(f"End {silence.end_silence()}")
-    print(f"Whole {silence.whole_file_is_silence}")
-    print(Metadata(Path("misc/optimize_test.wav")).duration())
+    print(f"Whole {silence.whole_file_is_silence()}")
 
 
 if __name__ == "__main__":
