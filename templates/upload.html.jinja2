@@ -125,7 +125,7 @@
                 <p class="help">Optionaler Kommentar.</p>
             </div>
             <div class="field mb-5" x-show="upload_running">
-                <p class="label">Bitte warten, Upload läuft...</p>
+                <p class="label">Bitte warten, Upload läuft... <b>Seite nicht schließen.</b></p>
                 <progress class="progress is-primary" :value="upload_progress" max="100"
                     x-text="`${upload_progress}%`"></progress>
                 <p x-show="wait_for_server">Daten werden auf dem Server verarbeitet...</p>
