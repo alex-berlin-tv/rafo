@@ -25,13 +25,7 @@ def run():
 @app.command()
 def test(path: Path):
     silence = Silence(path)
-
-    print(f"Start {silence.start_silence()}")
-    
-    for part in silence.intermediate_silences():
-        print(f"Intermediate {part}")
-    print(f"End {silence.end_silence()}")
-    print(f"Whole {silence.whole_file_is_silence()}")
+    print(silence.log())
 
 
 if __name__ == "__main__":

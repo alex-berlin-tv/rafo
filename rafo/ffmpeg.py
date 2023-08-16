@@ -118,6 +118,24 @@ class Silence:
             if silence_part.is_whole_file(self.__metadata.duration()):
                 return True
         return False
+    
+    def log(self) -> str:
+        """
+        Human readable log of all silence in the file appended to NocoDB to be viewed by the user.
+        """
+        rsl: list[str] = []
+        start_silence = self.start_silence()
+        if start_silence:
+            rsl.append(f"- Silence found and removed at the start ({start_silence})")
+        end_silence = self.end_silence()
+        if end_silence:
+            rsl.append(f"- Silence found and removed at the end ({end_silence})")
+        for silence in self.intermediate_silences():
+            rsl.append(f"- Intermediate silence found, this has to be resolved manually ({silence}) ")
+        if self.whole_file_is_silence():
+            rsl.append(f"- Whole file appears to be silence")
+        return "\n".join(rsl)
+        
 
     @staticmethod
     def __run_silence_detection(input_file: Path) -> list[str]:
