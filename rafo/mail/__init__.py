@@ -3,8 +3,6 @@ from ..model import NocoEpisode
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import smtplib
-import ssl
 
 import emails
 import jinja2
@@ -82,7 +80,7 @@ class Mail:
         html = self.__get_template("new_upload_internal.html.jinja2").render(data)
         self.send(
             settings.on_upload_mail,
-            f"e-{episode.noco_id:04d}: Neuer Upload {show.name}",
+            f"{self.__test()}e-{episode.noco_id:04d}: Neuer Upload {show.name}",
             html,
             plain,
         )
@@ -105,10 +103,19 @@ class Mail:
         html = self.__get_template("new_upload_producer.html.jinja2").render(data)
         self.send(
             producer.email,
-            "Sendung erfolgreich hochgeladen",
+            f"{self.__test()}Sendung erfolgreich hochgeladen",
             html,
             plain,
         )
+    
+    def __test(self) -> str:
+        """
+        Returns `[Test] ` if development mode is enabled. Used in the subject line
+        of notification emails.
+        """
+        if not settings.dev_mode:
+            return ""
+        return "[Test] "
 
     @staticmethod
     def __get_template(name: str) -> jinja2.Template:
