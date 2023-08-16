@@ -1,13 +1,13 @@
 from os import execlp
+from typing import Optional
 from .config import settings
 from .log import logger
-from .model import get_nocodb_client, get_nocodb_project
+from .model import get_nocodb_client, get_nocodb_project, NocoEpisode
 from .noco_upload import Upload
 
 from pathlib import Path
 import shutil
 import threading
-import time
 
 import ffmpeg
 
@@ -25,11 +25,16 @@ class FileWorker:
             get_nocodb_client(),
             get_nocodb_project(settings.project_name),
         )
+        self.file_name_prefix: Optional[str] = None
 
     def upload_raw(self):
         logger.debug(f"About to upload raw file {self.raw_file}")
+        named_file = self.raw_file.with_name(self.__file_name("raw", None)).with_suffix(self.raw_file.suffix)
+        shutil.copy(self.raw_file, named_file)
+        logger.warning(named_file)
         self.upload.upload_file(
-            self.raw_file,
+            named_file,
+            self.__file_name("raw", self.raw_file.suffix),
             settings.episode_table, 
             settings.raw_column, 
             self.episode_id,
@@ -46,8 +51,9 @@ class FileWorker:
         color: str = "#3399cc"
     ):
         logger.debug(f"About to generate waveform for {self.raw_file}")
+        file_name = self.__file_name("waveform-raw", ".png")
         try:
-            output_path = self.temp_folder / Path("raw_waveform.png")
+            output_path = self.temp_folder / Path(file_name)
             out, err = ffmpeg.input(
                 str(self.raw_file)
             ).filter(
@@ -61,6 +67,7 @@ class FileWorker:
             ).overwrite_output().run()
             self.upload.upload_file(
                 output_path,
+                file_name,
                 settings.episode_table,
                 settings.waveform_column,
                 self.episode_id,
@@ -82,3 +89,20 @@ class FileWorker:
             pass
         logger.debug(f"Delete temp folder {self.temp_folder}")
         shutil.rmtree(self.temp_folder)
+    
+    def __file_name(self, slug: str, extension: Optional[str]) -> str:
+        """
+        Cached method for getting a file name. Has to be cached as multiple methods
+        of the file worker need a file name but getting it needs at least two API
+        calls.
+        
+        If `extension` is `None` the method will not append any file extension.
+        """
+        if extension is None:
+            extension = ""
+        elif extension[0] != ".":
+            extension = f".{extension}"
+        if self.file_name_prefix is None:
+            episode = NocoEpisode.from_nocodb_by_id(self.episode_id)
+            self.file_name_prefix = episode.file_name_prefix()
+        return f"{self.file_name_prefix}_{slug}{extension}"

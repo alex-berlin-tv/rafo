@@ -23,11 +23,12 @@ class Upload:
     def upload_file(
         self,
         file: Path,
+        name: str,
         table: str,
         column: str,
         row: int
     ):
-        data = self.__upload(file, table, column)
+        data = self.__upload(file, table, name, column)
         self.client.table_row_update(
             self.project,
             table,
@@ -44,6 +45,7 @@ class Upload:
     def __upload(
         self,
         file: Path,
+        name: str,
         table: str,
         column: str,
     ) -> dict[str, str]:
@@ -55,6 +57,7 @@ class Upload:
             },
             data={
                 "path": f"{self.project.org_name}/{self.project.project_name}/{table}/{column}",
+                "title": name,
             },
             files={
                 "file": open(file, "rb")

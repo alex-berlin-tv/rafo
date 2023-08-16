@@ -1,5 +1,7 @@
+from jinja2 import ext
 from .config import settings
 from .log import logger
+from .utils import normalize_for_filename
 
 from datetime import datetime
 from typing import Any, Optional
@@ -9,7 +11,9 @@ from nocodb.filters import EqFilter
 from nocodb.infra.requests_client import NocoDBRequestsClient
 from pydantic import BaseModel, Field, RootModel
 
+
 def get_nocodb_client() -> NocoDBRequestsClient:
+    """Returns the client instance based on the values in the setting file."""
     token = settings.nocodb_api_key
     if not isinstance(token, str):
         raise ValueError("invalid nocodb token, not a string")
@@ -20,10 +24,15 @@ def get_nocodb_client() -> NocoDBRequestsClient:
 
 
 def get_nocodb_project(project_name: str) -> NocoDBProject:
+    """
+    Returns the project instance for the NocoDB Library based on the values in the
+    setting file.
+    """
     return NocoDBProject("noco", project_name)
 
 
 def get_nocodb_data(project_name: str, table_name: str, filter_obj: Optional[WhereFilter] = None) -> Any:
+    """Get all items of a specified table from the configured NocoDB instance and project."""
     client = get_nocodb_client()
     logger.debug(f"NocoDB table_row_list for {project_name}/{table_name} with filter {filter_obj}")
     return client.table_row_list(
@@ -32,7 +41,9 @@ def get_nocodb_data(project_name: str, table_name: str, filter_obj: Optional[Whe
         filter_obj=filter_obj,
     )
 
+
 class NocoProducer(BaseModel):
+    """A Producer in NocoDB."""
     noco_id: int = Field(alias="Id")
     created_at: datetime = Field(alias="CreatedAt")
     updated_at: datetime = Field(alias="UpdatedAt")
@@ -44,6 +55,7 @@ class NocoProducer(BaseModel):
 
     @classmethod
     def from_nocodb_by_uuid(cls, uuid: str):
+        """Get an Producer from NocoDB by a given UUID."""
         raw = get_nocodb_data(
             settings.project_name, 
             settings.producer_table, 
@@ -194,8 +206,14 @@ class NocoEpisode(BaseModel):
             raise ValueError(f"more than one show linked in episode with id {self.noco_id}")
         return NocoShow.model_validate(raw["list"][0])
 
+    def file_name_prefix(self) -> str:
+        """Canonical filename for a given Episode."""
+        date = self.planned_broadcast_at.strftime("%Y-%m-%d_%H-%M")
+        show = normalize_for_filename(self.get_show().name)
+        return f"e-{self.noco_id:05d}_{date}_{show}"
 
 class NocoEpisodeNew(BaseModel):
+    """A new Episode entry which should be added to NocoDB."""
     title: str = Field(alias="Titel")
     uuid: str = Field(alias="UUID")
     description: str = Field(alias="Beschreibung")
@@ -206,6 +224,7 @@ class NocoEpisodeNew(BaseModel):
         populate_by_name = True
 
     def add_to_noco(self, producer_uuid: str, show_uuid: str):
+        """Adds the entry to NocoDB using the API."""
         client = get_nocodb_client()
         project = get_nocodb_project(settings.project_name)
         logger.debug(f"NocoDB table_row_create for {settings.project_name}/{settings.episode_table}")
@@ -236,4 +255,4 @@ class NocoEpisodeNew(BaseModel):
             producer.noco_id,
         )
         return episode.noco_id
-
+    
