@@ -135,10 +135,19 @@ class ProducerUploadData(BaseModel):
         )
 
 
-class WorkerState(str, Enum):
+class WaveformState(str, Enum):
     PENDING = "Ausstehend"
     RUNNING = "Läuft"
     DONE = "Fertig"
+    ERROR = "Fehler"
+
+
+class OptimizingState(str, Enum):
+    PENDING = "Ausstehend"
+    RUNNING = "Läuft"
+    DONE = "Fertig"
+    CROPPED = "Fertig – Stille entfernt"
+    SILENCE = "Fertig – Stille gefunden"
     ERROR = "Fehler"
 
 
@@ -156,8 +165,8 @@ class NocoEpisode(BaseModel):
     uuid: str = Field(alias="UUID")
     planned_broadcast_at: datetime = Field(alias="Geplante Ausstrahlung")
     state_omnia: Optional[str] = Field(alias="Status Omnia")
-    state_waveform: Optional[str] = Field(alias="Status Waveform")
-    state_optimizing: Optional[str] = Field(alias="Status Optimierung")
+    state_waveform: Optional[WaveformState] = Field(alias="Status Waveform")
+    state_optimizing: Optional[OptimizingState] = Field(alias="Status Optimierung")
 
     @classmethod
     def from_nocodb_by_id(cls, id: int):
@@ -213,7 +222,7 @@ class NocoEpisode(BaseModel):
             raise ValueError(f"more than one show linked in episode with id {self.noco_id}")
         return NocoShow.model_validate(raw["list"][0])
 
-    def update_state_waveform(self, status: WorkerState):
+    def update_state_waveform(self, status: WaveformState):
         """Updates the state indicator for the waveform worker."""
         get_nocodb_client().table_row_update(
             get_nocodb_project(),
@@ -235,8 +244,8 @@ class NocoEpisodeNew(BaseModel):
     description: str = Field(alias="Beschreibung")
     planned_broadcast_at: str = Field(alias="Geplante Ausstrahlung")
     comment: str = Field(alias="Kommentar Produzent")
-    state_waveform: Optional[str] = Field(alias="Status Waveform", default=WorkerState.PENDING)
-    state_optimizing: Optional[str] = Field(alias="Status Optimierung", default=WorkerState.PENDING)
+    state_waveform: Optional[WaveformState] = Field(alias="Status Waveform", default=WaveformState.PENDING)
+    state_optimizing: Optional[OptimizingState] = Field(alias="Status Optimierung", default=OptimizingState.PENDING)
 
     class Config:
         populate_by_name = True

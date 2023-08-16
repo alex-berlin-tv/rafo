@@ -20,6 +20,10 @@ class Settings:
     contact_mail: str
     dev_mode: bool
     log_level: str
+    noise_tolerance: str
+    """Noise levels below this threshold are considered silence."""
+    silence_duration: int
+    """Minimal duration of a silence in seconds to be reported."""
     nocodb_api_key: str
     smtp_sender_address: str
     smtp_host: str
