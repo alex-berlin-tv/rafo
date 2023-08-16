@@ -1,9 +1,9 @@
-from jinja2 import ext
 from .config import settings
 from .log import logger
 from .utils import normalize_for_filename
 
 from datetime import datetime
+from enum import Enum
 from typing import Any, Optional
 
 from nocodb.nocodb import APIToken, NocoDBProject, WhereFilter
@@ -23,12 +23,12 @@ def get_nocodb_client() -> NocoDBRequestsClient:
     )
 
 
-def get_nocodb_project(project_name: str) -> NocoDBProject:
+def get_nocodb_project() -> NocoDBProject:
     """
     Returns the project instance for the NocoDB Library based on the values in the
     setting file.
     """
-    return NocoDBProject("noco", project_name)
+    return NocoDBProject("noco", settings.project_name)
 
 
 def get_nocodb_data(project_name: str, table_name: str, filter_obj: Optional[WhereFilter] = None) -> Any:
@@ -36,7 +36,7 @@ def get_nocodb_data(project_name: str, table_name: str, filter_obj: Optional[Whe
     client = get_nocodb_client()
     logger.debug(f"NocoDB table_row_list for {project_name}/{table_name} with filter {filter_obj}")
     return client.table_row_list(
-        get_nocodb_project(project_name),
+        get_nocodb_project(),
         table_name,
         filter_obj=filter_obj,
     )
@@ -121,7 +121,7 @@ class ProducerUploadData(BaseModel):
             raise KeyError("no producer found")
         producer = NocoProducer.model_validate(producer_data["list"][0])
         shows_raw = get_nocodb_client().table_row_nested_relations_list(
-            get_nocodb_project(settings.project_name),
+            get_nocodb_project(),
             settings.producer_table,
             "mm",
             producer.noco_id,
@@ -133,6 +133,13 @@ class ProducerUploadData(BaseModel):
             shows=[ShowFormData.from_noco_show(show) for show in shows.root],
             dev_mode=settings.dev_mode,
         )
+
+
+class ProcessWorkerState(str, Enum):
+    PENDING = "Warten"
+    RUNNING = "Läuft"
+    DONE = "Fertig"
+    CANCELED = "Abgebrochen"
 
 
 class NocoEpisode(BaseModel):
@@ -178,7 +185,7 @@ class NocoEpisode(BaseModel):
         client = get_nocodb_client()
         logger.debug(f"NocoDB table_row_nested_relations_list for {settings.project_name}/{settings.episode_table} for Field '{settings.producer_column}'")
         raw = client.table_row_nested_relations_list(
-            get_nocodb_project(settings.project_name),
+            get_nocodb_project(),
             settings.episode_table,
             "mm",
             self.noco_id,
@@ -194,7 +201,7 @@ class NocoEpisode(BaseModel):
         client = get_nocodb_client()
         logger.debug(f"NocoDB table_row_nested_relations_list for {settings.project_name}/{settings.episode_table} for Field '{settings.show_column}'")
         raw = client.table_row_nested_relations_list(
-            get_nocodb_project(settings.project_name),
+            get_nocodb_project(),
             settings.episode_table,
             "mm",
             self.noco_id,
@@ -226,7 +233,7 @@ class NocoEpisodeNew(BaseModel):
     def add_to_noco(self, producer_uuid: str, show_uuid: str):
         """Adds the entry to NocoDB using the API."""
         client = get_nocodb_client()
-        project = get_nocodb_project(settings.project_name)
+        project = get_nocodb_project()
         logger.debug(f"NocoDB table_row_create for {settings.project_name}/{settings.episode_table}")
         episode_data = client.table_row_create(
             project,

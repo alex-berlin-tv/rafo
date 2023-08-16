@@ -23,7 +23,7 @@ class FileWorker:
             settings.nocodb_url,
             settings.nocodb_api_key, 
             get_nocodb_client(),
-            get_nocodb_project(settings.project_name),
+            get_nocodb_project(),
         )
         self.file_name_prefix: Optional[str] = None
 
@@ -31,7 +31,6 @@ class FileWorker:
         logger.debug(f"About to upload raw file {self.raw_file}")
         named_file = self.raw_file.with_name(self.__file_name("raw", None)).with_suffix(self.raw_file.suffix)
         shutil.copy(self.raw_file, named_file)
-        logger.warning(named_file)
         self.upload.upload_file(
             named_file,
             self.__file_name("raw", self.raw_file.suffix),
