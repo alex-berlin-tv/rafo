@@ -6,7 +6,6 @@ authors = [
 description = "Collect files and metadata for a radio show uses NocoDB as backend"
 version = "0.1.0"
 dependencies = [
-    "click",
     "emails",
     "fastapi",
     "ffmpeg-python",
@@ -14,6 +13,7 @@ dependencies = [
     "nocodb@git+https://github.com/alex-berlin-tv/python-nocodb.git#egg=relation_create",
     "streaming_form_data",
     "typed-settings",
+    "typer",
     "uvicorn",
 ]
 
@@ -21,4 +21,4 @@ dependencies = [
 packages = ["rafo"]
 
 [project.scripts]
-rafo = "rafo:__main__.main"
+rafo = "rafo:__main__.app"

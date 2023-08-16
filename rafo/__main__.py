@@ -1,17 +1,16 @@
 from .config import settings
-from .ffmpeg import Silence
+from .ffmpeg import Silence, Metadata
 
 from pathlib import Path
 
-import click
+import typer
 import uvicorn
 
-@click.group()
-def cli():
-    pass
+
+app = typer.Typer()
 
 
-@click.command()
+@app.command()
 def run():
     """Starts the web-server."""
     uvicorn.run(
@@ -23,19 +22,19 @@ def run():
     )
 
 
-@click.command()
-def test():
-    silence = Silence()
-    parts = silence.run(Path("misc/optimize_test.wav"))
-    for part in parts.root:
-        print(f"{part.start}, {part.end}, {part.duration}")
+@app.command()
+def test(path: Path):
+    silence = Silence(path)
 
-
-def main():
-    cli.add_command(run)
-    cli.add_command(test)
-    cli()
+    print(f"Start {silence.start_silence()}")
+    parts = silence.intermediate_silences()
+    if parts:
+        for part in parts:
+            print(f"Intermediate {part.start}, {part.end}, {part.duration}")
+    print(f"End {silence.end_silence()}")
+    print(f"Whole {silence.whole_file_is_silence}")
+    print(Metadata(Path("misc/optimize_test.wav")).duration())
 
 
 if __name__ == "__main__":
-    main()
+    app()
