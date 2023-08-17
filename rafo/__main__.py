@@ -1,7 +1,4 @@
 from .config import settings
-from .ffmpeg import Metadata, Optimize, Silence 
-
-from pathlib import Path
 
 import typer
 import uvicorn
@@ -23,12 +20,8 @@ def run():
 
 
 @app.command()
-def test(path: Path):
-    silence = Silence(path)
-    optimize = Optimize(path, silence)
-    out = Path("test_upload/out.mp3")
-    print(optimize.run(out))
-    print(Metadata(out).formatted_duration())
+def test():
+    raise NotImplementedError()
 
 
 if __name__ == "__main__":
