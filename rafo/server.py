@@ -1,3 +1,4 @@
+from . import VERSION
 from .config import settings
 from .file_worker import FileWorker
 from .log import logger
@@ -28,12 +29,12 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/")
 async def root(request: Request):
-    return templates.TemplateResponse("index.html.jinja2", {"request": request})
+    return templates.TemplateResponse("index.html.jinja2", {"request": request, "version": VERSION})
 
 
 @app.get("/help")
 async def help(request: Request):
-    return templates.TemplateResponse("help.html.jinja2", {"request": request})
+    return templates.TemplateResponse("help.html.jinja2", {"request": request, "version": VERSION})
 
 
 @app.get("/upload/{uuid}")
@@ -45,6 +46,7 @@ async def upload(
         "request": request,
         "producer_uuid": uuid,
         "base_url": settings.base_url,
+        "version": VERSION,
     }
     return templates.TemplateResponse("upload.html.jinja2", data)
 

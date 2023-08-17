@@ -46,12 +46,27 @@
             </div>
         </div>
     </nav>
-    <main>
-        <section class="section">
-            {% block content %}
-            {% endblock %}
-        </section>
-    </main>
+    <div class="columns is-flex-direction-column full-height">
+        <div class="column">
+            <main class="column">
+                <section class="section">
+                    {% block content %}
+                    {% endblock %}
+                </section>
+            </main>
+        </div>
+        <div class="column is-narrow custom-footer">
+            <footer>
+                <div class="content has-text-centered m-1">
+                    <p>
+                        rafo Version {{ version }} – ALEX Berlin – <a
+                            href="https://www.alex-berlin.de/impressum">Impressum</a>, <a
+                            href="https://www.alex-berlin.de/datenschutz">Datenschutz</a>
+                    </p>
+                </div>
+            </footer>
+        </div>
+    </div>
 </body>
 {% block script_footer %}
 {% endblock %}
