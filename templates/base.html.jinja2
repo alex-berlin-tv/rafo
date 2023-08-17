@@ -18,6 +18,7 @@
 
     <link href="/static/css/bulma.min.css" rel="stylesheet">
     <link href="/static/css/fontawesome.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
     <script src="/static/js/alpine.min.js" defer></script>
     {% block head %}
     {% endblock %}
@@ -46,16 +47,10 @@
         </div>
     </nav>
     <main>
-        <div class="container mt-6">
-            <div class="columns is-mobile">
-                <div class="column"></div>
-                <div class="column is-10-tablet is-11-mobile">
-                    {% block content %}
-                    {% endblock %}
-                </div>
-                <div class="column"></div>
-            </div>
-        </div>
+        <section class="section">
+            {% block content %}
+            {% endblock %}
+        </section>
     </main>
 </body>
 {% block script_footer %}
