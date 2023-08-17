@@ -1,0 +1,19 @@
+# Changelog
+
+_For the English version please see the release section of Github._
+
+## v1.0.0 – First stable release
+
+Woho!
+
+
+## v1.1.0 – Cover, filename and more
+
+Bei der Einreichung können nun Cover angehängt werden, Dateien werden automatisch richtig benannt und eine Reihe von Quality-of-life Verbesserungen:
+
+- Produzierende können nun ihrer Sendung optional auch ein Coverfoto beifügen. Unterstützt werden aktuell `.jpg .jpeg .png`. Gespeichert wird das Cover in der Spalte `Cover` in der Tabelle `Episoden`.
+- Währen eines laufenden Uploads ist es nun nicht mehr möglich, das Browserfenster einfach zu schließen. Nutzende müssen bestätigen, dass sie dies wirklich tun möchten.
+- Der Name von Dateien (Audio, Waveform und Cover) beinhalten nun automatisch _Id, Erstsendedatum und Formatname._ Um eine korrekt benannte Datei runterladen zu können, muss in Noco zunächst in der Datei-Zelle auf das Vergrößern-Icon geklickt werden und dann der Downloadbutton verwendet werden. 
+- Während des Uploads wird nun der User darauf hingewiesen, dass das die Seite nicht geschlossen werden darf.
+- Die Spalten `Status Waveform` und `Status Optimierung` zeigen nun die korrekten Stati für die Prozesse an.
+- Wenn die Applikation im Testmodus läuft, wird dies in Zukunft in den Mailbetreffen ersichtlich. Dem Mailbetreff ist in diesem Fall jeweils ein `[Test]` torangefügt. 
