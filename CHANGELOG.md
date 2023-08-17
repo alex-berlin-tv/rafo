@@ -17,3 +17,22 @@ Bei der Einreichung können nun Cover angehängt werden, Dateien werden automati
 - Während des Uploads wird nun der User darauf hingewiesen, dass das die Seite nicht geschlossen werden darf.
 - Die Spalten `Status Waveform` und `Status Optimierung` zeigen nun die korrekten Stati für die Prozesse an.
 - Wenn die Applikation im Testmodus läuft, wird dies in Zukunft in den Mailbetreffen ersichtlich. Dem Mailbetreff ist in diesem Fall jeweils ein `[Test]` torangefügt. 
+
+
+## v1.2.0 – Fully automatic optimisation of audio files
+
+Eingegangene Audiodateien werden nun nach dem Upload automatisiert analysiert und nach unseren Anforderungen optimiert. Dies umfasst folgende Punkte:
+
+- Stille zu Beginn des Files wird erkannt und entfernt.
+- Stille am Ende des Files wird erkannt und entfernt.
+- Stille innerhalb des Files wird erkannt und in der NocoDB-Tabelle vermerkt.
+- Der Dateiname wird in das Titelfeld der Metadaten geschrieben (dies ist notwendig, da mAirList die Datei sonst nicht lesen kann).
+- Der `loudnorm` Filter wendet den EBU R128 Algorithmus an.
+- Die Datei wird als mp3 mit den konfigurierten Bit- und Samplerate kodiert.
+- Festgestellte Probleme sowie die Dauer der optimierten Datei werden im `Log Optimierung` Feld in NocoDB für jede Episode gespeichert.
+
+
+Weitere Änderungen:
+
+- Seitenfuss mit der Versionsangabe und Links zu Impressum sowie Datenschutzangaben.
+- Migration auf das CLI Framework Typer.
