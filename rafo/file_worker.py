@@ -79,7 +79,7 @@ class FileWorker:
 
     def optimize_file(self):
         self.__episode().update_state_optimizing(OptimizingState.RUNNING)
-        file_name = self.__file_name("optimized", ".mp3")
+        file_name = self.__file_name("opt", ".mp3")
         output_path = self.temp_folder / file_name
         try:
             silence = Silence(self.raw_file)
