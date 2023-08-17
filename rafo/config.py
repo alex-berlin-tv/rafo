@@ -40,6 +40,9 @@ class Settings:
     smtp_user: str
     smtp_port: int
     smtp_password: str
+    omnia_domain_id: str
+    omnia_api_secret: str
+    omnia_session_id: str
 
 
 settings = typed_settings.load(
