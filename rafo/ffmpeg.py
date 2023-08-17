@@ -190,6 +190,7 @@ class Optimize:
     - Converts the file to mp3
     - Writes the filename as title into the metadata (this is needed as otherwise
     mAirList cannot read the file.)
+    - Applies the EBU loudness-norm
     """
     
     def __init__(self, input_file: Path, silence: Silence):
