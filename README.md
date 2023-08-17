@@ -65,6 +65,8 @@ rafo uses the application [NocoDB](https://nocodb.com/) as a backend for the dat
         - Quelldatei (`Attachment` Field)
         - Optimierte Datei (`Attachment` Field)
         - Manuelle Datei (`Attachment` Field)
-        - Status Waveform (`SingleSelect` Field): Pending / Läuft / Fertig / Abgebrochen
-        - Status Optimierung (`SingleSelect` Field): Pending / Läuft / Fertig / Abgebrochen
+        - Cover (`Attachment` Field)
+        - Status Waveform (`SingleSelect` Field): Ausstehend / Läuft / Fertig / Fehler
+        - Status Optimierung (`SingleSelect` Field): Ausstehend / Läuft / Fertig / Fertig – Siehe Log / Fehler
         - Status Omnia (`SingleSelect` Field): Nicht auf Omnia / STARTE Upload zu Omnia / Liegt auf Omnia bereit / VERÖFFENTLICHEN / Online in der Mediathek
+        - Log Optimierung (`LongText` Field)
