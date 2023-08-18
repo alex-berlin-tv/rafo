@@ -43,6 +43,8 @@ class Settings:
     omnia_domain_id: str
     omnia_api_secret: str
     omnia_session_id: str
+    webhook_secret: str
+    """Arbitrary secret for webhook calls from NocoDB."""
 
 
 settings = typed_settings.load(

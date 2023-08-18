@@ -23,11 +23,14 @@ def run():
 @app.command()
 def test():
     omnia = Omnia.from_config()
-    result = omnia.upload_by_url(
-        StreamType.AUDIO_STREAM_TYPE,
-        "https://db.alex-berlin.de/download//o5jmhoqWKTJQOz1kuj.mp3",
-        True
-    )
+    # result = omnia.by_id(StreamType.AUDIO_STREAM_TYPE, 967556)
+    
+    # result = omnia.upload_by_url(
+    #     StreamType.AUDIO_STREAM_TYPE,
+    #     "https://db.alex-berlin.de/download//o5jmhoqWKTJQOz1kuj.mp3",
+    #     True
+    # )
+    result = omnia.update(StreamType.AUDIO, 1102026, {"title": "Lola Land"})
     print(result)
 
 
