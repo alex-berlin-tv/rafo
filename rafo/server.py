@@ -177,3 +177,8 @@ async def upload_file(
     return {
         "success": True,
     }
+
+
+@app.post("/webhook/update")
+def webhook(secret: str):
+    print(secret)

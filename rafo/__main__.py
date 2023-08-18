@@ -1,4 +1,5 @@
 from .config import settings
+from .omnia import Omnia, StreamType
 
 import typer
 import uvicorn
@@ -21,7 +22,17 @@ def run():
 
 @app.command()
 def test():
-    raise NotImplementedError()
+    omnia = Omnia.from_config()
+    # result = omnia.by_id(StreamType.AUDIO_STREAM_TYPE, 967556)
+    
+    # result = omnia.upload_by_url(
+    #     StreamType.AUDIO_STREAM_TYPE,
+    #     "https://db.alex-berlin.de/download//o5jmhoqWKTJQOz1kuj.mp3",
+    #     True
+    # )
+    result = omnia.update(StreamType.AUDIO, 1102026, {"title": "Lola Land"})
+    print(result)
+
 
 
 if __name__ == "__main__":

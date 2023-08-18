@@ -42,6 +42,8 @@ rafo run
 
 rafo uses the application [NocoDB](https://nocodb.com/) as a backend for the data. For this to work correctly, the following structures must be created:
 
+### Tables
+
 - Radioupload (Project)
     - Produzenten (Table)
         - Ident (`Formula` Field): `CONCAT("p", {Id}, "-", LEFT({Vorname}, 2), LEFT({Name}, 2))`
@@ -70,3 +72,17 @@ rafo uses the application [NocoDB](https://nocodb.com/) as a backend for the dat
         - Status Optimierung (`SingleSelect` Field): Ausstehend / Läuft / Fertig / Fertig – Siehe Log / Fehler
         - Status Omnia (`SingleSelect` Field): Nicht auf Omnia / STARTE Upload zu Omnia / Liegt auf Omnia bereit / VERÖFFENTLICHEN / Online in der Mediathek
         - Log Optimierung (`LongText` Field)
+    
+
+### Webhooks
+
+Further you have to configure two webhooks. The secret is configured in the `.secrets.toml` file using the `webhook_secret`.
+
+- After insert: TBA
+- After Update
+    - Name: rafo after update
+    - Type: `URL`
+    - Method: `POST`
+    - URL: `<YOUR_RAFO_DOMAIN>/webhook/update`
+    - Params
+        - Key: `SECRET`, Value `<YOUR_SECRET>`
