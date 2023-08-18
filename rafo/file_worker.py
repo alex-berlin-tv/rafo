@@ -106,7 +106,6 @@ class FileWorker:
         with self.count_lock:
             self.finished_workers += 1
 
-
     def delete_temp_folder_on_completion(self):
         while self.finished_workers != 4:
             pass
@@ -132,7 +131,6 @@ class FileWorker:
             self.episode_id,
         )
         logger.info(f"{name.title()} file {self.cover_file} uploaded to NocoDB")
-
     
     def __episode(self) -> NocoEpisode:
         """Provides the (cached) Episode."""
