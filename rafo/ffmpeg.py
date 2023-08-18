@@ -137,12 +137,12 @@ class Silence:
         if self.whole_file_is_silence():
             return f"- Whole file appears to be silence"
         if start_silence:
-            rsl.append(f"- Silence found and removed at the start ({start_silence})")
+            rsl.append(f"- Silence found and removed at the start ({start_silence:.2f})")
         end_silence = self.end_silence()
         if end_silence:
-            rsl.append(f"- Silence found and removed at the end ({end_silence})")
+            rsl.append(f"- Silence found and removed at the end ({end_silence:.2f})")
         for silence in self.intermediate_silences():
-            rsl.append(f"- Intermediate silence found, this has to be resolved manually ({silence}) ")
+            rsl.append(f"- Intermediate silence found, this has to be resolved manually ({silence:.2f}) ")
         return "\n".join(rsl)
         
 
@@ -202,11 +202,11 @@ class Optimize:
         input_options = {}
         start_silence = self.__silence.start_silence()
         if start_silence and start_silence.end > settings.audio_crop_allowance:
-            logger.info(f"Found silence at the start with a duration of {start_silence.duration}, will crop")
+            logger.info(f"Found silence at the start with a duration of {start_silence.duration:.2f}, will crop")
             input_options["ss"] = start_silence.end - settings.audio_crop_allowance
         end_silence = self.__silence.end_silence()
         if end_silence:
-            logger.info(f"Found silence at the end with a duration of {end_silence.duration}, will crop")
+            logger.info(f"Found silence at the end with a duration of {end_silence.duration:.2f}, will crop")
             input_options["to"] = end_silence.start + settings.audio_crop_allowance
 
         ffmpeg.input(
