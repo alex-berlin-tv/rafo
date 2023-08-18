@@ -1,10 +1,10 @@
-from re import A
 from .config import settings
 from .log import logger
 
+from datetime import datetime
 from enum import Enum
 import hashlib
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from pydantic import BaseModel, Field
 import requests
@@ -13,6 +13,16 @@ import requests
 BASE_URL: str = "https://api.nexx.cloud/v3.1/"
 OMNIA_HEADER_X_REQUEST_CID: str = "X-Request-CID"
 OMNIA_HEADER_X_REQUEST_TOKEN: str = "X-Request-Token"
+
+
+class Bool(int, Enum):
+    FALSE = 0
+    TRUE = 1
+
+    def to_bool(self) -> bool:
+        if self is self.FALSE:
+            return False
+        return True
 
 
 class ResponseMetadata(BaseModel):
@@ -45,7 +55,7 @@ class ResponseMetadata(BaseModel):
     """States whether result came from cache"""
 
     class Config:
-       populate_by_name = True 
+        populate_by_name = True
 
 
 class ResponsePaging(BaseModel):
@@ -59,19 +69,48 @@ class ResponsePaging(BaseModel):
     """The maximally available Number of Items."""
 
     class Config:
-       populate_by_name = True 
+        populate_by_name = True
+
+
+class MediaResultGeneral(BaseModel):
+    item_id: int = Field(alias="ID")
+    gid: int = Field(alias="GID")
+    hash_value: str = Field(alias="hash")
+    title: str = Field(alias="title")
+    subtitle: str = Field(alias="subtitle")
+    genre_raw: str = Field(alias="genre_raw")
+    genre: str = Field(alias="genre")
+    content_moderation_aspects: str = Field(alias="contentModerationAspects")
+    uploaded: datetime = Field(alias="uploaded")
+    created: datetime = Field(alias="created")
+    audio_type: str = Field(alias="audiotype")
+    runtime: str = Field(alias="runtime")
+    is_picked: Bool = Field(alias="isPicked")
+    for_kids: Bool = Field(alias="forKids")
+    is_pay: Bool = Field(alias="isPay")
+    is_ugc: Bool = Field(alias="isUGC")
+
+
+class ManagementResult(BaseModel):
+    message: str
+
+
+class MediaResult(BaseModel):
+    general: MediaResultGeneral = Field(alias="general")
+    # image_data: MediaResultImageData = Field(alias="imagedata")
+    image_data: Any = Field(alias="imagedata")
 
 
 class Response(BaseModel):
     metadata: ResponseMetadata
-    result: Any = None
+    result: Union[ManagementResult, MediaResult, list[MediaResult], None] = None
     paging: Optional[ResponsePaging] = None
 
 
 class StreamType(str, Enum):
-    VIDEO_STREAM_TYPE = "videos"
-    AUDIO_STREAM_TYPE = "audio"
-    SHOW_STREAM_TYPE = "shows"
+    VIDEO = "videos"
+    AUDIO = "audio"
+    SHOW = "shows"
 
 
 class ApiType(str, Enum):
@@ -117,6 +156,24 @@ class Omnia:
             parameters,
         )
     
+    def update(
+        self,
+        stream_type: StreamType,
+        item_id: int,
+        parameters: dict[str, str],
+    ):
+        """
+        Will update the general Metadata of a Media Item. Uses the Management API.
+        """
+        return self.call(
+            "put",
+            stream_type,
+            ApiType.MANAGEMENT,
+            "update",
+            [str(item_id)],
+            parameters
+        )
+
     def upload_by_url(
         self,
         stream_type: StreamType,
@@ -143,7 +200,6 @@ class Omnia:
             data
         )
 
-
     def call(
         self,
         method: str,
@@ -157,7 +213,7 @@ class Omnia:
         return self.__universal_call(
             method, stream_type, api_type, operation, args, parameters
         )
-    
+
     def __universal_call(
         self,
         method: str,
@@ -174,7 +230,7 @@ class Omnia:
                 BASE_URL, self.domain_id, stream_type.value, operation, args_str)
         elif api_type is ApiType.MANAGEMENT:
             url = self.__url_builder(
-                BASE_URL, self.domain_id, "manage", stream_type, args_str, operation)
+                BASE_URL, self.domain_id, "manage", stream_type.value, args_str, operation)
         elif api_type is ApiType.UPLOAD_LINK_MANAGEMENT:
             url = self.__url_builder(
                 BASE_URL, self.domain_id, "manage", "uploadlinks", operation)
