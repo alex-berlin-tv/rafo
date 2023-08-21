@@ -123,7 +123,8 @@ class FileWorker:
 
         logger.debug(f"About to upload {name} file {self.cover_file}")
         named_file = file.with_name(self.__file_name(name, None)).with_suffix(file.suffix)
-        shutil.copy(file, named_file)
+        if file != named_file:
+            shutil.copy(file, named_file)
         self.upload.upload_file(
             named_file,
             self.__file_name(name, self.raw_file.suffix),
