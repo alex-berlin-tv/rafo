@@ -137,12 +137,12 @@ class Silence:
         if self.whole_file_is_silence():
             return f"- Whole file appears to be silence"
         if start_silence:
-            rsl.append(f"- Silence found and removed at the start ({start_silence:.2f})")
+            rsl.append(f"- Silence found and removed at the start ({start_silence.start:.2f})")
         end_silence = self.end_silence()
         if end_silence:
-            rsl.append(f"- Silence found and removed at the end ({end_silence:.2f})")
+            rsl.append(f"- Silence found and removed at the end ({end_silence.end:.2f})")
         for silence in self.intermediate_silences():
-            rsl.append(f"- Intermediate silence found, this has to be resolved manually ({silence:.2f}) ")
+            rsl.append(f"- Intermediate silence found, this has to be resolved manually ({silence.start:.2f} to {silence.end:.2f}) ")
         return "\n".join(rsl)
         
 
