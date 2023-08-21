@@ -102,6 +102,7 @@ class FileWorker:
             self.__episode().update_state_optimizing(OptimizingState.ERROR)
             with self.count_lock:
                 self.finished_workers += 1
+            raise
 
         with self.count_lock:
             self.finished_workers += 1
