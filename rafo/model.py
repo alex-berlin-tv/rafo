@@ -150,6 +150,15 @@ class OptimizingState(str, Enum):
     ERROR = "Fehler"
 
 
+class OmniaState(str, Enum):
+    MISSING = "Nicht auf Omnia"
+    CMD_START_UPLOAD = "STARTE Upload zu Omnia"
+    AVAILABLE = "Liegt auf Omnia bereit "
+    CMD_PUBLISH = "VERÖFFENTLICHEN"
+    ONLINE = "Online in der Mediathek"
+    CMD_DEACTIVATE = "DEPUBLIZIEREN"
+
+
 class NocoEpisode(BaseModel):
     noco_id: int = Field(alias="Id")
     created_at: Optional[datetime] = Field(alias="CreatedAt", default=None)
@@ -238,6 +247,16 @@ class NocoEpisode(BaseModel):
             self.noco_id,
             {"Status Optimierung": state.value},
         )
+    
+    def update_state_omnia(self, state: OmniaState):
+        """Updates the Omnia upload state."""
+        get_nocodb_client().table_row_update(
+            get_nocodb_project(),
+            settings.episode_table,
+            self.noco_id,
+            {"Status Omnia": state.value},
+        )
+        
     
     def update_optimizing_log(self, log: str):
         """Updates the content of the optimizing log field."""

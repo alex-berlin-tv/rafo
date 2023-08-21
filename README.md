@@ -85,4 +85,4 @@ Further you have to configure two webhooks. The secret is configured in the `.se
     - Method: `POST`
     - URL: `<YOUR_RAFO_DOMAIN>/webhook/update`
     - Params
-        - Key: `SECRET`, Value `<YOUR_SECRET>`
+        - Key: `secret`, Value `<YOUR_SECRET>`

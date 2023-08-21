@@ -11,7 +11,6 @@ from pathlib import Path
 import tempfile
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
-from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from nocodb.exceptions import NocoDBAPIError
@@ -180,5 +179,12 @@ async def upload_file(
 
 
 @app.post("/webhook/update")
-def webhook(secret: str):
-    print(secret)
+async def webhook(secret: str, request: Request):
+    if secret != settings.webhook_secret:
+        raise HTTPException(
+            status_code=401, detail=f"Invalid webhook secret")
+    data = await request.json()
+    noco_id = data["data"]["previous_rows"][0]["Id"]
+    path = data["data"]["previous_rows"][0]["Optimierte Datei"][0]["path"]
+    title = data["data"]["previous_rows"][0]["Optimierte Datei"][0]["title"]
+    state = data["data"]["previous_rows"][0]["Status Omnia"]
