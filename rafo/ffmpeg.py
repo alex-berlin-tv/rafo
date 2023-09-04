@@ -1,5 +1,6 @@
 from .config import settings
 from .log import logger
+from .model import NocoEpisode, NocoProducer, NocoShow
 
 from pathlib import Path
 import re
@@ -193,9 +194,19 @@ class Optimize:
     - Applies the EBU loudness-norm
     """
     
-    def __init__(self, input_file: Path, silence: Silence):
+    def __init__(
+        self,
+        input_file: Path,
+        silence: Silence,
+        episode: NocoEpisode,
+        producer: NocoProducer,
+        show: NocoShow,
+    ):
         self.__input_file = input_file
         self.__silence = silence
+        self.__episode = episode
+        self.__producer = producer
+        self.__show = show
     
     def run(self, output_file: Path):
         """ Applies the optimization."""
@@ -208,7 +219,8 @@ class Optimize:
         if end_silence:
             logger.info(f"Found silence at the end with a duration of {end_silence.duration:.2f}, will crop")
             input_options["to"] = end_silence.start + settings.audio_crop_allowance
-
+        
+        date = self.__episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M")
         ffmpeg.input(
             str(self.__input_file),
             **input_options
@@ -218,5 +230,11 @@ class Optimize:
             str(output_file),
             audio_bitrate=settings.bit_rate,
             ar=settings.sample_rate,
-            metadata=f"title={output_file.stem}"
+            **{
+                "metadata:g:0": f"title={output_file.stem}",
+                "metadata:g:1": f"artist={self.__producer.first_name} {self.__producer.last_name} (p-{self.__producer.noco_id:03})",
+                "metadata:g:2": f"album={self.__show.name} (s-{self.__show.noco_id:03})",
+                "metadata:g:3": f"track={self.__episode.noco_id}",
+                "metadata:g:4": f"date={date}",
+            }
         ).run()

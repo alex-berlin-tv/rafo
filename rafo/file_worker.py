@@ -81,9 +81,12 @@ class FileWorker:
         self.__episode().update_state_optimizing(OptimizingState.RUNNING)
         file_name = self.__file_name("opt", ".mp3")
         output_path = self.temp_folder / file_name
+        producer = self.__episode().get_producer()
+        show = self.__episode().get_show()
+
         try:
             silence = Silence(self.raw_file)
-            optimize = Optimize(self.raw_file, silence)
+            optimize = Optimize(self.raw_file, silence, self.__episode(), producer, show)
             optimize.run(output_path)
             duration = Metadata(output_path).formatted_duration()
 
@@ -154,4 +157,4 @@ class FileWorker:
             extension = f".{extension}"
         if self.__file_name_prefix is None:
             self.__file_name_prefix = self.__episode().file_name_prefix()
-        return f"{self.__file_name_prefix}_{slug}{extension}"
+        return f"{self.__file_name_prefix}-{slug}{extension}"
