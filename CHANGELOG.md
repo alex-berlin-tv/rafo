@@ -36,3 +36,9 @@ Weitere Änderungen:
 
 - Seitenfuss mit der Versionsangabe und Links zu Impressum sowie Datenschutzangaben.
 - Migration auf das CLI Framework Typer.
+
+
+## v1.2.1 – Filenames and metadata in optimized files
+
+- The file names now follow the new schemas as decided by the company.
+- The optimized files now contain additional information in the mp3 meta tags.
