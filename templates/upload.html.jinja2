@@ -71,7 +71,7 @@
                 <label class="label" for="datetime">Geplantes Sendedatum- und Zeit</label>
                 <div class="control has-icons-left">
                     <input class="input" id="datetime" name="datetime" type="datetime-local" x-model="datetime" required
-                        :disabled="upload_running">
+                        :disabled="upload_running" :max="get_max_datetime()">
                     <div class="icon is-small is-left"><i class="fa-solid fa-file"></i></div>
                 </div>
                 <p class="help">Wann wird deine Sendung gemäss Vereinbarung mit der Sendeabwicklung ausgestrahlt
@@ -186,6 +186,7 @@
             upload_running: false,
             upload_progress: 0,
             wait_for_server: false,
+            max_datetime: null,
             fetch_data() {
                 fetch(`../api/producer_for_upload/${this.producer_uuid}`)
                     .then(res => {
@@ -206,6 +207,16 @@
                             this.fetch_error_detail = data.detail;
                         }
                     });
+            },
+            get_max_datetime() {
+                console.log("JJJA");
+                if (this.max_datetime !== null) {
+                    return this.max_datetime;
+                }
+                var date = new Date();
+                date.setFullYear(date.getFullYear() + 1);
+                this.max_datetime = date.toISOString().slice(0, -8);
+                return this.max_datetime;
             },
             get_file_name(path) {
                 if (path === null) {
