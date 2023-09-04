@@ -269,9 +269,9 @@ class NocoEpisode(BaseModel):
 
     def file_name_prefix(self) -> str:
         """Canonical filename for a given Episode."""
-        date = self.planned_broadcast_at.strftime("%Y-%m-%d_%H-%M")
-        show = normalize_for_filename(self.get_show().name)
-        return f"e-{self.noco_id:05d}_{date}_{show}"
+        return self.planned_broadcast_at.strftime("%y%m%d-%H%M")
+        # show = normalize_for_filename(self.get_show().name)
+        # return f"e-{self.noco_id:05d}_{date}_{show}"
 
 class NocoEpisodeNew(BaseModel):
     """A new Episode entry which should be added to NocoDB."""
