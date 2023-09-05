@@ -32,7 +32,17 @@
         </div>
     </template>
 
-    <div x-show="data_loaded && !fetch_error">
+	<div x-show="data_loaded && !fetch_error && maintenance_mode">
+		<article class="message is-warning">
+			<div class="message-header">
+				<p>Wartungsmodus</p>
+			</div>
+			<div class="message-body" x-text="maintenance_message">
+			</div>
+		</article>
+	</div>
+
+    <div x-show="data_loaded && !fetch_error && !maintenance_mode">
         <h1>Uploadformular</h1>
         <form id="form" enctype="multipart/form-data" @submit="upload()">
             <template x-if="dev_mode">
@@ -186,6 +196,8 @@
             upload_running: false,
             upload_progress: 0,
             wait_for_server: false,
+			maintenance_mode: false,
+			maintenance_message: "",
             max_datetime: null,
             fetch_data() {
                 fetch(`../api/producer_for_upload/${this.producer_uuid}`)
@@ -201,6 +213,8 @@
                             this.producer_name = data.producer_name;
                             this.available_shows = data.shows;
                             this.dev_mode = data.dev_mode;
+							this.maintenance_mode = data.maintenance_mode;
+							this.maintenance_message = data.maintenance_message;
                             window.addEventListener('beforeunload', this.confirm_close);
                         }
                         else if ("detail" in data) {

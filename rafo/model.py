@@ -79,8 +79,8 @@ class NocoShow(BaseModel):
     @classmethod
     def from_nocodb_by_uuid(cls, uuid: str):
         raw = get_nocodb_data(
-            settings.project_name, 
-            settings.show_table, 
+            settings.project_name,
+            settings.show_table,
             filter_obj=EqFilter("UUID", uuid),
         )
         if len(raw["list"]) != 1:
@@ -109,6 +109,8 @@ class ProducerUploadData(BaseModel):
     producer_name: str
     shows: Optional[list[ShowFormData]]
     dev_mode: bool
+    maintenance_mode: bool
+    maintenance_message: str
 
     @classmethod
     def from_nocodb(cls, producer_uuid: str):
@@ -132,6 +134,8 @@ class ProducerUploadData(BaseModel):
             producer_name=f"{producer.first_name} {producer.last_name}",
             shows=[ShowFormData.from_noco_show(show) for show in shows.root],
             dev_mode=settings.dev_mode,
+            maintenance_mode=settings.maintenance_mode,
+            maintenance_message=settings.maintenance_message,
         )
 
 
@@ -256,8 +260,7 @@ class NocoEpisode(BaseModel):
             self.noco_id,
             {"Status Omnia": state.value},
         )
-        
-    
+
     def update_optimizing_log(self, log: str):
         """Updates the content of the optimizing log field."""
         get_nocodb_client().table_row_update(
@@ -272,6 +275,7 @@ class NocoEpisode(BaseModel):
         return self.planned_broadcast_at.strftime("%y%m%d-%H%M")
         # show = normalize_for_filename(self.get_show().name)
         # return f"e-{self.noco_id:05d}_{date}_{show}"
+
 
 class NocoEpisodeNew(BaseModel):
     """A new Episode entry which should be added to NocoDB."""
@@ -293,7 +297,7 @@ class NocoEpisodeNew(BaseModel):
         logger.debug(f"NocoDB table_row_create for {settings.project_name}/{settings.episode_table}")
         episode_data = client.table_row_create(
             project,
-            settings.episode_table, 
+            settings.episode_table,
             self.model_dump(by_alias=True)
         )
         episode = NocoEpisode.model_validate(episode_data)

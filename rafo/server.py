@@ -90,7 +90,7 @@ async def upload_file(
     uuid: str,
     background_tasks: BackgroundTasks,
 ):
-    max_file_size = 1024 * 1024 * 1024 * settings.max_file_size 
+    max_file_size = 1024 * 1024 * 1024 * settings.max_file_size
     body_validator = MaxBodySizeValidator(max_file_size)
     # TODO: Change this to tmp folder
     uuid = str(uuid4())

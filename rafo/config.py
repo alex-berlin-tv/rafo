@@ -33,6 +33,14 @@ class Settings:
     When automatically cutting away silence the given duration of silence will remain.
     This is to prevent to harsh/fast cut ins.
     """
+    maintenance_mode: bool
+    """
+    States wheter the maintenance mode should be enabled. If the maintenance
+    mode is enabled it's not possible to upload new files. This mode should be
+    used during backend (NocoDB) updates
+    """
+    maintenance_message: str
+    """Message to shown to the user if maintenance mode is enabled."""
 
     nocodb_api_key: str
     smtp_sender_address: str
