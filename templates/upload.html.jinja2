@@ -9,7 +9,8 @@
         <div class="modal-content">
             <div class="notification is-primary">
                 <p><b>Upload erfolgreich abgeschlossen</b></p>
-                <p>Wir haben deine Sendung erhalten, vielen Dank! Du wirst in Kürze eine Bestätigung per Mail erhalten (bitte schau auch im Spamordner nach).</p>
+                <p>Wir haben deine Sendung erhalten, vielen Dank! Du wirst in Kürze eine Bestätigung per Mail erhalten
+                    (bitte schau auch im Spamordner nach).</p>
             </div>
         </div>
         <button class="modal-close is-large" aria-label="close" @click="success=false"></button>
@@ -32,15 +33,15 @@
         </div>
     </template>
 
-	<div x-show="data_loaded && !fetch_error && maintenance_mode">
-		<article class="message is-warning">
-			<div class="message-header">
-				<p>Wartungsmodus</p>
-			</div>
-			<div class="message-body" x-text="maintenance_message">
-			</div>
-		</article>
-	</div>
+    <div x-show="data_loaded && !fetch_error && maintenance_mode">
+        <article class="message is-warning">
+            <div class="message-header">
+                <p>Wartungsmodus</p>
+            </div>
+            <div class="message-body" x-text="maintenance_message">
+            </div>
+        </article>
+    </div>
 
     <div x-show="data_loaded && !fetch_error && !maintenance_mode">
         <h1>Uploadformular</h1>
@@ -58,7 +59,8 @@
                     <input class="input" id="producer" name="producer" type="text" x-model="producer_name" disabled>
                     <span class="icon is-small is-left"><i class="fa-regular fa-user"></i></span>
                 </div>
-                <p class="help">Der Uploadlink ist für dich personalisiert.</p>
+                <p class="help">Dieses Feld ist nicht veränderbar und stellt die verantwortliche Person da, die bei uns
+                    im System hinterlegt ist.</p>
             </div>
             <div class="field">
                 <label class="label" for="show">Format</label>
@@ -84,8 +86,10 @@
                         :disabled="upload_running" :max="get_max_datetime()">
                     <div class="icon is-small is-left"><i class="fa-solid fa-file"></i></div>
                 </div>
-                <p class="help">Wann wird deine Sendung gemäss Vereinbarung mit der Sendeabwicklung ausgestrahlt
-                    werden?
+                <p class="help">Trage hier die Sendezeit der Erstausstrahlung ein. Sollte dir diese nicht bekannt sein
+                    wende dich bitte an
+                    deine Bezugsperson bei ALEX Berlin oder direkt an <a
+                        href="mailto:dispo@alex-berlin.de">dispo@alex-berlin.de</a> bevor du die Datei hochlädst.
                     <i>Pflichtfeld.</i>
                 </p>
             </div>
@@ -96,7 +100,9 @@
                         maxlength="200" required :disabled="upload_running">
                     <div class="icon is-small is-left"><i class="fa-solid fa-file"></i></div>
                 </div>
-                <p class="help">Der Titel deiner Episode. <i>Pflichtfeld, zwischen 10 und 200 Zeichen lang.</i>
+                <p class="help">Der Titel deiner Episode. Dieses Feld bestimmt, wie die Sendung öffentlich in der
+                    Mediathek heißt. Idealerweise ist dies der Formatname und bei Bedarf eine Ergänzung um Folgennummer
+                    oder Thema. <i>Pflichtfeld, zwischen 10 und 200 Zeichen lang.</i>
                 </p>
             </div>
             <div class="field">
@@ -105,7 +111,11 @@
                     <textarea class="textarea" id="description" name="description" type="text" x-model="description"
                         minlength="10" maxlength="1000" required :disabled="upload_running"></textarea>
                 </div>
-                <p class="help">Beschreibe den Inhalt deiner Sendung. <i>Pflichtfeld, mindestens 10 Zeichen
+                <p class="help">
+                    Dieses Feld bestimmt, wie die Sendungsbeschreibung öffentlich in der Mediathek aussehen wird. Soll
+                    kein individueller Text eingeblendet werden, sondern nur der Standarttext des Formates, lass dieses
+                    Feld leer. <b>Bitte keine Nachrichten an ALEX Mitarbeiter!</b> Nutze hierfür das Kommentarfeld.
+                    <i>Pflichtfeld, mindestens 10 Zeichen
                         lang.</i>
                 </p>
             </div>
@@ -124,14 +134,15 @@
                         <span class="file-name" x-text="get_file_name(file)"></span>
                     </label>
                 </div>
-                <p class="help">Lade hier das Audiofile deiner Sendung hoch. <i>Pflichtfeld.</i></p>
+                <p class="help">Lade hier deine Audiodatei der Sendung hoch. Bedenke bitte eine Länge von max. 59:30min
+                    und die unterstützen Audioformate MP3 oder WAV. <i>Pflichtfeld.</i></p>
             </div>
             <div class="field">
                 <label class="label" for="cover">Coverfoto</label>
                 <div class="file has-name is-small is-fullwidth">
                     <label class="file-label">
-                        <input class="file-input" id="cover" name="cover" type="file" x-model="cover" accept=".jpg,.jpeg,.png"
-                            :disabled="upload_running" />
+                        <input class="file-input" id="cover" name="cover" type="file" x-model="cover"
+                            accept=".jpg,.jpeg,.png" :disabled="upload_running" />
                         <span class="file-cta">
                             <span class="file-icon is-small">
                                 <i class="fas fa-upload"></i>
@@ -141,7 +152,11 @@
                         <span class="file-name" x-text="get_file_name(cover)"></span>
                     </label>
                 </div>
-                <p class="help">Ein optionales Coverfoto für die Sendung.</p>
+                <p class="help">Sollte die Sendung eine individuelles Cover bekommen, gibt es hier die Möglichkeit ein
+                    solches hochzuladen.
+                    Das Seitenverhältnis muss 1:1 und die Auflösung mindestens 512 x 512 Pixel betragen.
+                    Ignoriere es, damit wir das Standardbild des Formats beibehalten.
+                </p>
             </div>
             <div class="field mb-5">
                 <label class="label" for="comment">Kommentar</label>
@@ -149,7 +164,8 @@
                     <textarea class="textarea" id="comment" name="comment" type="text" x-model="comment"
                         maxlength="1000" :disabled="upload_running"></textarea>
                 </div>
-                <p class="help">Optionaler Kommentar.</p>
+                <p class="help">Hier kann eine Nachricht an die Sendeabwicklung verfasst werden, sollte es Abweichungen
+                    oder wichtige Kommentare geben.</p>
             </div>
             <div class="field mb-5" x-show="upload_running">
                 <p class="label">Bitte warten, Upload läuft... <b>Seite nicht schließen.</b></p>
@@ -196,8 +212,8 @@
             upload_running: false,
             upload_progress: 0,
             wait_for_server: false,
-			maintenance_mode: false,
-			maintenance_message: "",
+            maintenance_mode: false,
+            maintenance_message: "",
             max_datetime: null,
             fetch_data() {
                 fetch(`../api/producer_for_upload/${this.producer_uuid}`)
@@ -213,8 +229,8 @@
                             this.producer_name = data.producer_name;
                             this.available_shows = data.shows;
                             this.dev_mode = data.dev_mode;
-							this.maintenance_mode = data.maintenance_mode;
-							this.maintenance_message = data.maintenance_message;
+                            this.maintenance_mode = data.maintenance_mode;
+                            this.maintenance_message = data.maintenance_message;
                             window.addEventListener('beforeunload', this.confirm_close);
                         }
                         else if ("detail" in data) {
@@ -292,7 +308,7 @@
                 this.comment = "Die Natur zeigt sich von ihrer besten Seite, mit blühenden Blumen und saftigem Grün. Aber zugleich sehe ich die zerstörerischen Auswirkungen des Klimawandels, wie Waldbrände und schmelzende Gletscher, die mich verzweifeln lassen.";
             },
             confirm_close(event) {
-                if(glob_upload_running) {
+                if (glob_upload_running) {
                     event.preventDefault();
                     event.returnValue("Der Upload ist noch nicht abgeschlossen. Bist du dir sicher, dass du den Upload abrechen möchtest?");
                 }
