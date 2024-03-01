@@ -48,7 +48,7 @@ Weitere Änderungen:
 
 - Fixed typo in internal e-mail message.
 - Updated content of help page.
-- Updated form with more detailed texts.
+- Updated form with more detailed help texts.
 - The icons in the upload form are now more fitting.
 - Description is now an optional field in the upload form.
 - Test data in upload form is now a little bit more meaningful.
