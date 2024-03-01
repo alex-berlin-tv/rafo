@@ -84,7 +84,8 @@
                 <label class="label" for="datetime">Geplantes Sendedatum- und Zeit</label>
                 <div class="control has-icons-left">
                     <input class="input" id="datetime" name="datetime" type="datetime-local" x-model="datetime" required
-                        :disabled="upload_running" :max="get_max_datetime()" @change="auto_set_title()">
+                        :disabled="upload_running" :max="get_max_datetime()" min="2024-01-01T00:00"
+                        @change="auto_set_title()">
                     <div class="icon is-small is-left"><i class="fa-solid fa-calendar-days"></i></div>
                 </div>
                 <p class="help">Trage hier die Sendezeit der Erstausstrahlung ein. Sollte dir diese nicht bekannt sein
@@ -241,11 +242,15 @@
                         }
                     });
             },
+            // If only one show is available set this show as selected durin init. This is done so
+            // that the title can be suggested automatically in this case.
             init_show_selection() {
                 if (this.available_shows.length == 1) {
                     this.show = this.available_shows[0].uuid;
                 }
             },
+            // Tries to set the title based on the selected show and broadcast date. Once the user
+            // has edited the title field themselves, the value will no longer be overwritten
             auto_set_title() {
                 if (this.title_changed_manually || this.show === null) {
                     return;
@@ -263,6 +268,7 @@
                 const date = new Date(this.datetime);
                 this.title = `${show_name} vom ${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`;
             },
+            // Calculates the max value for the broadcast datetime field. Today plus one year.
             get_max_datetime() {
                 if (this.max_datetime !== null) {
                     return this.max_datetime;
