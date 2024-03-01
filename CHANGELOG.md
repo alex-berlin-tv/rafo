@@ -42,3 +42,9 @@ Weitere Änderungen:
 
 - The file names now follow the new schemas as decided by the company.
 - The optimized files now contain additional information in the mp3 meta tags.
+
+
+## v.2.2 – To be named
+
+- Fixed typo in internal e-mail message.
+- Updated content of help page.

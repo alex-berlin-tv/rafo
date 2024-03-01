@@ -2,11 +2,67 @@
 {% block content %}
 <div class="content">
     <section>
-        <h1>Hilfe</h1>
-        <p>Wir haben dir hier die wichtigsten Informationen rund um unser neues Uploadportal für Radiosendungen zusammengetragen.</p>
+        <h1 class="title">Hilfe</h1>
+        <p>Wir haben dir hier die wichtigsten Informationen rund um unser neues Uploadportal für Radiosendungen
+            zusammengetragen.</p>
 
-        <h2>Persönlicher Link</h2>
-        <p>Um den Radioupload verwenden zu können, bennötigst du einen personalisierten Link. Dieser erhälst du von unserer Sendeabwicklung. Mit diesem Link kannst du für alle Formate, welche du bei uns produzierst neue Episoden hochladen. Dadurch das die Links personalisiert sind können wir sicherstellen, dass nur du für deine Sendung(en) Dateien hochladen kannst.</p>
+        <article class="message is-danger">
+            <div class="message-body">Schließe das Browserfenster erst, wenn der Upload abgeschlossen ist.</div>
+        </article>
+
+        <h2 class="title">Persönlicher Link</h2>
+        <p>Um den Radioupload verwenden zu können, bennötigst du einen personalisierten Link. Dieser erhälst du von
+            unserer Sendeabwicklung. Mit diesem Link kannst du für alle Formate, welche du bei uns produzierst neue
+            Episoden hochladen. Dadurch das die Links personalisiert sind können wir sicherstellen, dass nur du für
+            deine Sendung(en) Dateien hochladen kannst.</p>
+        </p>
+        <article class="message is-warning">
+            <div class="message-body">Bitte sei dir bewusst, dass du dafür verantwortlich bist, solltest du den Link an
+                Dritte weitergeben.</div>
+        </article>
+
+        <h2 class="title">Informationen zu den Feldern</h2>
+        <h3 class="title">Sendeverantwortlich</h3>
+        <p>Dieses Feld ist nicht veränderbar und stellt die verantwortliche Person da, die bei uns im System hinterlegt
+            ist.</p>
+
+        <h3 class="title">Format</h3>
+        <p>Solltest du für mehrere Formate verantwortlich sein, kannst du hier das passende Format wählen.</p>
+
+        <h3 class="title"> Geplante Sendedatum- und Zeit</h3>
+        <p>Trage hier die Sendezeit der Erstausstrahlung ein. Sollte dir diese nicht bekannt sein wende dich bitte an
+            deine Bezugsperson bei ALEX Berlin oder direkt an <a
+                href="mailto:dispo@alex-berlin.de">dispo@alex-berlin.de</a> bevor du die Datei hochlädst.</p>
+
+        <h3 class="title">Sendungstitel</h3>
+        <p>Dieses Feld bestimmt, wie die Sendung öffentlich in der Mediathek heißt. Idealerweise ist dies der Formatname
+            und bei Bedarf eine Ergänzung um Folgennummer oder Thema.</p>
+
+        <h3 class="title">Beschreibung</h3>
+        <p>Dieses Feld bestimmt, wie die Sendungsbeschreibung öffentlich in der Mediathek aussehen wird. Soll kein
+            individueller Text eingeblendet werden, sondern nur der Standarttext des Formates, lass dieses Feld leer.
+            Bitte keine Nachrichten an ALEX Mitarbeiter!</p>
+
+        <h3 class="title">Datei</h3>
+        <p>Lade hier deine Audiodatei der Sendung hoch. Bedenke bitte eine Länge von max. 59:30min und die unterstützen
+            Audioformate <code>MP3</code> oder <code>WAV</code>.</p>
+
+        <h3 class="title">Coverfoto</h3>
+        <p>Sollte die Sendung eine individuelles Cover bekommen, gibt es hier die Möglichkeit ein solches hochzuladen.
+            Das Seitenverhältnis muss 1:1 sein uns sollte mindestens eine Auflösung von 1000 x 1000 Pixel haben.
+            Ignoriere es, damit wir das Standardbild des Formats beibehalten.
+        </p>
+
+        <h3 class="title">Kommentar</h3>
+        <p>Hier kann eine Nachricht an die Sendeabwicklung verfasst werden, sollte es Abweichungen oder wichtige
+            Kommentare geben.</p>
+
+        <h3 class="title">Mehrfach-Upload</h3>
+        <p>Hier kann eine Nachricht an die Sendeabwicklung verfasst werden, sollte es Abweichungen oder wichtige
+            Kommentare geben.</p>
+
+        <p><b>Bitte achtet darauf, dass der Upload vollständig abgeschlossen wird, bevor das
+                Fenster geschlossen wird.</b></p>
     </section>
 </div>
 {% endblock %}
