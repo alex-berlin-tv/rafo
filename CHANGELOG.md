@@ -44,7 +44,7 @@ Weitere Änderungen:
 - The optimized files now contain additional information in the mp3 meta tags.
 
 
-## v.2.2 – To be named
+## v1.2.2 – Frontend improvements
 
 - Fixed typo in internal e-mail message.
 - Updated content of help page.
