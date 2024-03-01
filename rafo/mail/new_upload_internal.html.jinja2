@@ -13,7 +13,7 @@
     <p>
         <b>ID:</b> e-{{ "%05d" % episode.noco_id }}<br>
         <b>Format:</b> {{ show.name }} (s-{{ "%03d" % show.noco_id }})<br>
-        <b>Poduzentt:in:</b> {{ producer.first_name }} {{ producer.last_name }} (p-{{ "%03d" % producer.noco_id }})<br>
+        <b>Produzent:in:</b> {{ producer.first_name }} {{ producer.last_name }} (p-{{ "%03d" % producer.noco_id }})<br>
         <b>Sendedatum:</b> {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}<br>
         <b>Titel:</b> {{ episode.title }}<br>
         <b>Beschreibung:</b> {{ episode.description }}
