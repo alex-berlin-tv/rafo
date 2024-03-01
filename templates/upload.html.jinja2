@@ -66,7 +66,8 @@
                 <label class="label" for="show">Format</label>
                 <div class="control has-icons-left">
                     <div class="select">
-                        <select x-model="show" id="show" name="show" required :disabled="upload_running">
+                        <select x-model="show" id="show" name="show" required :disabled="upload_running"
+                            @change="auto_set_title()">
                             <template x-if="available_shows.length > 1">
                                 <option disabled selected value="">Format auswählen</option>
                             </template>
@@ -83,7 +84,7 @@
                 <label class="label" for="datetime">Geplantes Sendedatum- und Zeit</label>
                 <div class="control has-icons-left">
                     <input class="input" id="datetime" name="datetime" type="datetime-local" x-model="datetime" required
-                        :disabled="upload_running" :max="get_max_datetime()">
+                        :disabled="upload_running" :max="get_max_datetime()" @change="auto_set_title()">
                     <div class="icon is-small is-left"><i class="fa-solid fa-calendar-days"></i></div>
                 </div>
                 <p class="help">Trage hier die Sendezeit der Erstausstrahlung ein. Sollte dir diese nicht bekannt sein
@@ -96,28 +97,26 @@
             <div class="field">
                 <label class="label" for="title">Sendungstitel</label>
                 <div class="control has-icons-left">
-                    <input class="input" id="title" name="title" type="text" x-model="title" minlength="10"
-                        maxlength="200" :disabled="upload_running">
+                    <input class="input" id="title" name="title" type="text" x-model="title" minlength="8"
+                        maxlength="200" :disabled="upload_running" @input="title_changed_manually = true">
                     <div class="icon is-small is-left"><i class="fa-solid fa-pen"></i></div>
                 </div>
                 <p class="help">Der Titel deiner Episode. Dieses Feld bestimmt, wie die Sendung öffentlich in der
                     Mediathek heißt. Idealerweise ist dies der Formatname und bei Bedarf eine Ergänzung um Folgennummer
-                    oder Thema.
+                    oder Thema. <i>Pflichtfeld, zwischen 8 und 200 Zeichen lang</i>.
                 </p>
             </div>
             <div class="field">
                 <label class="label" for="description">Beschreibung</label>
                 <div class="control">
                     <textarea class="textarea" id="description" name="description" type="text" x-model="description"
-                        minlength="10" maxlength="1000" required :disabled="upload_running"></textarea>
+                        maxlength="1000" required :disabled="upload_running"></textarea>
                 </div>
                 <p class="help">
                     Dieses Feld bestimmt, wie die Sendungsbeschreibung <b>öffentlich in der Mediathek</b> aussehen wird.
                     Soll
                     kein individueller Text eingeblendet werden, sondern nur der Standarttext des Formates, lass dieses
                     Feld leer. <b>Bitte keine Nachrichten an ALEX Mitarbeiter!</b> Nutze hierfür das Kommentarfeld.
-                    <i>Pflichtfeld, mindestens 10 Zeichen
-                        lang.</i>
                 </p>
             </div>
             <div class="field">
@@ -216,6 +215,7 @@
             maintenance_mode: false,
             maintenance_message: "",
             max_datetime: null,
+            title_changed_manually: false,
             fetch_data() {
                 fetch(`../api/producer_for_upload/${this.producer_uuid}`)
                     .then(res => {
@@ -233,14 +233,37 @@
                             this.maintenance_mode = data.maintenance_mode;
                             this.maintenance_message = data.maintenance_message;
                             window.addEventListener('beforeunload', this.confirm_close);
+                            this.init_show_selection();
+                            this.auto_set_title();
                         }
                         else if ("detail" in data) {
                             this.fetch_error_detail = data.detail;
                         }
                     });
             },
+            init_show_selection() {
+                if (this.available_shows.length == 1) {
+                    this.show = this.available_shows[0].uuid;
+                }
+            },
+            auto_set_title() {
+                if (this.title_changed_manually || this.show === null) {
+                    return;
+                }
+                let show_name = "";
+                for (let i = 0; i < this.available_shows.length; i++) {
+                    if (this.available_shows[i].uuid === this.show) {
+                        show_name = this.available_shows[i].name;
+                    }
+                }
+                if (Object.keys(this.datetime).length === 0) {
+                    this.title = show_name;
+                    return
+                }
+                const date = new Date(this.datetime);
+                this.title = `${show_name} vom ${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`;
+            },
             get_max_datetime() {
-                console.log("JJJA");
                 if (this.max_datetime !== null) {
                     return this.max_datetime;
                 }
@@ -302,11 +325,11 @@
                 this.comment = "";
             },
             test_fill() {
-                this.datetime = "2023-02-23T23:00";
-                this.title = "Ein Testeintrag";
+                this.datetime = "2023-05-23T23:00";
                 this.description = "(Testeintrag) Tauche ein in die elektrisierende Atmosphäre der angesagtesten Clubs und die neuesten Beats der elektronischen Musikszene. Unsere Radiosendung ist deine Eintrittskarte zu den heißesten Tracks, exklusiven Interviews mit aufstrebenden DJs und einem lebendigen Austausch über die Bedeutung von Clubkultur.";
                 this.file = null;
                 this.comment = "(Testeintrag) Bitte aktualisieren Sie die Access-Datenbank unter Berücksichtigung der aktuellen Anforderungen und Best Practices für Datenbankmanagement. Führen Sie eine gründliche Überprüfung der Datensätze durch, beseitigen Sie Redundanzen und Inkonsistenzen, optimieren Sie die Datenbankstruktur und dokumentieren Sie Ihre Änderungen.";
+                this.auto_set_title();
             },
             confirm_close(event) {
                 if (glob_upload_running) {

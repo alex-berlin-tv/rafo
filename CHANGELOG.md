@@ -52,3 +52,4 @@ Weitere Änderungen:
 - The icons in the upload form are now more fitting.
 - Description is now an optional field in the upload form.
 - Test data in upload form is now a little bit more meaningful.
+- Form now presents user with a meaningful default title based on selected show and air-date.
