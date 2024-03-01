@@ -53,3 +53,4 @@ Weitere Änderungen:
 - Description is now an optional field in the upload form.
 - Test data in upload form is now a little bit more meaningful.
 - Form now presents user with a meaningful default title based on selected show and air-date.
+- Broadcasting date can not be more than 24h in the past.

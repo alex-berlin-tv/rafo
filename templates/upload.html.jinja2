@@ -84,7 +84,7 @@
                 <label class="label" for="datetime">Geplantes Sendedatum- und Zeit</label>
                 <div class="control has-icons-left">
                     <input class="input" id="datetime" name="datetime" type="datetime-local" x-model="datetime" required
-                        :disabled="upload_running" :max="get_max_datetime()" min="2024-01-01T00:00"
+                        :disabled="upload_running" :min="get_min_datetime()" :max="get_max_datetime()"
                         @change="auto_set_title()">
                     <div class="icon is-small is-left"><i class="fa-solid fa-calendar-days"></i></div>
                 </div>
@@ -267,6 +267,12 @@
                 }
                 const date = new Date(this.datetime);
                 this.title = `${show_name} vom ${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`;
+            },
+            // Calculates the max value for the broadcast datetime field. 24h ago.
+            get_min_datetime() {
+                const now = new Date();
+                var date = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+                return date.toISOString().slice(0, -8);
             },
             // Calculates the max value for the broadcast datetime field. Today plus one year.
             get_max_datetime() {
