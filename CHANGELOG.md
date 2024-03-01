@@ -48,3 +48,4 @@ Weitere Änderungen:
 
 - Fixed typo in internal e-mail message.
 - Updated content of help page.
+- Updated form with more detailed texts.

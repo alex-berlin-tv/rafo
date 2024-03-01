@@ -97,12 +97,12 @@
                 <label class="label" for="title">Sendungstitel</label>
                 <div class="control has-icons-left">
                     <input class="input" id="title" name="title" type="text" x-model="title" minlength="10"
-                        maxlength="200" required :disabled="upload_running">
+                        maxlength="200" :disabled="upload_running">
                     <div class="icon is-small is-left"><i class="fa-solid fa-file"></i></div>
                 </div>
                 <p class="help">Der Titel deiner Episode. Dieses Feld bestimmt, wie die Sendung öffentlich in der
                     Mediathek heißt. Idealerweise ist dies der Formatname und bei Bedarf eine Ergänzung um Folgennummer
-                    oder Thema. <i>Pflichtfeld, zwischen 10 und 200 Zeichen lang.</i>
+                    oder Thema.
                 </p>
             </div>
             <div class="field">
@@ -112,7 +112,8 @@
                         minlength="10" maxlength="1000" required :disabled="upload_running"></textarea>
                 </div>
                 <p class="help">
-                    Dieses Feld bestimmt, wie die Sendungsbeschreibung öffentlich in der Mediathek aussehen wird. Soll
+                    Dieses Feld bestimmt, wie die Sendungsbeschreibung <b>öffentlich in der Mediathek</b> aussehen wird.
+                    Soll
                     kein individueller Text eingeblendet werden, sondern nur der Standarttext des Formates, lass dieses
                     Feld leer. <b>Bitte keine Nachrichten an ALEX Mitarbeiter!</b> Nutze hierfür das Kommentarfeld.
                     <i>Pflichtfeld, mindestens 10 Zeichen
