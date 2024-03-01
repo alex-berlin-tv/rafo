@@ -21,5 +21,5 @@ silence_duration = 1
 bit_rate = "320k"
 sample_rate = 44100
 audio_crop_allowance = 0.5
-maintenance_mode = true
+maintenance_mode = false
 maintenance_message = "Die Software wird aktualisiert und sollte um 15:00 wieder verfügbar sein."

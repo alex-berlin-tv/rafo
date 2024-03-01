@@ -3,9 +3,10 @@ name = "rafo"
 authors = [
     {name = "Irvin Hostettler, ALEX Berlin", email = "hostettler@alex-berlin.de"}
 ]
-description = "Collect files and metadata for a radio show uses NocoDB as backend"
-version = "0.1.0"
+description = "Collect files and metadata for a radio show uses Baserow as backend"
+version = "1.3.0"
 dependencies = [
+    "baserow-client",
     "emails",
     "fastapi",
     "ffmpeg-python",

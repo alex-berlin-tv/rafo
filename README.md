@@ -4,7 +4,7 @@
 
 # rafo
 
-rafo aka "radio form" is a small application that allows external producers to submit the audio file and metadata of their radio programmes via a web form. [NocoDB](https://nocodb.com/) is used as the backend. Developed by [ALEX Berlin](https://www.alex-berlin.de/) as part of ALEX Digital 2023.
+rafo aka "radio form" is a small application that allows external producers to submit the audio file and metadata of their radio programmes via a web form. [Baserow](https://baserow.io/) is used as the backend. Developed by [ALEX Berlin](https://www.alex-berlin.de/) as part of ALEX Digital 2023.
 
 ## Installation
 
@@ -38,9 +38,9 @@ Start rafo with:
 rafo run
 ```
 
-## Configuration of NocoDB
+## Configuration of Baserow
 
-rafo uses the application [NocoDB](https://nocodb.com/) as a backend for the data. For this to work correctly, the following structures must be created:
+rafo uses the application [Baserow](https://baserow.io/) as a backend for the data. For this to work correctly, the following structures must be created:
 
 ### Tables
 
