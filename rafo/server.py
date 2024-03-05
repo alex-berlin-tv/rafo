@@ -55,7 +55,7 @@ async def producer_for_upload_info(
     uuid: str,
 ):
     try:
-        data = ProducerUploadData.from_nocodb(uuid)
+        data = ProducerUploadData.from_db(uuid)
     except KeyError:
         raise HTTPException(
             status_code=404, detail=f"Unter dieser URL kann kein Formular gefunden werden. Stelle bitte sicher, dass du den Link korrekt kopiert hast und probiere es nochmals.")
@@ -135,12 +135,14 @@ async def upload_file(
     if not file_target.multipart_filename:
         raise HTTPException(
             status_code=422, detail="File/multipart name for audio file missing")
-    file_path_with_extension = file_path.with_suffix(Path(file_target.multipart_filename).suffix)
+    file_path_with_extension = file_path.with_suffix(
+        Path(file_target.multipart_filename).suffix)
     file_path.rename(file_path_with_extension)
     file_path = file_path_with_extension
 
     if cover_target.multipart_filename is not None:
-        cover_path_with_extension = cover_path.with_suffix(Path(cover_target.multipart_filename).suffix)
+        cover_path_with_extension = cover_path.with_suffix(
+            Path(cover_target.multipart_filename).suffix)
         cover_path.rename(cover_path_with_extension)
         cover_path = cover_path_with_extension
     else:
@@ -156,14 +158,16 @@ async def upload_file(
     comment = comment_target.value.decode()
     if comment == "":
         comment = None
-    episode = NocoEpisodeNew( # type: ignore
+    episode = NocoEpisodeNew(  # type: ignore
         title=title_target.value.decode(),  # type: ignore
         uuid=uuid,  # type: ignore
         description=description_target.value.decode(),  # type: ignore
-        planned_broadcast_at=planned_broadcast_at.strftime("%Y-%m-%d %H:%M:%S%z"),  # type: ignore
+        planned_broadcast_at=planned_broadcast_at.strftime(
+            "%Y-%m-%d %H:%M:%S%z"),  # type: ignore
         comment=comment_target.value.decode(),  # type: ignore
     )
-    episode_id = episode.add_to_noco(producer_target.value.decode(), show_target.value.decode())
+    episode_id = episode.add_to_noco(
+        producer_target.value.decode(), show_target.value.decode())
     worker = FileWorker(file_path, cover_path, temp_folder, episode_id)
     mail = Mail.from_settings()
     background_tasks.add_task(worker.upload_raw)

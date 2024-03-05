@@ -1,4 +1,4 @@
-from .baserow import Table, TableConfig
+from .baserow import Table, TableConfig, TableLinkField
 from .config import settings
 from .log import logger
 
@@ -48,6 +48,7 @@ class BaserowPerson(Table):
     row_id: int = Field(alias="id")
     name: str = Field(alias="Name")
     email: str = Field(alias="E-Mail")
+    shows: TableLinkField = Field(alias="Format")
     uuid: str = Field(alias="UUID")
 
     model_config = TableConfig(
@@ -135,9 +136,16 @@ class ShowFormData(BaseModel):
             name=show.name,
         )
 
+    @classmethod
+    def from_db_show(cls, show: BaserowShow):
+        return cls(
+            uuid=show.uuid,
+            name=show.name,
+        )
+
 
 class ProducerUploadData(BaseModel):
-    """Contains all information needed by the client in the upload form."""
+    """Contains all information needed to display the upload form frontend."""
     producer_name: str
     shows: Optional[list[ShowFormData]]
     dev_mode: bool
@@ -145,26 +153,12 @@ class ProducerUploadData(BaseModel):
     maintenance_message: str
 
     @classmethod
-    def from_nocodb(cls, producer_uuid: str):
-        producer_data = get_nocodb_data(
-            settings.project_name,
-            settings.producer_table,
-            filter_obj=EqFilter("UUID", producer_uuid),
-        )
-        if len(producer_data["list"]) != 1:
-            raise KeyError("no producer found")
-        producer = NocoProducer.model_validate(producer_data["list"][0])
-        shows_raw = get_nocodb_client().table_row_nested_relations_list(
-            get_nocodb_project(),
-            settings.producer_table,
-            "mm",
-            producer.noco_id,
-            settings.show_table,
-        )
-        shows = NocoShows.model_validate(shows_raw["list"])
+    def from_db(cls, person_uuid: str):
+        person = BaserowPerson.by_uuid(person_uuid)
+        shows = BaserowShow.by_link_field(person.shows)
         return cls(
-            producer_name=f"{producer.first_name} {producer.last_name}",
-            shows=[ShowFormData.from_noco_show(show) for show in shows.root],
+            producer_name=person.name,
+            shows=[ShowFormData.from_db_show(show) for show in shows],
             dev_mode=settings.dev_mode,
             maintenance_mode=settings.maintenance_mode,
             maintenance_message=settings.maintenance_message,
@@ -225,6 +219,12 @@ class BaserowUpload(Table):
     waveform: Optional[Any] = Field(alias="Waveform")
     uuid: str = Field(alias="UUID")
     state: List[OmniaState] = Field(alias="Status")
+
+    model_config = TableConfig(
+        table_id=settings.br_upload_table,
+        table_name="Upload",
+        populate_by_name=True,
+    )
 
 
 class NocoEpisode(BaseModel):
