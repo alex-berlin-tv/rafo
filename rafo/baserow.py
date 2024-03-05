@@ -37,7 +37,8 @@ class TableConfig(ConfigDict):
 
 class Table(BaseModel):
     """
-    Encapsulates the most common interactions with a baserow table.
+    Encapsulates the most common interactions with a baserow table by binding it to a pydantic
+    BaseModel.
     """
 
     @classmethod

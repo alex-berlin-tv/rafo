@@ -4,7 +4,7 @@ from .log import logger
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from nocodb.nocodb import APIToken, NocoDBProject, WhereFilter
 from nocodb.filters import EqFilter
@@ -45,10 +45,10 @@ def get_nocodb_data(project_name: str, table_name: str, filter_obj: Optional[Whe
 
 class BaserowPerson(Table):
     """A person (formerly called Producer) in Baserow."""
-    baserow_id: Optional[int] = Field(alias="id")
+    row_id: int = Field(alias="id")
     name: str = Field(alias="Name")
     email: str = Field(alias="E-Mail")
-    uuid: Optional[str] = Field(alias="UUID")
+    uuid: str = Field(alias="UUID")
 
     model_config = TableConfig(
         table_id=settings.br_person_table,
@@ -79,6 +79,23 @@ class NocoProducer(BaseModel):
         if len(raw["list"]) != 1:
             raise KeyError(f"no producer for UUID {uuid} found")
         return cls.model_validate(raw["list"][0])
+
+
+class BaserowShow(Table):
+    """
+    A show (»Format«) has one or more producers and contains multiple episodes.
+    """
+    row_id: int = Field(alias="id")
+    name: str = Field(alias="Name")
+    responsible: Any = Field(alias="Verantwortlich")
+    uuid: str = Field(alias="UUID")
+    supervision: Any = Field(alias="Betreuung")
+
+    model_config = TableConfig(
+        table_id=settings.br_show_table,
+        table_name="Format",
+        populate_by_name=True,
+    )
 
 
 class NocoShow(BaseModel):
@@ -176,6 +193,38 @@ class OmniaState(str, Enum):
     CMD_PUBLISH = "VERÖFFENTLICHEN"
     ONLINE = "Online in der Mediathek"
     CMD_DEACTIVATE = "DEPUBLIZIEREN"
+
+
+class UploadState(str, Enum):
+    """Indication of multiple long-running processes for upload entries."""
+    WAVEFORM_PENDING = "Waveform: Ausstehend"
+    WAVEFORM_RUNNING = "Waveform: Läuft"
+    WAVEFORM_COMPLETE = "Waveform: Fertig"
+    WAVEFORM_ERROR = "Waveform: Fehler"
+    OPTIMIZATION_PENDING = "Optimierung: Ausstehend"
+    OPTIMIZATION_RUNNING = "Optimierung: Läuft"
+    OPTIMIZATION_COMPLETE = "Optimierung: Fertig"
+    OPTIMIZATION_ERROR = "Optimierung: Fehler"
+    OMNIA_PENDING = "Omnia: Nicht auf Omnia"
+    OMNIA_RUNNING = "Omnia: Upload läuft"
+    OMNIA_COMPLETE = "Omnia: Liegt auf Omnia"
+    OMNIA_ERROR = "Omnia: Fehler während Upload"
+
+
+class BaserowUpload(Table):
+    """A upload of an episode for a show by a person."""
+    row_id: int = Field(alias="id")
+    name: str = Field(alias="Name")
+    planned_broadcast_at: datetime = Field(alias="Geplante Ausstrahlung")
+    description: Optional[str] = Field(alias="Beschreibung")
+    comment_producer: Optional[str] = Field(alias="Kommentar Produzent")
+    source_file: Optional[Any] = Field(alias="Quelldatei")
+    optimized_file: Optional[Any] = Field(alias="Optimierte Datei")
+    manual_file: Optional[Any] = Field(alias="Manuelle Datei")
+    cover: Optional[Any] = Field(alias="Cover")
+    waveform: Optional[Any] = Field(alias="Waveform")
+    uuid: str = Field(alias="UUID")
+    state: List[OmniaState] = Field(alias="Status")
 
 
 class NocoEpisode(BaseModel):
