@@ -1,16 +1,22 @@
 [rafo]
 nocodb_url = "https://db.alex-berlin.de"
+baserow_url = "https://api.baserow.io"
 base_url = "https://upload.alex-berlin.de"
 port = 8000
 project_name = "Radioupload"
 producer_table = "Produzenten"
+br_person_table = 260942
 show_table = "Formate"
+br_show_table = 263793
 episode_table = "Episoden"
+br_upload_table = 263794
 max_file_size = 2
-raw_column = "Quelldatei"
-waveform_column = "Waveform"
-producer_column = "Eingereicht von"
-show_column = "Format"
+
+raw_column = "Quelldatei" # TODO: remove
+waveform_column = "Waveform" # TODO: remove
+producer_column = "Eingereicht von" # TODO: remove
+show_column = "Format" # TODO: remove
+
 on_upload_mail = "sendeabwicklung@alex-berlin.de"
 on_upload_sender_name = "Sendeabwicklung ALEX Berlin"
 contact_mail = "sendeabwicklung@alex-berlin.de"

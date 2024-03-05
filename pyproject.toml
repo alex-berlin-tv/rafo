@@ -6,14 +6,14 @@ authors = [
 description = "Collect files and metadata for a radio show uses Baserow as backend"
 version = "1.3.0"
 dependencies = [
-    "baserow-client",
+    "baserow-client@git+https://github.com/alex-berlin-tv/python-baserow-client.git#egg=develop",
     "emails",
     "fastapi",
     "ffmpeg-python",
     "Jinja2",
     "nocodb@git+https://github.com/alex-berlin-tv/python-nocodb.git#egg=relation_create",
     "streaming_form_data",
-    "typed-settings",
+    "typed-settings[attrs]",
     "typer",
     "uvicorn",
 ]

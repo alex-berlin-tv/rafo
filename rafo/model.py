@@ -1,6 +1,6 @@
+from .baserow import Table, TableConfig
 from .config import settings
 from .log import logger
-from .utils import normalize_for_filename
 
 from datetime import datetime
 from enum import Enum
@@ -18,7 +18,7 @@ def get_nocodb_client() -> NocoDBRequestsClient:
     if not isinstance(token, str):
         raise ValueError("invalid nocodb token, not a string")
     return NocoDBRequestsClient(
-        APIToken(token), 
+        APIToken(token),
         settings.nocodb_url,
     )
 
@@ -34,11 +34,26 @@ def get_nocodb_project() -> NocoDBProject:
 def get_nocodb_data(project_name: str, table_name: str, filter_obj: Optional[WhereFilter] = None) -> Any:
     """Get all items of a specified table from the configured NocoDB instance and project."""
     client = get_nocodb_client()
-    logger.debug(f"NocoDB table_row_list for {project_name}/{table_name} with filter {filter_obj}")
+    logger.debug(
+        f"NocoDB table_row_list for {project_name}/{table_name} with filter {filter_obj}")
     return client.table_row_list(
         get_nocodb_project(),
         table_name,
         filter_obj=filter_obj,
+    )
+
+
+class BaserowPerson(Table):
+    """A person (formerly called Producer) in Baserow."""
+    baserow_id: Optional[int] = Field(alias="id")
+    name: str = Field(alias="Name")
+    email: str = Field(alias="E-Mail")
+    uuid: Optional[str] = Field(alias="UUID")
+
+    model_config = TableConfig(
+        table_id=settings.br_person_table,
+        table_name="Person",
+        populate_by_name=True,
     )
 
 
@@ -57,8 +72,8 @@ class NocoProducer(BaseModel):
     def from_nocodb_by_uuid(cls, uuid: str):
         """Get an Producer from NocoDB by a given UUID."""
         raw = get_nocodb_data(
-            settings.project_name, 
-            settings.producer_table, 
+            settings.project_name,
+            settings.producer_table,
             filter_obj=EqFilter("UUID", uuid),
         )
         if len(raw["list"]) != 1:
@@ -178,13 +193,14 @@ class NocoEpisode(BaseModel):
     planned_broadcast_at: datetime = Field(alias="Geplante Ausstrahlung")
     state_omnia: Optional[str] = Field(alias="Status Omnia")
     state_waveform: Optional[WaveformState] = Field(alias="Status Waveform")
-    state_optimizing: Optional[OptimizingState] = Field(alias="Status Optimierung")
+    state_optimizing: Optional[OptimizingState] = Field(
+        alias="Status Optimierung")
 
     @classmethod
     def from_nocodb_by_id(cls, id: int):
         raw = get_nocodb_data(
-            settings.project_name, 
-            settings.episode_table, 
+            settings.project_name,
+            settings.episode_table,
             filter_obj=EqFilter("Id", str(id)),
         )
         if len(raw["list"]) != 1:
@@ -194,8 +210,8 @@ class NocoEpisode(BaseModel):
     @classmethod
     def from_nocodb_by_uuid(cls, uuid: str):
         raw = get_nocodb_data(
-            settings.project_name, 
-            settings.episode_table, 
+            settings.project_name,
+            settings.episode_table,
             filter_obj=EqFilter("UUID", uuid),
         )
         if len(raw["list"]) != 1:
@@ -204,7 +220,8 @@ class NocoEpisode(BaseModel):
 
     def get_producer(self) -> "NocoProducer":
         client = get_nocodb_client()
-        logger.debug(f"NocoDB table_row_nested_relations_list for {settings.project_name}/{settings.episode_table} for Field '{settings.producer_column}'")
+        logger.debug(
+            f"NocoDB table_row_nested_relations_list for {settings.project_name}/{settings.episode_table} for Field '{settings.producer_column}'")
         raw = client.table_row_nested_relations_list(
             get_nocodb_project(),
             settings.episode_table,
@@ -213,14 +230,17 @@ class NocoEpisode(BaseModel):
             settings.producer_column,
         )
         if len(raw["list"]) < 1:
-            raise ValueError(f"no producer linked in episode with id {self.noco_id}")
+            raise ValueError(
+                f"no producer linked in episode with id {self.noco_id}")
         elif len(raw["list"]) > 1:
-            raise ValueError(f"more than one producer linked in episode with id {self.noco_id}")
+            raise ValueError(
+                f"more than one producer linked in episode with id {self.noco_id}")
         return NocoProducer.model_validate(raw["list"][0])
-    
+
     def get_show(self) -> "NocoShow":
         client = get_nocodb_client()
-        logger.debug(f"NocoDB table_row_nested_relations_list for {settings.project_name}/{settings.episode_table} for Field '{settings.show_column}'")
+        logger.debug(
+            f"NocoDB table_row_nested_relations_list for {settings.project_name}/{settings.episode_table} for Field '{settings.show_column}'")
         raw = client.table_row_nested_relations_list(
             get_nocodb_project(),
             settings.episode_table,
@@ -229,9 +249,11 @@ class NocoEpisode(BaseModel):
             settings.show_column,
         )
         if len(raw["list"]) < 1:
-            raise ValueError(f"no show linked in episode with id {self.noco_id}")
+            raise ValueError(
+                f"no show linked in episode with id {self.noco_id}")
         elif len(raw["list"]) > 1:
-            raise ValueError(f"more than one show linked in episode with id {self.noco_id}")
+            raise ValueError(
+                f"more than one show linked in episode with id {self.noco_id}")
         return NocoShow.model_validate(raw["list"][0])
 
     def update_state_waveform(self, state: WaveformState):
@@ -242,7 +264,7 @@ class NocoEpisode(BaseModel):
             self.noco_id,
             {"Status Waveform": state.value},
         )
-    
+
     def update_state_optimizing(self, state: OptimizingState):
         """Updates the state indicator for the optimizing worker."""
         get_nocodb_client().table_row_update(
@@ -251,7 +273,7 @@ class NocoEpisode(BaseModel):
             self.noco_id,
             {"Status Optimierung": state.value},
         )
-    
+
     def update_state_omnia(self, state: OmniaState):
         """Updates the Omnia upload state."""
         get_nocodb_client().table_row_update(
@@ -284,8 +306,10 @@ class NocoEpisodeNew(BaseModel):
     description: str = Field(alias="Beschreibung")
     planned_broadcast_at: str = Field(alias="Geplante Ausstrahlung")
     comment: str = Field(alias="Kommentar Produzent")
-    state_waveform: Optional[WaveformState] = Field(alias="Status Waveform", default=WaveformState.PENDING)
-    state_optimizing: Optional[OptimizingState] = Field(alias="Status Optimierung", default=OptimizingState.PENDING)
+    state_waveform: Optional[WaveformState] = Field(
+        alias="Status Waveform", default=WaveformState.PENDING)
+    state_optimizing: Optional[OptimizingState] = Field(
+        alias="Status Optimierung", default=OptimizingState.PENDING)
 
     class Config:
         populate_by_name = True
@@ -294,7 +318,8 @@ class NocoEpisodeNew(BaseModel):
         """Adds the entry to NocoDB using the API."""
         client = get_nocodb_client()
         project = get_nocodb_project()
-        logger.debug(f"NocoDB table_row_create for {settings.project_name}/{settings.episode_table}")
+        logger.debug(
+            f"NocoDB table_row_create for {settings.project_name}/{settings.episode_table}")
         episode_data = client.table_row_create(
             project,
             settings.episode_table,
@@ -303,7 +328,8 @@ class NocoEpisodeNew(BaseModel):
         episode = NocoEpisode.model_validate(episode_data)
         producer = NocoProducer.from_nocodb_by_uuid(producer_uuid)
         show = NocoShow.from_nocodb_by_uuid(show_uuid)
-        logger.debug(f"NocoDB table_row_relation_create for {settings.project_name}/{settings.episode_table} for Field '{settings.show_column}'")
+        logger.debug(
+            f"NocoDB table_row_relation_create for {settings.project_name}/{settings.episode_table} for Field '{settings.show_column}'")
         client.table_row_relation_create(
             project,
             settings.episode_table,
@@ -312,7 +338,8 @@ class NocoEpisodeNew(BaseModel):
             settings.show_column,
             show.noco_id,
         )
-        logger.debug(f"NocoDB table_row_relation_create for {settings.project_name}/{settings.episode_table} for Field '{settings.producer_column}'")
+        logger.debug(
+            f"NocoDB table_row_relation_create for {settings.project_name}/{settings.episode_table} for Field '{settings.producer_column}'")
         client.table_row_relation_create(
             project,
             settings.episode_table,
@@ -322,4 +349,3 @@ class NocoEpisodeNew(BaseModel):
             producer.noco_id,
         )
         return episode.noco_id
-    

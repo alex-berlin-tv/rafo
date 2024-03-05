@@ -3,18 +3,24 @@ import typed_settings
 
 @typed_settings.settings
 class Settings:
+    baserow_url: str
     nocodb_url: str
     base_url: str
     port: int
     project_name: str
     producer_table: str
+    br_person_table: int
     show_table: str
+    br_show_table: int
     episode_table: str
+    br_upload_table: int
     max_file_size: int
-    raw_column: str
-    waveform_column: str
-    producer_column: str
-    show_column: str
+
+    raw_column: str  # TODO: remove
+    waveform_column: str  # TODO: remove
+    producer_column: str  # TODO: remove
+    show_column: str  # TODO: remove
+
     on_upload_mail: str
     on_upload_sender_name: str
     contact_mail: str
@@ -54,6 +60,12 @@ class Settings:
     omnia_session_id: str
     webhook_secret: str
     """Arbitrary secret for webhook calls from NocoDB."""
+
+
+@typed_settings.settings
+class PersonTable:
+    id: int
+    name: str
 
 
 settings = typed_settings.load(
