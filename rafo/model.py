@@ -155,8 +155,8 @@ class ProducerUploadData(BaseModel):
 
     @classmethod
     def from_db(cls, person_uuid: str):
-        person = BaserowPerson.by_uuid(person_uuid)
-        shows = BaserowShow.by_link_field(person.shows)
+        person = BaserowPerson.by_uuid(person_uuid).one()
+        shows = BaserowShow.by_link_field(person.shows).any()
         return cls(
             producer_name=person.name,
             shows=[ShowFormData.from_db_show(show) for show in shows],
@@ -249,6 +249,7 @@ class BaserowUpload(Table):
     """A upload of an episode for a show by a person."""
     row_id: int = Field(alias="id")
     name: str = Field(alias="Name")
+    uploader: TableLinkField = Field(alias="Eingereicht von")
     planned_broadcast_at: datetime = Field(alias="Geplante Ausstrahlung")
     description: Optional[str] = Field(alias="Beschreibung")
     comment_producer: Optional[str] = Field(alias="Kommentar Produzent")
@@ -265,6 +266,15 @@ class BaserowUpload(Table):
         table_name="Upload",
         populate_by_name=True,
     )
+
+    def get_uploader(self) -> BaserowPerson:
+        """Get DB entry of the person which did the upload."""
+        rsl = BaserowPerson.by_link_field(self.uploader).one()
+        if not isinstance(rsl, BaserowPerson):
+            raise ValueError(
+                "logic error, by link field query for Person returned not a single result"
+            )
+        return rsl
 
 
 class NocoEpisode(BaseModel):
@@ -283,7 +293,8 @@ class NocoEpisode(BaseModel):
     state_omnia: Optional[str] = Field(alias="Status Omnia")
     state_waveform: Optional[WaveformState] = Field(alias="Status Waveform")
     state_optimizing: Optional[OptimizingState] = Field(
-        alias="Status Optimierung")
+        alias="Status Optimierung"
+    )
 
     @classmethod
     def from_nocodb_by_id(cls, id: int):
