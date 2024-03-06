@@ -1,10 +1,11 @@
+import enum
 from .baserow import Table, TableConfig, TableLinkField
 from .config import settings
 from .log import logger
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, ClassVar, List, Optional
 
 from nocodb.nocodb import APIToken, NocoDBProject, WhereFilter
 from nocodb.filters import EqFilter
@@ -203,6 +204,45 @@ class UploadState(str, Enum):
     OMNIA_RUNNING = "Omnia: Upload läuft"
     OMNIA_COMPLETE = "Omnia: Liegt auf Omnia"
     OMNIA_ERROR = "Omnia: Fehler während Upload"
+
+
+class UploadStates(RootModel[list[UploadState]]):
+    """
+    Handles the replacement of a single status within the Multi Select Field.
+    """
+    root: list[UploadState]
+
+    WAVEFORM_PREFIX: ClassVar[str] = "Waveform"
+    OPTIMIZATION_PREFIX: ClassVar[str] = "Optimierung"
+    OMNIA_PREFIX: ClassVar[str] = "Omnia"
+    ORDER: ClassVar[list[str]] = [
+        WAVEFORM_PREFIX, OPTIMIZATION_PREFIX, OMNIA_PREFIX
+    ]
+
+    @classmethod
+    def all_pending(cls) -> "UploadStates":
+        """Returns all states to be pending."""
+        return cls(root=[
+            UploadState.WAVEFORM_PENDING,
+            UploadState.OPTIMIZATION_PENDING,
+            UploadState.OMNIA_PENDING,
+        ])
+
+    def replace_state(self, prefix: str, new_state: UploadState):
+        """Replaces the state with the given prefix."""
+        keep = [
+            state for state in self.root if not state.value.startswith(prefix)
+        ]
+        self.root = [new_state] + keep
+
+    def sort(self):
+        """Ensures that the statuses are always sorted in the same order."""
+        def sort_by_order(value):
+            for index, prefix in enumerate(self.ORDER):
+                if value.startswith(prefix):
+                    return (index, value)
+            return (-1, value)
+        self.root = sorted(self.root, key=sort_by_order)
 
 
 class BaserowUpload(Table):
