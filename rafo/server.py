@@ -162,8 +162,8 @@ async def upload_file(
         title=title_target.value.decode(),  # type: ignore
         uuid=uuid,  # type: ignore
         description=description_target.value.decode(),  # type: ignore
-        planned_broadcast_at=planned_broadcast_at.strftime(
-            "%Y-%m-%d %H:%M:%S%z"),  # type: ignore
+        planned_broadcast_at=planned_broadcast_at.strftime(  # type: ignore
+            "%Y-%m-%d %H:%M:%S%z"),
         comment=comment_target.value.decode(),  # type: ignore
     )
     episode_id = episode.add_to_noco(
