@@ -1,16 +1,16 @@
 """
 This module contains a thin wrapper around the Baserow Client library.
 """
-from dataclasses import Field
 
-from pydantic.root_model import RootModel
 from .config import settings
+from .log import logger
 
 from typing import List, Optional, Type, TypeVar, Union
 
 from baserow.client import ApiError, BaserowClient
 from baserow.filter import Column, Filter
 from pydantic import BaseModel, ConfigDict, Field
+from pydantic.root_model import RootModel
 
 
 T = TypeVar("T", bound="Table")
@@ -42,6 +42,10 @@ class TableLinkField(RootModel[list[RowLink]]):
     Table link field. Can contain one or more links to rows in another table.
     """
     root: list[RowLink]
+
+    def id_str(self) -> str:
+        """Returns a list of all ID's as string for debugging."""
+        return ",".join([str(link.row_id) for link in self.root])
 
 
 class Client(BaserowClient):
@@ -153,6 +157,7 @@ class Table(BaseModel):
 
     @classmethod
     def by_uuid(cls: Type[T], uuid: str) -> T:
+        logger.debug(f"baserow query in {cls.table_name()} by UUID {uuid}")
         return cls.query([Column("UUID").equal(uuid)], one=True)
 
     @classmethod
@@ -161,6 +166,7 @@ class Table(BaseModel):
         Retrieve an entry by its unique row ID. To raise an error when the ID
         does not exist, set `not_none` to `True`.
         """
+        logger.debug(f"baserow query in {cls.table_name()} by ID {row_id}")
         response = Client().get_database_table_row(
             cls.table_id(),
             row_id,
@@ -174,6 +180,9 @@ class Table(BaseModel):
 
     @classmethod
     def by_link_field(cls: Type[T], link_field: TableLinkField) -> List[T]:
+        logger.debug(
+            f"baserow query in {cls.table_name()} for linked fields with ID's [{link_field.id_str()}]"
+        )
         rsl: List[T] = []
         for link in link_field.root:
             rsl.append(cls.by_id(link.row_id, not_none=True))
