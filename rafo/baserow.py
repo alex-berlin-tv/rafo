@@ -328,12 +328,13 @@ class Table(BaseModel, abc.ABC):
         )
 
     @classmethod
-    def __dump_subset(cls, by_alias: bool, **kwargs: Any) -> dict[str, Any]:
+    def __model_dump_subset(cls, by_alias: bool, **kwargs: Any) -> dict[str, Any]:
         """
         This method takes a dictionary of keyword arguments (kwargs) and
         validates it against the model before serializing it as a dictionary. It
         is used for the update and batch_update methods. If a field value is
         inherited from a BaseModel, it will be serialized using model_dump.
+
         Please refer to the documentation on the update method to learn more
         about its limitations and underlying ideas.
         """
@@ -356,7 +357,8 @@ class Table(BaseModel, abc.ABC):
                 rsl[rsl_key] = value.model_dump(by_alias=by_alias)
         return rsl
 
-    def update(self, row_id: int, by_alias: bool = True, **kwargs: Any):
+    @classmethod
+    def update(cls, row_id: int, by_alias: bool = True, **kwargs: Any):
         """
         Update the fields in the database specified by the kwargs parameter. The
         keys provided must be valid field names in the model. values will be
@@ -380,14 +382,38 @@ class Table(BaseModel, abc.ABC):
                 tables), setting an alias typically indicates that the field
                 name in Baserow is not a valid Python variable name.
         """
-        payload = self.__dump_subset(by_alias, **kwargs)
-        if self.dump_payload:
+        payload = cls.__model_dump_subset(by_alias, **kwargs)
+        if cls.dump_payload:
             logger.debug(payload)
         Client().update_database_table_row(
-            self.table_id,
+            cls.table_id,
             row_id,
             payload,
             user_field_names=True,
+        )
+
+    @classmethod
+    def batch_update(cls, data: dict[int, dict[str, Any]], by_alias: bool = True):
+        """
+        Updates multiple fields in the database. The given data dict must map
+        the unique row id to the data to be updated. The input is validated
+        against the model. See the update method documentation for more
+        information about its limitations and underlying ideas.
+
+        Args:
+            data: A dict mapping the unique row id to the data to be updated.
+            by_alias: Please refer to the documentation on the update method to
+                learn more about this arg.
+        """
+        payload = []
+        for key, value in data.items():
+            entry = cls.__model_dump_subset(by_alias, **value)
+            entry["id"] = key
+            payload.append(entry)
+        if cls.dump_payload:
+            logger.debug(payload)
+        raise NotImplementedError(
+            "Baserow client library currently does not support batch update operations on rows"
         )
 
     def add(self):
