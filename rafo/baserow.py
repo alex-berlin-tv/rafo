@@ -65,7 +65,7 @@ class MultipleSelectField(RootModel[list[MultipleSelectEntry]]):
 
 class Client(BaserowClient):
     """
-    Encapsulates the baserow client into a singleton and provides some extra validation methods.
+    Encapsulates the baserow client into a singleton.
     """
     _instance = None
     __initialized = False
@@ -132,8 +132,16 @@ class Result(Generic[T]):
 
 class Table(BaseModel, abc.ABC):
     """
-    Encapsulates the most common interactions with a baserow table by binding it to a pydantic
-    BaseModel.
+    Encapsulates the most common interactions with a baserow table by binding it
+    to a pydantic BaseModel.
+
+    Baserow provides two ways of accessing or specifying fields. The first is by
+    using the unique field ID, which can be obtained in the frontend or by using
+    the list table fields call. The second is by using the name given by the
+    user in the frontend, also known as the user field name. Currently, the
+    model only supports accessing fields using their user field names. These
+    names can be provided as field names in the code or by setting an alias for
+    a field.
     """
 
     @property
@@ -275,13 +283,66 @@ class Table(BaseModel, abc.ABC):
             cls.model_construct(), field_name, value
         )
 
-    def update(self, **kwargs: Any):
+    @classmethod
+    def __dump_subset(cls, by_alias: bool, **kwargs: Any) -> dict[str, Any]:
         """
-        Updates the fields specified by kwargs. The given keys and values are
-        validated against the model. If the value type is itself a 
+        This method takes a dictionary of keyword arguments (kwargs) and
+        validates it against the model before serializing it as a dictionary. It
+        is used for the update and batch_update methods. If a field value is
+        inherited from a BaseModel, it will be serialized using model_dump.
+        Please refer to the documentation on the update method to learn more
+        about its limitations and underlying ideas.
         """
+        rsl = {}
         for key, value in kwargs.items():
-            self.__validate_single_field(key, value)
+            # Check, field by field, whether the submitted key-value pairs are
+            # in the model and the value passes the validation specified by the
+            # field.
+            cls.__validate_single_field(key, value)
+
+            # If a field has an alias, replace the key with the alias.
+            rsl_key = key
+            alias = cls.model_fields[key].alias
+            if by_alias and alias:
+                rsl_key = alias
+
+            # When the field value is a pydantic model, serialize it.
+            rsl[rsl_key] = value
+            if isinstance(value, BaseModel):
+                rsl[rsl_key] = value.model_dump(by_alias=by_alias)
+        return rsl
+
+    def update(self, row_id: int, by_alias: bool = True, **kwargs: Any):
+        """
+        Update the fields in the database specified by the kwargs parameter. The
+        keys provided must be valid field names in the model. values will be
+        validated against the model. If the value type is inherited by the
+        BaseModel, its serializer will be applied to the value and submitted to
+        the database. Please note that custom _Field_ serializers for any other
+        types are not taken into account.
+
+        The custom model serializer is used in the module because the structure
+        of some Baserow fields differs between the GET result and the required
+        POST data for modification. For example, the MultipleSelectField returns
+        ID, text value, and color with the GET request. However, only a list of
+        IDs or values is required for updating the field using a POST request.
+
+        Args:
+            row_id: ID of row in Baserow to be updated.
+            by_alias: Specify whether to use alias values to address field names
+                in Baserow. Note that this value is set to True by default,
+                contrary to pydantic's usual practice. In the context of the
+                table model (which is specifically used to represent Baserow
+                tables), setting an alias typically indicates that the field
+                name in Baserow is not a valid Python variable name.
+        """
+        payload = self.__dump_subset(by_alias, **kwargs)
+        Client().update_database_table_row(
+            self.table_id,
+            row_id,
+            payload,
+            user_field_names=True,
+        )
 
     def add(self):
         Client().create_database_table_row(
