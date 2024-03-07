@@ -283,6 +283,7 @@ class BaserowUpload(Table):
     cover: Optional[Any] = Field(alias="Cover")
     waveform: Optional[Any] = Field(alias="Waveform")
     state: MultipleSelectField = Field(alias="Status")
+    optimization_log: Optional[str] = Field(alias="Log Optimierung")
 
     table_id: ClassVar[int] = settings.br_upload_table
     table_name: ClassVar[str] = "Upload"
@@ -307,6 +308,17 @@ class BaserowUpload(Table):
         enum = self.state_enum
         enum.update_state(prefix, new_state)
         self.update(self.row_id, state=enum.to_multiple_select_field())
+
+    def update_optimizing_log(self, value: str):
+        """Updates the optimization log field."""
+        self.update(self.row_id, optimization_log=value)
+
+    def file_name_prefix(self) -> str:
+        """Canonical filename for a given Episode."""
+        date = self.planned_broadcast_at.strftime("%y%m%d-%H%M")
+        return f"{date}_{self.row_id}"
+        # show = normalize_for_filename(self.get_show().name)
+        # return f"e-{self.noco_id:05d}_{date}_{show}"
 
 
 class NocoEpisode(BaseModel):
