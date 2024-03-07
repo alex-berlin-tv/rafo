@@ -3,7 +3,7 @@ import enum
 from pydantic.config import ConfigDict
 from pydantic.fields import computed_field
 from pydantic.functional_validators import ModelAfterValidator, field_validator
-from .baserow import MultipleSelectField, Table, TableLinkField
+from .baserow import MultipleSelectEntry, MultipleSelectField, Table, TableLinkField
 from .config import settings
 from .log import logger
 
@@ -260,6 +260,13 @@ class UploadStates(RootModel[list[UploadState]]):
             return (-1, value)
         self.root = sorted(self.root, key=sort_by_order)
 
+    def to_multiple_select_field(self) -> MultipleSelectField:
+        """Converts the state collection to a MultipleSelectField."""
+        rsl: list[MultipleSelectEntry] = []
+        for entry in self.root:
+            rsl.append(MultipleSelectEntry(id=None, value=entry, color=None))
+        return MultipleSelectField(rsl)
+
 
 class BaserowUpload(Table):
     """A upload of an episode for a show by a person."""
@@ -280,6 +287,7 @@ class BaserowUpload(Table):
     table_id: ClassVar[int] = settings.br_upload_table
     table_name: ClassVar[str] = "Upload"
     model_config = ConfigDict(populate_by_name=True)
+    dump_response = True
 
     @computed_field
     @property
@@ -298,6 +306,7 @@ class BaserowUpload(Table):
         """Update the the state with the given prefix."""
         enum = self.state_enum
         enum.update_state(prefix, new_state)
+        self.update(self.row_id, state=enum.to_multiple_select_field())
 
 
 class NocoEpisode(BaseModel):

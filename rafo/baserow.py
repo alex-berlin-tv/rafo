@@ -4,6 +4,7 @@ This module contains a thin wrapper around the Baserow Client library.
 
 import abc
 from pydantic.fields import computed_field
+from pydantic.functional_validators import field_validator, model_validator
 from pydantic.main import create_model
 from .config import settings
 from .log import logger
@@ -53,9 +54,16 @@ class TableLinkField(RootModel[list[RowLink]]):
 
 class MultipleSelectEntry(BaseModel):
     """A entry in a multiple select field."""
-    entry_id: int = Field(alias="id")
-    value: str
-    color: str
+    entry_id: Optional[int] = Field(alias="id")
+    value: Optional[str]
+    color: Optional[str]
+
+    @model_validator(mode="after")
+    def id_or_value_must_be_set(self) -> Any:
+        if self.entry_id is None and self.value is None:
+            raise ValueError(
+                "At least one of the entry_id and value fields must be set"
+            )
 
 
 class MultipleSelectField(RootModel[list[MultipleSelectEntry]]):
@@ -168,6 +176,12 @@ class Table(BaseModel, abc.ABC):
     table_id: ClassVar[int]
     table_name: ClassVar[str]
 
+    dump_response: ClassVar[bool] = False
+    """
+    If set to true, the parsed dict of the body of each API response is dumped
+    to debug output.
+    """
+
     @classmethod
     def validate_baserow(cls):
         """
@@ -217,6 +231,8 @@ class Table(BaseModel, abc.ABC):
             filter=filter,
             user_field_names=True,
         )
+        if cls.dump_response:
+            logger.debug(response)
         return Result(
             [cls.model_validate(result) for result in response.results],
             f"querying  table {cls.table_id} ({cls.table_name}) with filter '{filter}'",
@@ -238,6 +254,8 @@ class Table(BaseModel, abc.ABC):
             row_id,
             user_field_names=True,
         )
+        if cls.dump_response:
+            logger.debug(response)
         return Result(
             [cls.model_validate(response)],
             f"querying the table with the unique ID '{row_id}' for {cls.table_name} ({cls.table_id})",
