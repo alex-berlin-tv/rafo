@@ -70,6 +70,8 @@ class MultipleSelectField(RootModel[list[MultipleSelectEntry]]):
     """Multiple select field in a table."""
     root: list[MultipleSelectEntry]
 
+    model_config = ConfigDict(populate_by_name=True)
+
 
 class Client(BaserowClient):
     """
