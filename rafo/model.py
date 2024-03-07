@@ -287,7 +287,7 @@ class BaserowUpload(Table):
     table_id: ClassVar[int] = settings.br_upload_table
     table_name: ClassVar[str] = "Upload"
     model_config = ConfigDict(populate_by_name=True)
-    dump_response = True
+    dump_payload = True
 
     @computed_field
     @property

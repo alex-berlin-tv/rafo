@@ -4,12 +4,13 @@ This module contains a thin wrapper around the Baserow Client library.
 
 import abc
 from pydantic.fields import computed_field
+from pydantic.functional_serializers import model_serializer
 from pydantic.functional_validators import field_validator, model_validator
 from pydantic.main import create_model
 from .config import settings
 from .log import logger
 
-from typing import Any, ClassVar, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, ClassVar, Generic, Optional, Type, TypeVar, Union
 
 from baserow.client import ApiError, BaserowClient
 from baserow.filter import Column, Filter
@@ -58,19 +59,37 @@ class MultipleSelectEntry(BaseModel):
     value: Optional[str]
     color: Optional[str]
 
+    model_config = ConfigDict(populate_by_name=True)
+
     @model_validator(mode="after")
-    def id_or_value_must_be_set(self) -> Any:
+    def id_or_value_must_be_set(self: "MultipleSelectEntry") -> "MultipleSelectEntry":
         if self.entry_id is None and self.value is None:
             raise ValueError(
                 "At least one of the entry_id and value fields must be set"
             )
+        return self
+
+    @model_serializer
+    def serialize(self) -> Union[int, str]:
+        """
+        Serializes the field into the data structure required by the Baserow
+        API. If an entry has both an id and a value set, the id is used.
+        Otherwise the set field is used.
+
+        From the Baserow API documentation: Accepts an array of mixed integer or
+        text values, each representing the selected option id or value. In the
+        case of a text value, the first matching option is selected. 
+        """
+        if self.entry_id is not None:
+            return self.entry_id
+        if self.value is not None:
+            return self.value
+        raise ValueError("both fields id and value are unset for this entry")
 
 
 class MultipleSelectField(RootModel[list[MultipleSelectEntry]]):
     """Multiple select field in a table."""
     root: list[MultipleSelectEntry]
-
-    model_config = ConfigDict(populate_by_name=True)
 
 
 class Client(BaserowClient):
@@ -184,6 +203,11 @@ class Table(BaseModel, abc.ABC):
     to debug output.
     """
 
+    dump_payload: ClassVar[bool] = False
+    """
+    If set to true, the data body for the request is dumped to the debug output.
+    """
+
     @classmethod
     def validate_baserow(cls):
         """
@@ -208,7 +232,7 @@ class Table(BaseModel, abc.ABC):
     @classmethod
     def query(
         cls: Type[T],
-        filter: List[Filter],
+        filter: list[Filter],
     ) -> Result[T]:
         """
         Queries rows in the table If no results are found, the function will
@@ -285,7 +309,7 @@ class Table(BaseModel, abc.ABC):
         logger.debug(
             f"baserow {description}"
         )
-        rsl: List[T] = []
+        rsl: list[T] = []
         try:
             for link in link_field.root:
                 rsl.append(cls.by_id(link.row_id).one())
@@ -357,6 +381,8 @@ class Table(BaseModel, abc.ABC):
                 name in Baserow is not a valid Python variable name.
         """
         payload = self.__dump_subset(by_alias, **kwargs)
+        if self.dump_payload:
+            logger.debug(payload)
         Client().update_database_table_row(
             self.table_id,
             row_id,
