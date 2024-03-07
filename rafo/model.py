@@ -3,7 +3,7 @@ import enum
 from pydantic.config import ConfigDict
 from pydantic.fields import computed_field
 from pydantic.functional_validators import ModelAfterValidator, field_validator
-from .baserow import MultipleSelectEntry, MultipleSelectField, Table, TableLinkField
+from .baserow import DateTimeField, MultipleSelectEntry, MultipleSelectField, Table, TableLinkField
 from .config import settings
 from .log import logger
 
@@ -50,11 +50,11 @@ def get_nocodb_data(project_name: str, table_name: str, filter_obj: Optional[Whe
 
 class BaserowPerson(Table):
     """A person (formerly called Producer) in Baserow."""
-    row_id: int = Field(alias="id")
-    name: str = Field(alias="Name")
-    email: str = Field(alias="E-Mail")
-    shows: TableLinkField = Field(alias="Format")
-    uuid: str = Field(alias="UUID")
+    row_id: int = Field(alias=str("id"))
+    name: str = Field(alias=str("Name"))
+    email: str = Field(alias=str("E-Mail"))
+    shows: TableLinkField = Field(alias=str("Format"))
+    uuid: str = Field(alias=str("UUID"))
 
     table_id: ClassVar[int] = settings.br_person_table
     table_name: ClassVar[str] = "Person"
@@ -63,14 +63,14 @@ class BaserowPerson(Table):
 
 class NocoProducer(BaseModel):
     """A Producer in NocoDB."""
-    noco_id: int = Field(alias="Id")
-    created_at: datetime = Field(alias="CreatedAt")
-    updated_at: datetime = Field(alias="UpdatedAt")
-    first_name: str = Field(alias="Vorname")
-    last_name: str = Field(alias="Name")
-    ident: str = Field(alias="Ident")
-    email: str = Field(alias="Email")
-    uuid: str = Field(alias="UUID")
+    noco_id: int = Field(alias=str("Id"))
+    created_at: datetime = Field(alias=str("CreatedAt"))
+    updated_at: datetime = Field(alias=str("UpdatedAt"))
+    first_name: str = Field(alias=str("Vorname"))
+    last_name: str = Field(alias=str("Name"))
+    ident: str = Field(alias=str("Ident"))
+    email: str = Field(alias=str("Email"))
+    uuid: str = Field(alias=str("UUID"))
 
     @classmethod
     def from_nocodb_by_uuid(cls, uuid: str):
@@ -89,11 +89,11 @@ class BaserowShow(Table):
     """
     A show (»Format«) has one or more producers and contains multiple episodes.
     """
-    row_id: int = Field(alias="id")
-    name: str = Field(alias="Name")
-    responsible: Any = Field(alias="Verantwortlich")
-    uuid: str = Field(alias="UUID")
-    supervision: Any = Field(alias="Betreuung")
+    row_id: int = Field(alias=str("id"))
+    name: str = Field(alias=str("Name"))
+    responsible: Any = Field(alias=str("Verantwortlich"))
+    uuid: str = Field(alias=str("UUID"))
+    supervision: Any = Field(alias=str("Betreuung"))
 
     table_id: ClassVar[int] = settings.br_show_table
     table_name: ClassVar[str] = "Format"
@@ -101,14 +101,14 @@ class BaserowShow(Table):
 
 
 class NocoShow(BaseModel):
-    noco_id: int = Field(alias="Id")
-    created_at: datetime = Field(alias="CreatedAt")
-    updated_at: datetime = Field(alias="UpdatedAt")
-    name: str = Field(alias="Name")
-    ident: str = Field(alias="Ident")
-    uuid: str = Field(alias="UUID")
-    name: str = Field(alias="Name")
-    description: Optional[str] = Field(alias="Description")
+    noco_id: int = Field(alias=str("Id"))
+    created_at: datetime = Field(alias=str("CreatedAt"))
+    updated_at: datetime = Field(alias=str("UpdatedAt"))
+    name: str = Field(alias=str("Name"))
+    ident: str = Field(alias=str("Ident"))
+    uuid: str = Field(alias=str("UUID"))
+    name: str = Field(alias=str("Name"))
+    description: Optional[str] = Field(alias=str("Description"))
 
     @classmethod
     def from_nocodb_by_uuid(cls, uuid: str):
@@ -270,20 +270,29 @@ class UploadStates(RootModel[list[UploadState]]):
 
 class BaserowUpload(Table):
     """A upload of an episode for a show by a person."""
-    row_id: int = Field(alias="id")
-    name: str = Field(alias="Name")
-    uploader: TableLinkField = Field(alias="Eingereicht von")
-    show: TableLinkField = Field(alias="Format")
-    planned_broadcast_at: datetime = Field(alias="Geplante Ausstrahlung")
-    description: Optional[str] = Field(alias="Beschreibung")
-    comment_producer: Optional[str] = Field(alias="Kommentar Produzent")
-    source_file: Optional[Any] = Field(alias="Quelldatei")
-    optimized_file: Optional[Any] = Field(alias="Optimierte Datei")
-    manual_file: Optional[Any] = Field(alias="Manuelle Datei")
-    cover: Optional[Any] = Field(alias="Cover")
-    waveform: Optional[Any] = Field(alias="Waveform")
-    state: MultipleSelectField = Field(alias="Status")
-    optimization_log: Optional[str] = Field(alias="Log Optimierung")
+    row_id: int = Field(alias=str("id"))
+    name: str = Field(alias=str("Name"))
+    uploader: TableLinkField = Field(alias=str("Eingereicht von"))
+    show: TableLinkField = Field(alias=str("Format"))
+    planned_broadcast_at: datetime = Field(
+        alias=str("Geplante Ausstrahlung"))
+    description: Optional[str] = Field(alias=str("Beschreibung"), default=None)
+    comment_producer: Optional[str] = Field(
+        alias=str("Kommentar Produzent"), default=None
+    )
+    source_file: Optional[Any] = Field(alias=str("Quelldatei"), default=None)
+    optimized_file: Optional[Any] = Field(
+        alias=str("Optimierte Datei"), default=None
+    )
+    manual_file: Optional[Any] = Field(
+        alias=str("Manuelle Datei"), default=None
+    )
+    cover: Optional[Any] = Field(alias=str("Cover"), default=None)
+    waveform: Optional[Any] = Field(alias=str("Waveform"), default=None)
+    state: MultipleSelectField = Field(alias=str("Status"), default=None)
+    optimization_log: Optional[str] = Field(
+        alias=str("Log Optimierung"), default=None
+    )
 
     table_id: ClassVar[int] = settings.br_upload_table
     table_name: ClassVar[str] = "Upload"
@@ -322,22 +331,25 @@ class BaserowUpload(Table):
 
 
 class NocoEpisode(BaseModel):
-    noco_id: int = Field(alias="Id")
-    created_at: Optional[datetime] = Field(alias="CreatedAt", default=None)
-    updated_at: Optional[datetime] = Field(alias="UpdatedAt", default=None)
-    title: str = Field(alias="Titel")
-    description: str = Field(alias="Beschreibung")
-    comment_producer: Optional[str] = Field(alias="Kommentar Produzent")
-    source_file: Optional[Any] = Field(alias="Quelldatei")
-    optimized_file: Optional[Any] = Field(alias="Optimierte Datei")
-    manual_file: Optional[Any] = Field(alias="Manuelle Datei")
-    waveform: Optional[Any] = Field(alias="Waveform")
-    uuid: str = Field(alias="UUID")
-    planned_broadcast_at: datetime = Field(alias="Geplante Ausstrahlung")
-    state_omnia: Optional[str] = Field(alias="Status Omnia")
-    state_waveform: Optional[WaveformState] = Field(alias="Status Waveform")
+    noco_id: int = Field(alias=str("Id"))
+    created_at: Optional[datetime] = Field(
+        alias=str("CreatedAt"), default=None)
+    updated_at: Optional[datetime] = Field(
+        alias=str("UpdatedAt"), default=None)
+    title: str = Field(alias=str("Titel"))
+    description: str = Field(alias=str("Beschreibung"))
+    comment_producer: Optional[str] = Field(alias=str("Kommentar Produzent"))
+    source_file: Optional[Any] = Field(alias=str("Quelldatei"))
+    optimized_file: Optional[Any] = Field(alias=str("Optimierte Datei"))
+    manual_file: Optional[Any] = Field(alias=str("Manuelle Datei"))
+    waveform: Optional[Any] = Field(alias=str("Waveform"))
+    uuid: str = Field(alias=str("UUID"))
+    planned_broadcast_at: datetime = Field(alias=str("Geplante Ausstrahlung"))
+    state_omnia: Optional[str] = Field(alias=str("Status Omnia"))
+    state_waveform: Optional[WaveformState] = Field(
+        alias=str("Status Waveform"))
     state_optimizing: Optional[OptimizingState] = Field(
-        alias="Status Optimierung"
+        alias=str("Status Optimierung")
     )
 
     @classmethod
@@ -445,15 +457,15 @@ class NocoEpisode(BaseModel):
 
 class NocoEpisodeNew(BaseModel):
     """A new Episode entry which should be added to NocoDB."""
-    title: str = Field(alias="Titel")
-    uuid: str = Field(alias="UUID")
-    description: str = Field(alias="Beschreibung")
-    planned_broadcast_at: str = Field(alias="Geplante Ausstrahlung")
-    comment: str = Field(alias="Kommentar Produzent")
+    title: str = Field(alias=str("Titel"))
+    uuid: str = Field(alias=str("UUID"))
+    description: str = Field(alias=str("Beschreibung"))
+    planned_broadcast_at: str = Field(alias=str("Geplante Ausstrahlung"))
+    comment: str = Field(alias=str("Kommentar Produzent"))
     state_waveform: Optional[WaveformState] = Field(
-        alias="Status Waveform", default=WaveformState.PENDING)
+        alias=str("Status Waveform"), default=WaveformState.PENDING)
     state_optimizing: Optional[OptimizingState] = Field(
-        alias="Status Optimierung", default=OptimizingState.PENDING)
+        alias=str("Status Optimierung"), default=OptimizingState.PENDING)
 
     class Config:
         populate_by_name = True

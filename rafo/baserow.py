@@ -3,14 +3,13 @@ This module contains a thin wrapper around the Baserow Client library.
 """
 
 import abc
-from pydantic.fields import computed_field
+import datetime
 from pydantic.functional_serializers import model_serializer
 from pydantic.functional_validators import field_validator, model_validator
-from pydantic.main import create_model
 from .config import settings
 from .log import logger
 
-from typing import Any, ClassVar, Generic, Optional, Type, TypeVar, Union
+from typing import Any, ClassVar, Generic, Optional, Self, Type, TypeVar, Union
 
 from baserow.client import ApiError, BaserowClient
 from baserow.filter import Column, Filter
@@ -90,6 +89,17 @@ class MultipleSelectEntry(BaseModel):
 class MultipleSelectField(RootModel[list[MultipleSelectEntry]]):
     """Multiple select field in a table."""
     root: list[MultipleSelectEntry]
+
+
+class DateTimeField(datetime.datetime):
+    """
+    Date and time field. Needed as the the API client library doesn't accept
+    datetime object as value.
+    """
+
+    @model_serializer
+    def datetime_to_isoformat(self) -> str:
+        return self.isoformat()
 
 
 class Client(BaserowClient):
@@ -416,9 +426,14 @@ class Table(BaseModel, abc.ABC):
             "Baserow client library currently does not support batch update operations on rows"
         )
 
-    def add(self):
-        Client().create_database_table_row(
+    def create(self) -> Self:
+        """
+        Creates a new row in the Baserow table using the values of the instance.
+        Returns the object of Baserow's response.
+        """
+        rsl = Client().create_database_table_row(
             self.table_id,
-            self.model_dump(by_alias=True),
+            self.model_dump(by_alias=True, mode="json"),
             user_field_names=True
         )
+        return self.model_validate(rsl)
