@@ -2,10 +2,13 @@
 This module contains a thin wrapper around the Baserow Client library.
 """
 
+import abc
+from pydantic.fields import computed_field
+from pydantic.main import create_model
 from .config import settings
 from .log import logger
 
-from typing import Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, ClassVar, Generic, List, Optional, Type, TypeVar, Union
 
 from baserow.client import ApiError, BaserowClient
 from baserow.filter import Column, Filter
@@ -46,6 +49,18 @@ class TableLinkField(RootModel[list[RowLink]]):
     def id_str(self) -> str:
         """Returns a list of all ID's as string for debugging."""
         return ",".join([str(link.row_id) for link in self.root])
+
+
+class MultipleSelectEntry(BaseModel):
+    """A entry in a multiple select field."""
+    entry_id: int = Field(alias="id")
+    value: str
+    color: str
+
+
+class MultipleSelectField(RootModel[list[MultipleSelectEntry]]):
+    """Multiple select field in a table."""
+    root: list[MultipleSelectEntry]
 
 
 class Client(BaserowClient):
@@ -115,19 +130,35 @@ class Result(Generic[T]):
         return len(self.__value) > 0
 
 
-class TableConfig(ConfigDict):
-    """
-    This is a ConfigDict extension that includes custom settings for connecting with Baserow.
-    """
-    table_id: int
-    table_name: str
-
-
-class Table(BaseModel):
+class Table(BaseModel, abc.ABC):
     """
     Encapsulates the most common interactions with a baserow table by binding it to a pydantic
     BaseModel.
     """
+
+    @property
+    @abc.abstractmethod
+    def table_id(cls) -> int:  # type: ignore
+        """
+        The Baserow table ID. Every table in Baserow has a unique ID. This means
+        that each model is linked to a specific table. It's not currently
+        possible to bind a table model to multiple tables.
+        """
+        raise NotImplementedError()
+
+    @property
+    @abc.abstractmethod
+    def table_name(cls) -> str:  # type: ignore
+        """
+        Each table model must have a human-readable table name. The name is used
+        for debugging information only and has no role in addressing/interacting
+        with the Baserow table. Ideally this should be the same name used for
+        the table within the Baserow UI.
+        """
+        raise NotImplementedError()
+
+    table_id: ClassVar[int]
+    table_name: ClassVar[str]
 
     @classmethod
     def validate_baserow(cls):
@@ -135,29 +166,25 @@ class Table(BaseModel):
         Checks if the given table id's exist in the Baserow backend. And the given user field
         names exist in the table.
         """
-        table_id = cls.table_id()
-        table_name = cls.table_name()
         aliases = [field.alias for _, field in cls.model_fields.items()]
         try:
-            result = Client().list_database_table_fields(table_id)
+            result = Client().list_database_table_fields(cls.table_id)
             field_names = [field.name for field in result]
             for alias in aliases:
                 if alias not in field_names and alias != "id":
                     raise RuntimeError(
-                        f"Field '{alias}' not found in Baserow {table_name} table {table_id}"
+                        f"Field '{alias}' not found in Baserow {cls.table_name} table {cls.table_id}"
                     )
         except ApiError as e:
             if e.args[0] == "ERROR_TABLE_DOES_NOT_EXIST":
                 raise RuntimeError(
-                    f"There is no {table_name} table in baserow for id {table_id}")
+                    f"There is no {cls.table_name} table in baserow for id {cls.table_id}")
             raise e
 
     @classmethod
     def query(
         cls: Type[T],
         filter: List[Filter],
-        # one: bool = False,
-        # not_none: bool = False,
     ) -> Result[T]:
         """
         Queries rows in the table If no results are found, the function will
@@ -177,39 +204,19 @@ class Table(BaseModel):
                 record. Will throw a `NoResultError' if the query returns an
                 empty result.Cannot be set at the same time as `one`.
         """
-        # if one and not_none:
-        #     raise ValueError(
-        #         "The 'one' and 'not_none' parameters cannot both be true in the query method."
-        #     )
-
         response = Client().list_database_table_rows(
-            cls.table_id(),
+            cls.table_id,
             filter=filter,
             user_field_names=True,
         )
         return Result(
             [cls.model_validate(result) for result in response.results],
-            f"querying  table {cls.table_id()} ({cls.table_name()}) with filter '{filter}'",
+            f"querying  table {cls.table_id} ({cls.table_name}) with filter '{filter}'",
         )
-
-        if one and response.count != 1:
-            raise NoSingleResultFoundError(
-                f"when querying table {cls.table_id()} ({cls.table_name()}) with filter '{filter}', only one record was expected, but {response.count} results were returned instead."
-            )
-        if not_none and response.count < 1:
-            raise NoResultError(
-                f"expected at least one record when querying table {cls.table_id()} ({cls.table_name()}) with filter '{filter}'. However, zero results were returned instead."
-            )
-
-        if one:
-            return cls.model_validate(response.results[0])
-        if response.count == 0:
-            return None
-        return [cls.model_validate(result) for result in response.results]
 
     @classmethod
     def by_uuid(cls: Type[T], uuid: str) -> Result[T]:
-        logger.debug(f"baserow query in {cls.table_name()} by UUID {uuid}")
+        logger.debug(f"baserow query in {cls.table_name} by UUID {uuid}")
         return cls.query([Column("UUID").equal(uuid)])
 
     @classmethod
@@ -217,27 +224,21 @@ class Table(BaseModel):
         """
         Retrieve an entry by its unique row ID.
         """
-        logger.debug(f"baserow query in {cls.table_name()} by ID {row_id}")
+        logger.debug(f"baserow query in {cls.table_name} by ID {row_id}")
         response = Client().get_database_table_row(
-            cls.table_id(),
+            cls.table_id,
             row_id,
             user_field_names=True,
         )
         return Result(
             [cls.model_validate(response)],
-            f"querying the table with the unique ID '{row_id}' for {cls.table_name()} ({cls.table_id()})",
+            f"querying the table with the unique ID '{row_id}' for {cls.table_name} ({cls.table_id})",
         )
-        if not_none and len(response) == 0:
-            raise NoResultError(
-            )
-        return cls.model_validate(response)
 
     @classmethod
     def by_link_field(
         cls: Type[T],
         link_field: TableLinkField,
-        # one: bool = False,
-        # not_none: bool = False,
     ) -> Result[T]:
         """
         Get entries by a TableLinkField values. Used to retrieve linked table rows.
@@ -252,7 +253,7 @@ class Table(BaseModel):
                 record. Will throw a `NoResultError' if the query returns an
                 empty result.Cannot be set at the same time as `one`.
         """
-        description = f"query in {cls.table_name()} for linked fields with ID's [{link_field.id_str()}]"
+        description = f"query in {cls.table_name} for linked fields with ID's [{link_field.id_str()}]"
         logger.debug(
             f"baserow {description}"
         )
@@ -268,40 +269,23 @@ class Table(BaseModel):
             raise NoResultError(
                 f"error while {description}, {e}")
 
-        # if one and len(rsl) != 1:
-        #     raise NoSingleResultFoundError(
-        #         f"when querying for linked rows in table {cls.table_id()} ({cls.table_name()}) with id's [{link_field.id_str()}], only one record was expected, but {len(rsl)} results were found"
-        #     )
-        # if not_none and len(rsl) == 0:
-        #     raise NoResultError(
-        #         f"expected at least one record when querying for linked rows in table {cls.table_id()} ({cls.table_name()}) with id's [{link_field.id_str()}] However, zero results were returned instead"
-        #     )
-
-        # if one:
-        #     return rsl[0]
-        # if len(rsl) == 0:
-        #     return None
-        # return rsl
-
     @classmethod
-    def table_id(cls) -> int:
-        rsl = cls.model_config.get('table_id')
-        if not isinstance(rsl, int):
-            raise RuntimeError(f"table_id is not configured in a table model")
-        return rsl
+    def __validate_single_field(cls, field_name: str, value: Any) -> dict[str, Any] | tuple[dict[str, Any], dict[str, Any] | None, set[str]]:
+        return cls.__pydantic_validator__.validate_assignment(
+            cls.model_construct(), field_name, value
+        )
 
-    @classmethod
-    def table_name(cls):
-        rsl = cls.model_config.get('table_name')
-        if not isinstance(rsl, str):
-            raise RuntimeError(
-                f"table_name is not configured in a table model"
-            )
-        return rsl
+    def update(self, **kwargs: Any):
+        """
+        Updates the fields specified by kwargs. The given keys and values are
+        validated against the model. If the value type is itself a 
+        """
+        for key, value in kwargs.items():
+            self.__validate_single_field(key, value)
 
     def add(self):
         Client().create_database_table_row(
-            self.table_id(),
+            self.table_id,
             self.model_dump(by_alias=True),
             user_field_names=True
         )

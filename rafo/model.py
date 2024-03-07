@@ -1,5 +1,9 @@
 import enum
-from .baserow import Table, TableConfig, TableLinkField
+
+from pydantic.config import ConfigDict
+from pydantic.fields import computed_field
+from pydantic.functional_validators import ModelAfterValidator, field_validator
+from .baserow import MultipleSelectField, Table, TableLinkField
 from .config import settings
 from .log import logger
 
@@ -52,11 +56,9 @@ class BaserowPerson(Table):
     shows: TableLinkField = Field(alias="Format")
     uuid: str = Field(alias="UUID")
 
-    model_config = TableConfig(
-        table_id=settings.br_person_table,
-        table_name="Person",
-        populate_by_name=True,
-    )
+    table_id: ClassVar[int] = settings.br_person_table
+    table_name: ClassVar[str] = "Person"
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class NocoProducer(BaseModel):
@@ -93,11 +95,9 @@ class BaserowShow(Table):
     uuid: str = Field(alias="UUID")
     supervision: Any = Field(alias="Betreuung")
 
-    model_config = TableConfig(
-        table_id=settings.br_show_table,
-        table_name="Format",
-        populate_by_name=True,
-    )
+    table_id: ClassVar[int] = settings.br_show_table
+    table_name: ClassVar[str] = "Format"
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class NocoShow(BaseModel):
@@ -220,6 +220,18 @@ class UploadStates(RootModel[list[UploadState]]):
     ]
 
     @classmethod
+    def from_multiple_select_field(cls, field: MultipleSelectField) -> "UploadStates":
+        """Parses a Baserow multiple select field model."""
+        entries = []
+        for field_entry in field.root:
+            for enum_entry in UploadState:
+                if field_entry.value == enum_entry.value:
+                    entries.append(enum_entry)
+        rsl = cls(root=entries)
+        rsl.sort()
+        return rsl
+
+    @classmethod
     def all_pending(cls) -> "UploadStates":
         """Returns all states to be pending."""
         return cls(root=[
@@ -228,7 +240,11 @@ class UploadStates(RootModel[list[UploadState]]):
             UploadState.OMNIA_PENDING,
         ])
 
-    def replace_state(self, prefix: str, new_state: UploadState):
+    def values(self) -> list[str]:
+        """Returns all values as list of strings."""
+        return [entry.value for entry in self.root]
+
+    def update_state(self, prefix: str, new_state: UploadState):
         """Replaces the state with the given prefix."""
         keep = [
             state for state in self.root if not state.value.startswith(prefix)
@@ -250,6 +266,7 @@ class BaserowUpload(Table):
     row_id: int = Field(alias="id")
     name: str = Field(alias="Name")
     uploader: TableLinkField = Field(alias="Eingereicht von")
+    show: TableLinkField = Field(alias="Format")
     planned_broadcast_at: datetime = Field(alias="Geplante Ausstrahlung")
     description: Optional[str] = Field(alias="Beschreibung")
     comment_producer: Optional[str] = Field(alias="Kommentar Produzent")
@@ -258,23 +275,29 @@ class BaserowUpload(Table):
     manual_file: Optional[Any] = Field(alias="Manuelle Datei")
     cover: Optional[Any] = Field(alias="Cover")
     waveform: Optional[Any] = Field(alias="Waveform")
-    uuid: str = Field(alias="UUID")
-    state: List[OmniaState] = Field(alias="Status")
+    state: MultipleSelectField = Field(alias="Status")
 
-    model_config = TableConfig(
-        table_id=settings.br_upload_table,
-        table_name="Upload",
-        populate_by_name=True,
-    )
+    table_id: ClassVar[int] = settings.br_upload_table
+    table_name: ClassVar[str] = "Upload"
+    model_config = ConfigDict(populate_by_name=True)
+
+    @computed_field
+    @property
+    def state_enum(self) -> UploadStates:
+        return UploadStates.from_multiple_select_field(self.state)
 
     def get_uploader(self) -> BaserowPerson:
         """Get DB entry of the person which did the upload."""
-        rsl = BaserowPerson.by_link_field(self.uploader).one()
-        if not isinstance(rsl, BaserowPerson):
-            raise ValueError(
-                "logic error, by link field query for Person returned not a single result"
-            )
-        return rsl
+        return BaserowPerson.by_link_field(self.uploader).one()
+
+    def get_show(self) -> BaserowShow:
+        """Get DB entry of the show linked to the upload."""
+        return BaserowShow.by_link_field(self.show).one()
+
+    def update_state(self, prefix: str, new_state: UploadState):
+        """Update the the state with the given prefix."""
+        enum = self.state_enum
+        enum.update_state(prefix, new_state)
 
 
 class NocoEpisode(BaseModel):
