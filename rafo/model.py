@@ -1,6 +1,6 @@
 import enum
 
-from .baserow import FileField, MultipleSelectEntry, MultipleSelectField, RowLink, Table, TableLinkField
+from .baserow import MultipleSelectEntry, MultipleSelectField, RowLink, Table, TableLinkField
 from .config import settings
 from .log import logger
 
@@ -60,7 +60,7 @@ class BaserowPerson(Table):
     model_config = ConfigDict(populate_by_name=True)
 
     def row_link(self) -> RowLink:
-        """Returns RowLink to link to this row using a TableLinkField."""
+        """Returns RowLinkj to link this table using a TableLinkField."""
         return RowLink(
             row_id=self.row_id,
             key=None,
@@ -294,16 +294,15 @@ class BaserowUpload(Table):
     comment_producer: Optional[str] = Field(
         alias=str("Kommentar Produzent"), default=None
     )
-    source_file: Optional[FileField] = Field(
-        alias=str("Quelldatei"), default=None)
+    source_file: Optional[Any] = Field(alias=str("Quelldatei"), default=None)
     optimized_file: Optional[Any] = Field(
         alias=str("Optimierte Datei"), default=None
     )
-    manual_file: Optional[FileField] = Field(
+    manual_file: Optional[Any] = Field(
         alias=str("Manuelle Datei"), default=None
     )
-    cover: Optional[FileField] = Field(alias=str("Cover"), default=None)
-    waveform: Optional[FileField] = Field(alias=str("Waveform"), default=None)
+    cover: Optional[Any] = Field(alias=str("Cover"), default=None)
+    waveform: Optional[Any] = Field(alias=str("Waveform"), default=None)
     state: MultipleSelectField = Field(
         alias=str("Status"),
         default=UploadStates.all_pending().to_multiple_select_field(),
@@ -311,11 +310,13 @@ class BaserowUpload(Table):
     optimization_log: Optional[str] = Field(
         alias=str("Log Optimierung"), default=None
     )
-
+    created_at: Optional[datetime] = Field(
+        alias=str("Hochgeladen am"), default=None
+    )
     table_id: ClassVar[int] = settings.br_upload_table
     table_name: ClassVar[str] = "Upload"
     model_config = ConfigDict(populate_by_name=True)
-    dump_response = True
+    dump_payload = True
 
     @computed_field
     @property
