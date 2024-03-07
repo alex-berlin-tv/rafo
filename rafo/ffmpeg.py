@@ -1,6 +1,6 @@
 from .config import settings
 from .log import logger
-from .model import NocoEpisode, NocoProducer, NocoShow
+from .model import BaserowPerson, BaserowShow, BaserowUpload
 
 from pathlib import Path
 import re
@@ -51,14 +51,14 @@ class Metadata:
     def duration(self) -> float:
         """Duration of the media file in seconds."""
         return float(self.data["streams"][0]["duration"])
-    
+
     def formatted_duration(self) -> str:
         """Human readable duration in the HH:MM.ss format."""
         seconds = self.duration()
         hours, remainder = divmod(seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
-        
+
 
 class SilencePart:
     """States the position and duration of silence."""
@@ -89,7 +89,8 @@ class SilencePart:
 class Silence:
     """Detect silence."""
 
-    silence_start_re = re.compile(r" silence_start: (?P<start>[0-9]+(\.?[0-9]*)).*$")
+    silence_start_re = re.compile(
+        r" silence_start: (?P<start>[0-9]+(\.?[0-9]*)).*$")
     silence_end_re = re.compile(r" silence_end: (?P<end>[0-9]+(\.?[0-9]*))")
 
     def __init__(self, input_file: Path):
@@ -103,7 +104,7 @@ class Silence:
             if silence_part.is_at_start():
                 return silence_part
         return None
-    
+
     def intermediate_silences(self) -> list[SilencePart]:
         """Returns a list of all `SilencePart`s which are not at the start or end of the file."""
         rsl: list[SilencePart] = []
@@ -114,21 +115,21 @@ class Silence:
                 continue
             rsl.append(silence_part)
         return rsl
-    
+
     def end_silence(self) -> Optional[SilencePart]:
         """Returns a `SilencePart` if there is one at the end of the file."""
         for silence_part in self.__silence_parts:
             if silence_part.is_at_end(self.__metadata.duration()):
                 return silence_part
         return None
-    
+
     def whole_file_is_silence(self) -> bool:
         """Returns whether whole file is silence."""
         for silence_part in self.__silence_parts:
             if silence_part.is_whole_file(self.__metadata.duration()):
                 return True
         return False
-    
+
     def log(self) -> str:
         """
         Human readable log of all silence in the file appended to NocoDB to be viewed by the user.
@@ -138,14 +139,16 @@ class Silence:
         if self.whole_file_is_silence():
             return f"- Whole file appears to be silence"
         if start_silence:
-            rsl.append(f"- Silence found and removed at the start ({start_silence.start:.2f})")
+            rsl.append(
+                f"- Silence found and removed at the start ({start_silence.start:.2f})")
         end_silence = self.end_silence()
         if end_silence:
-            rsl.append(f"- Silence found and removed at the end ({end_silence.end:.2f})")
+            rsl.append(
+                f"- Silence found and removed at the end ({end_silence.end:.2f})")
         for silence in self.intermediate_silences():
-            rsl.append(f"- Intermediate silence found, this has to be resolved manually ({silence.start:.2f} to {silence.end:.2f}) ")
+            rsl.append(
+                f"- Intermediate silence found, this has to be resolved manually ({silence.start:.2f} to {silence.end:.2f}) ")
         return "\n".join(rsl)
-        
 
     @staticmethod
     def __run_silence_detection(input_file: Path) -> list[str]:
@@ -158,11 +161,11 @@ class Silence:
                 )
                 .output("-", format="null")
                 .compile()
-            ),
+             ),
             stderr=subprocess.PIPE,
         )
         return popen.communicate()[1].decode().splitlines()
-    
+
     @staticmethod
     def __parse_ffmpeg_output(ffmpeg_output: list[str]) -> list[SilencePart]:
         silence_index = -1
@@ -193,34 +196,38 @@ class Optimize:
     mAirList cannot read the file.)
     - Applies the EBU loudness-norm
     """
-    
+
     def __init__(
         self,
         input_file: Path,
         silence: Silence,
-        episode: NocoEpisode,
-        producer: NocoProducer,
-        show: NocoShow,
+        upload: BaserowUpload,
+        person: BaserowPerson,
+        show: BaserowShow,
     ):
         self.__input_file = input_file
         self.__silence = silence
-        self.__episode = episode
-        self.__producer = producer
+        self.__upload = upload
+        self.__person = person
         self.__show = show
-    
+
     def run(self, output_file: Path):
         """ Applies the optimization."""
         input_options = {}
         start_silence = self.__silence.start_silence()
         if start_silence and start_silence.end > settings.audio_crop_allowance:
-            logger.info(f"Found silence at the start with a duration of {start_silence.duration:.2f}, will crop")
-            input_options["ss"] = start_silence.end - settings.audio_crop_allowance
+            logger.info(
+                f"Found silence at the start with a duration of {start_silence.duration:.2f}, will crop")
+            input_options["ss"] = start_silence.end - \
+                settings.audio_crop_allowance
         end_silence = self.__silence.end_silence()
         if end_silence:
-            logger.info(f"Found silence at the end with a duration of {end_silence.duration:.2f}, will crop")
-            input_options["to"] = end_silence.start + settings.audio_crop_allowance
-        
-        date = self.__episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M")
+            logger.info(
+                f"Found silence at the end with a duration of {end_silence.duration:.2f}, will crop")
+            input_options["to"] = end_silence.start + \
+                settings.audio_crop_allowance
+
+        date = self.__upload.planned_broadcast_at.strftime("%d.%m.%Y %H:%M")
         ffmpeg.input(
             str(self.__input_file),
             **input_options
@@ -232,9 +239,9 @@ class Optimize:
             ar=settings.sample_rate,
             **{
                 "metadata:g:0": f"title={output_file.stem}",
-                "metadata:g:1": f"artist={self.__producer.first_name} {self.__producer.last_name} (p-{self.__producer.noco_id:03})",
-                "metadata:g:2": f"album={self.__show.name} (s-{self.__show.noco_id:03})",
-                "metadata:g:3": f"track={self.__episode.noco_id}",
+                "metadata:g:1": f"artist={self.__person.name} (p-{self.__person.row_id:03})",
+                "metadata:g:2": f"album={self.__show.name} (s-{self.__show.row_id:03})",
+                "metadata:g:3": f"track=Upload entry: {self.__upload.row_id}",
                 "metadata:g:4": f"date={date}",
             }
         ).run()

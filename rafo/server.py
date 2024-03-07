@@ -1,9 +1,10 @@
+from rafo.baserow import TableLinkField
 from . import VERSION
 from .config import settings
 from .file_worker import FileWorker
 from .log import logger
 from .mail import Mail
-from .model import NocoEpisodeNew, ProducerUploadData
+from .model import BaserowPerson, BaserowShow, BaserowUpload, ProducerUploadData
 
 import datetime
 from uuid import uuid4
@@ -148,9 +149,8 @@ async def upload_file(
     else:
         cover_path = None
     try:
-        planned_broadcast_at = datetime.datetime.strptime(
+        planned_broadcast_at = datetime.datetime.fromisoformat(
             planned_broadcast_target.value.decode(),
-            "%Y-%m-%dT%H:%M",
         )
     except Exception as e:
         raise HTTPException(
@@ -158,25 +158,28 @@ async def upload_file(
     comment = comment_target.value.decode()
     if comment == "":
         comment = None
-    episode = NocoEpisodeNew(  # type: ignore
-        title=title_target.value.decode(),  # type: ignore
-        uuid=uuid,  # type: ignore
-        description=description_target.value.decode(),  # type: ignore
-        planned_broadcast_at=planned_broadcast_at.strftime(  # type: ignore
-            "%Y-%m-%d %H:%M:%S%z"),
-        comment=comment_target.value.decode(),  # type: ignore
+
+    uploader = BaserowPerson.by_uuid(producer_target.value.decode()).one()
+    show = BaserowShow.by_uuid(show_target.value.decode()).one()
+    new_upload = BaserowUpload(
+        row_id=-1,
+        name=title_target.value.decode(),
+        uploader=TableLinkField([uploader.row_link()]),
+        show=TableLinkField([show.row_link()]),
+        description=description_target.value.decode(),
+        planned_broadcast_at=planned_broadcast_at,
+        comment_producer=comment,
     )
-    episode_id = episode.add_to_noco(
-        producer_target.value.decode(), show_target.value.decode())
-    worker = FileWorker(file_path, cover_path, temp_folder, episode_id)
+    upload = new_upload.create()
+    worker = FileWorker(file_path, cover_path, temp_folder, upload.row_id)
     mail = Mail.from_settings()
     background_tasks.add_task(worker.upload_raw)
     background_tasks.add_task(worker.upload_cover)
     background_tasks.add_task(worker.generate_waveform)
     background_tasks.add_task(worker.optimize_file)
     background_tasks.add_task(worker.delete_temp_folder_on_completion)
-    background_tasks.add_task(mail.send_on_upload_internal, episode_id)
-    background_tasks.add_task(mail.send_on_upload_external, episode_id)
+    background_tasks.add_task(mail.send_on_upload_internal, upload.row_id)
+    background_tasks.add_task(mail.send_on_upload_external, upload.row_id)
     return {
         "success": True,
     }

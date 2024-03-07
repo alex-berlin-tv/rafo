@@ -1,9 +1,6 @@
 import enum
 
-from pydantic.config import ConfigDict
-from pydantic.fields import computed_field
-from pydantic.functional_validators import ModelAfterValidator, field_validator
-from .baserow import DateTimeField, MultipleSelectEntry, MultipleSelectField, Table, TableLinkField
+from .baserow import FileField, MultipleSelectEntry, MultipleSelectField, RowLink, Table, TableLinkField
 from .config import settings
 from .log import logger
 
@@ -15,6 +12,8 @@ from nocodb.nocodb import APIToken, NocoDBProject, WhereFilter
 from nocodb.filters import EqFilter
 from nocodb.infra.requests_client import NocoDBRequestsClient
 from pydantic import BaseModel, Field, RootModel
+from pydantic.config import ConfigDict
+from pydantic.fields import computed_field
 
 
 def get_nocodb_client() -> NocoDBRequestsClient:
@@ -60,8 +59,15 @@ class BaserowPerson(Table):
     table_name: ClassVar[str] = "Person"
     model_config = ConfigDict(populate_by_name=True)
 
+    def row_link(self) -> RowLink:
+        """Returns RowLink to link to this row using a TableLinkField."""
+        return RowLink(
+            row_id=self.row_id,
+            key=None,
+        )
 
-class NocoProducer(BaseModel):
+
+class OldNocoProducer(BaseModel):
     """A Producer in NocoDB."""
     noco_id: int = Field(alias=str("Id"))
     created_at: datetime = Field(alias=str("CreatedAt"))
@@ -99,8 +105,15 @@ class BaserowShow(Table):
     table_name: ClassVar[str] = "Format"
     model_config = ConfigDict(populate_by_name=True)
 
+    def row_link(self) -> RowLink:
+        """Returns RowLink to link to this row using a TableLinkField."""
+        return RowLink(
+            row_id=self.row_id,
+            key=None,
+        )
 
-class NocoShow(BaseModel):
+
+class OldNocoShow(BaseModel):
     noco_id: int = Field(alias=str("Id"))
     created_at: datetime = Field(alias=str("CreatedAt"))
     updated_at: datetime = Field(alias=str("UpdatedAt"))
@@ -122,8 +135,8 @@ class NocoShow(BaseModel):
         return cls.model_validate(raw["list"][0])
 
 
-class NocoShows(RootModel[list[NocoShow]]):
-    root: list[NocoShow]
+class NocoShows(RootModel[list[OldNocoShow]]):
+    root: list[OldNocoShow]
 
 
 class ShowFormData(BaseModel):
@@ -131,7 +144,7 @@ class ShowFormData(BaseModel):
     name: str
 
     @classmethod
-    def from_noco_show(cls, show: NocoShow):
+    def from_noco_show(cls, show: OldNocoShow):
         return cls(
             uuid=show.uuid,
             name=show.name,
@@ -199,6 +212,7 @@ class UploadState(str, Enum):
     OPTIMIZATION_PENDING = "Optimierung: Ausstehend"
     OPTIMIZATION_RUNNING = "Optimierung: Läuft"
     OPTIMIZATION_COMPLETE = "Optimierung: Fertig"
+    OPTIMIZATION_SEE_LOG = "Optimierung: Fertig, Log beachten!"
     OPTIMIZATION_ERROR = "Optimierung: Fehler"
     OMNIA_PENDING = "Omnia: Nicht auf Omnia"
     OMNIA_RUNNING = "Omnia: Upload läuft"
@@ -280,16 +294,20 @@ class BaserowUpload(Table):
     comment_producer: Optional[str] = Field(
         alias=str("Kommentar Produzent"), default=None
     )
-    source_file: Optional[Any] = Field(alias=str("Quelldatei"), default=None)
+    source_file: Optional[FileField] = Field(
+        alias=str("Quelldatei"), default=None)
     optimized_file: Optional[Any] = Field(
         alias=str("Optimierte Datei"), default=None
     )
-    manual_file: Optional[Any] = Field(
+    manual_file: Optional[FileField] = Field(
         alias=str("Manuelle Datei"), default=None
     )
-    cover: Optional[Any] = Field(alias=str("Cover"), default=None)
-    waveform: Optional[Any] = Field(alias=str("Waveform"), default=None)
-    state: MultipleSelectField = Field(alias=str("Status"), default=None)
+    cover: Optional[FileField] = Field(alias=str("Cover"), default=None)
+    waveform: Optional[FileField] = Field(alias=str("Waveform"), default=None)
+    state: MultipleSelectField = Field(
+        alias=str("Status"),
+        default=UploadStates.all_pending().to_multiple_select_field(),
+    )
     optimization_log: Optional[str] = Field(
         alias=str("Log Optimierung"), default=None
     )
@@ -297,7 +315,7 @@ class BaserowUpload(Table):
     table_id: ClassVar[int] = settings.br_upload_table
     table_name: ClassVar[str] = "Upload"
     model_config = ConfigDict(populate_by_name=True)
-    dump_payload = True
+    dump_response = True
 
     @computed_field
     @property
@@ -374,7 +392,7 @@ class NocoEpisode(BaseModel):
             raise KeyError(f"no episode for UUID {uuid} found")
         return cls.model_validate(raw["list"][0])
 
-    def get_producer(self) -> "NocoProducer":
+    def get_producer(self) -> "OldNocoProducer":
         client = get_nocodb_client()
         logger.debug(
             f"NocoDB table_row_nested_relations_list for {settings.project_name}/{settings.episode_table} for Field '{settings.producer_column}'")
@@ -391,9 +409,9 @@ class NocoEpisode(BaseModel):
         elif len(raw["list"]) > 1:
             raise ValueError(
                 f"more than one producer linked in episode with id {self.noco_id}")
-        return NocoProducer.model_validate(raw["list"][0])
+        return OldNocoProducer.model_validate(raw["list"][0])
 
-    def get_show(self) -> "NocoShow":
+    def get_show(self) -> "OldNocoShow":
         client = get_nocodb_client()
         logger.debug(
             f"NocoDB table_row_nested_relations_list for {settings.project_name}/{settings.episode_table} for Field '{settings.show_column}'")
@@ -410,7 +428,7 @@ class NocoEpisode(BaseModel):
         elif len(raw["list"]) > 1:
             raise ValueError(
                 f"more than one show linked in episode with id {self.noco_id}")
-        return NocoShow.model_validate(raw["list"][0])
+        return OldNocoShow.model_validate(raw["list"][0])
 
     def update_state_waveform(self, state: WaveformState):
         """Updates the state indicator for the waveform worker."""
@@ -482,8 +500,8 @@ class NocoEpisodeNew(BaseModel):
             self.model_dump(by_alias=True)
         )
         episode = NocoEpisode.model_validate(episode_data)
-        producer = NocoProducer.from_nocodb_by_uuid(producer_uuid)
-        show = NocoShow.from_nocodb_by_uuid(show_uuid)
+        producer = OldNocoProducer.from_nocodb_by_uuid(producer_uuid)
+        show = OldNocoShow.from_nocodb_by_uuid(show_uuid)
         logger.debug(
             f"NocoDB table_row_relation_create for {settings.project_name}/{settings.episode_table} for Field '{settings.show_column}'")
         client.table_row_relation_create(

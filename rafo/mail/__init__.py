@@ -1,8 +1,5 @@
 from ..config import settings
-from ..model import NocoEpisode
-
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from ..model import BaserowPerson, BaserowUpload
 
 import emails
 import jinja2
@@ -31,7 +28,7 @@ class Mail:
     def from_settings(cls):
         return cls(
             settings.smtp_sender_address,
-            settings.on_upload_sender_name, 
+            settings.on_upload_sender_name,
             settings.smtp_host,
             settings.smtp_user,
             settings.smtp_password,
@@ -65,49 +62,53 @@ class Mail:
 
     def send_on_upload_internal(
         self,
-        episode_id: int,
+        upload_id: int,
     ):
-        episode = NocoEpisode.from_nocodb_by_id(episode_id)
-        producer = episode.get_producer()
-        show = episode.get_show()
+        upload = BaserowUpload.by_id(upload_id).one()
+        uploader = upload.get_uploader()
+        show = upload.get_show()
         data = {
-            "episode": episode,
-            "producer": producer,
+            "episode": upload,
+            "producer": uploader,
             "show": show,
             "dev_mode": settings.dev_mode,
         }
-        plain = self.__get_template("new_upload_internal.txt.jinja2").render(data)
-        html = self.__get_template("new_upload_internal.html.jinja2").render(data)
+        plain = self.__get_template(
+            "new_upload_internal.txt.jinja2").render(data)
+        html = self.__get_template(
+            "new_upload_internal.html.jinja2").render(data)
         self.send(
             settings.on_upload_mail,
-            f"{self.__test()}e-{episode.noco_id:04d}: Neuer Upload {show.name}",
+            f"{self.__test()}e-{upload.row_id:05d}: Neuer Upload {show.name}",
             html,
             plain,
         )
 
     def send_on_upload_external(
         self,
-        episode_id: int,
+        upload_id: int,
     ):
-        episode = NocoEpisode.from_nocodb_by_id(episode_id)
-        producer = episode.get_producer()
-        show = episode.get_show()
+        upload = BaserowUpload.by_id(upload_id).one()
+        uploader = upload.get_uploader()
+        show = upload.get_show()
         data = {
-            "episode": episode,
-            "producer": producer,
+            "episode": upload,
+            "producer": uploader,
             "show": show,
             "dev_mode": settings.dev_mode,
             "contact_mail": settings.contact_mail,
         }
-        plain = self.__get_template("new_upload_producer.txt.jinja2").render(data)
-        html = self.__get_template("new_upload_producer.html.jinja2").render(data)
+        plain = self.__get_template(
+            "new_upload_producer.txt.jinja2").render(data)
+        html = self.__get_template(
+            "new_upload_producer.html.jinja2").render(data)
         self.send(
-            producer.email,
+            uploader.email,
             f"{self.__test()}Sendung erfolgreich hochgeladen",
             html,
             plain,
         )
-    
+
     def __test(self) -> str:
         """
         Returns `[Test] ` if development mode is enabled. Used in the subject line

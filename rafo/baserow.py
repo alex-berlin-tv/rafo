@@ -2,19 +2,21 @@
 This module contains a thin wrapper around the Baserow Client library.
 """
 
-import abc
-import datetime
-from pydantic.functional_serializers import model_serializer
-from pydantic.functional_validators import field_validator, model_validator
+from dataclasses import asdict
 from .config import settings
 from .log import logger
 
+import abc
+import datetime
+from io import BufferedReader
 from typing import Any, ClassVar, Generic, Optional, Self, Type, TypeVar, Union
 
 from baserow.client import ApiError, BaserowClient
 from baserow.filter import Column, Filter
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.root_model import RootModel
+from pydantic.functional_serializers import model_serializer
+from pydantic.functional_validators import model_validator
 
 
 T = TypeVar("T", bound="Table")
@@ -37,8 +39,34 @@ class NoResultError(Exception):
 
 class RowLink(BaseModel):
     """A single link to another table."""
-    row_id: int = Field(alias="id")
-    key: Optional[str] = Field(alias="value")
+    row_id: Optional[int] = Field(alias=str("id"))
+    key: Optional[str] = Field(alias=str("value"))
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    @model_validator(mode="after")
+    def id_or_value_must_be_set(self: "RowLink") -> "RowLink":
+        if self.row_id is None and self.key is None:
+            raise ValueError(
+                "At least one of the row_id and value fields must be set"
+            )
+        return self
+
+    @model_serializer
+    def serialize(self) -> Union[int, str]:
+        """
+        Serializes the field into the data structure required by the Baserow
+        API. If an entry has both an id and a value set, the id is used.
+        Otherwise the key field is used.
+
+        From the Baserow API documentation: Accepts an array containing the
+        identifiers or main field text values of the related rows.
+        """
+        if self.row_id is not None:
+            return self.row_id
+        if self.key is not None:
+            return self.key
+        raise ValueError("both fields id and key are unset for this entry")
 
 
 class TableLinkField(RootModel[list[RowLink]]):
@@ -91,15 +119,38 @@ class MultipleSelectField(RootModel[list[MultipleSelectEntry]]):
     root: list[MultipleSelectEntry]
 
 
-class DateTimeField(datetime.datetime):
-    """
-    Date and time field. Needed as the the API client library doesn't accept
-    datetime object as value.
-    """
+class FileThumbnail(BaseModel):
+    """Thumbnail declaration within file response."""
+    url: str
+    width: Optional[int]
+    height: Optional[int]
 
-    @model_serializer
-    def datetime_to_isoformat(self) -> str:
-        return self.isoformat()
+
+class File(BaseModel):
+    """A file."""
+    url: Optional[str] = None
+    mime_type: Optional[str]
+    thumbnails: Optional[dict[str, FileThumbnail]] = None
+    name: str
+    size: Optional[int] = None
+    is_image: Optional[bool] = None
+    image_width: Optional[int] = None
+    image_height: Optional[int] = None
+    uploaded_at: Optional[datetime.datetime] = None
+    original_name: Optional[str] = None
+
+    @classmethod
+    def upload_file(cls, file: BufferedReader) -> "File":
+        """
+        Uploads a file to Baserow and returns the result.
+        """
+        response = Client().upload_file(file)
+        return cls.model_validate(asdict(response))
+
+
+class FileField(RootModel[list[File]]):
+    """File field which can hold uploaded files."""
+    root: list[File]
 
 
 class Client(BaserowClient):
@@ -322,7 +373,12 @@ class Table(BaseModel, abc.ABC):
         rsl: list[T] = []
         try:
             for link in link_field.root:
-                rsl.append(cls.by_id(link.row_id).one())
+                if link.row_id is not None:
+                    rsl.append(cls.by_id(link.row_id).one())
+                else:
+                    raise NotImplementedError(
+                        "retrieving linked rows via their key value is currently not implemented by this method"
+                    )
             return Result(rsl, description)
         except NoSingleResultFoundError as e:
             raise NoSingleResultFoundError(
