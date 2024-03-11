@@ -11,7 +11,7 @@
         producer.name }} eine neue Sendung auf {{ site_url }} hochgeladen:</p>
 
     <p>
-        <b>ID:</b> u-{{ "%05d" % episode.row_id }}<br>
+        <b>ID:</b> e-{{ "%05d" % episode.row_id }}<br>
         <b>Format:</b> {{ show.name }} (s-{{ "%03d" % show.row_id }})<br>
         <b>Produzent:in:</b> {{ producer.name }} (p-{{ "%03d" % producer.row_id }})<br>
         <b>Sendedatum:</b> {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}<br>
