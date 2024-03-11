@@ -61,12 +61,10 @@ class Mail:
         self.send(recipient, "Dein Radio-Uploadlink", message)
 
     def send_on_upload_internal(self, upload: BaserowUpload):
-        uploader = upload.get_uploader()
-        show = upload.get_show()
         data = {
             "episode": upload,
-            "producer": uploader,
-            "show": show,
+            "producer": upload.cached_uploader,
+            "show": upload.cached_show,
             "dev_mode": settings.dev_mode,
         }
         plain = self.__get_template(
@@ -75,18 +73,16 @@ class Mail:
             "new_upload_internal.html.jinja2").render(data)
         self.send(
             settings.on_upload_mail,
-            f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload {show.name}",
+            f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload {upload.cached_show.name}",
             html,
             plain,
         )
 
     def send_on_upload_external(self, upload: BaserowUpload):
-        uploader = upload.get_uploader()
-        show = upload.get_show()
         data = {
             "episode": upload,
-            "producer": uploader,
-            "show": show,
+            "producer": upload.cached_uploader,
+            "show": upload.cached_show,
             "dev_mode": settings.dev_mode,
             "contact_mail": settings.contact_mail,
         }
@@ -95,23 +91,22 @@ class Mail:
         html = self.__get_template(
             "new_upload_producer.html.jinja2").render(data)
         self.send(
-            uploader.email,
+            upload.cached_uploader.email,
             f"{self.__test()}Sendung erfolgreich hochgeladen",
             html,
             plain,
         )
 
     def send_on_upload_supervisor(self, upload: BaserowUpload):
-        show = upload.get_show()
-        supervisors = show.get_supervisors()
-        # supervisors = BaserowPerson.by_link_field(show.supervisors).any()
+        supervisors = BaserowPerson.by_link_field(
+            upload.cached_show.supervisors
+        ).any()
         if len(supervisors) == 0:
             return
-        uploader = upload.get_uploader()
         data = {
             "episode": upload,
-            "producer": uploader,
-            "show": show,
+            "producer": upload.cached_uploader,
+            "show": upload.cached_show,
             "dev_mode": settings.dev_mode,
             "contact_mail": settings.contact_mail,
         }
@@ -122,7 +117,7 @@ class Mail:
         for supervisor in supervisors:
             self.send(
                 supervisor.email,
-                f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload {show.name}",
+                f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload {upload.cached_show.name}",
                 html,
                 plain,
             )

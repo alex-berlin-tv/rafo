@@ -9,7 +9,7 @@ from typing import Any, ClassVar, Optional
 
 from pydantic import BaseModel, Field, RootModel
 from pydantic.config import ConfigDict
-from pydantic.fields import computed_field
+from pydantic.fields import PrivateAttr, computed_field
 
 
 class BaserowPerson(Table):
@@ -215,18 +215,39 @@ class BaserowUpload(Table):
     table_name: ClassVar[str] = "Upload"
     model_config = ConfigDict(populate_by_name=True)
 
+    _uploader_cache: Optional[BaserowPerson] = PrivateAttr(default=None)
+    _show_cache: Optional[BaserowShow] = PrivateAttr(default=None)
+
     @computed_field
     @property
     def state_enum(self) -> UploadStates:
         return UploadStates.from_multiple_select_field(self.state)
 
-    def get_uploader(self) -> BaserowPerson:
-        """Get DB entry of the person which did the upload."""
-        return BaserowPerson.by_link_field(self.uploader).one()
+    @property
+    def cached_uploader(self) -> BaserowPerson:
+        """
+        The linked person who uploaded the entry. Is always expected to be one
+        entry. This data is therefore only cached on the first request that the
+        linked entry is actually loaded by Baserow.
+        """
+        if self._uploader_cache is None:
+            self._uploader_cache = BaserowPerson.by_link_field(
+                self.uploader,
+            ).one()
+        return self._uploader_cache
 
-    def get_show(self) -> BaserowShow:
-        """Get DB entry of the show linked to the upload."""
-        return BaserowShow.by_link_field(self.show).one()
+    @property
+    def cached_show(self) -> BaserowShow:
+        """
+        The linked show for this entry. Is always expected to be one entry. This
+        data is therefore only cached on the first request that the linked entry
+        is actually loaded by Baserow.
+        """
+        if self._show_cache is None:
+            self._show_cache = BaserowShow.by_link_field(
+                self.show,
+            ).one()
+        return self._show_cache
 
     def update_state(self, prefix: str, new_state: UploadState):
         """Update the the state with the given prefix."""

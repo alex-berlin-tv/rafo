@@ -85,13 +85,15 @@ class FileWorker:
         )
         file_name = self.__file_name("opt", ".mp3")
         output_path = self.temp_folder / file_name
-        person = self.__uploader()
-        show = self.__show()
 
         try:
             silence = Silence(self.raw_file)
-            optimize = Optimize(self.raw_file, silence,
-                                self.upload, person, show)
+            optimize = Optimize(
+                self.raw_file, silence,
+                self.upload,
+                self.upload.cached_uploader,
+                self.upload.cached_show,
+            )
             optimize.run(output_path)
 
             log = silence.log()
@@ -128,16 +130,6 @@ class FileWorker:
             pass
         logger.debug(f"Delete temp folder {self.temp_folder}")
         shutil.rmtree(self.temp_folder)
-
-    def __uploader(self) -> BaserowPerson:
-        if self.__person_cache is None:
-            self.__person_cache = self.upload.get_uploader()
-        return self.__person_cache
-
-    def __show(self) -> BaserowShow:
-        if self.__show_cache is None:
-            self.__show_cache = self.upload.get_show()
-        return self.__show_cache
 
     def __upload_named_file(
         self,
