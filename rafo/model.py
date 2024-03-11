@@ -235,10 +235,6 @@ class BaserowUpload(Table):
         enum.update_state(prefix, new_state)
         self.update(self.row_id, state=enum.to_multiple_select_field())
 
-    def update_optimizing_log(self, value: str):
-        """Updates the optimization log field."""
-        self.update(self.row_id, optimization_log=value)
-
     def file_name_prefix(self) -> str:
         """Canonical filename for a given Episode."""
         date = self.planned_broadcast_at.strftime("%y%m%d-%H%M")

@@ -93,7 +93,6 @@ class FileWorker:
             optimize = Optimize(self.raw_file, silence,
                                 self.upload, person, show)
             optimize.run(output_path)
-            duration = Metadata(output_path).formatted_duration()
 
             log = silence.log()
             if log == "":
@@ -101,14 +100,14 @@ class FileWorker:
                     UploadStates.OPTIMIZATION_PREFIX,
                     UploadState.OPTIMIZATION_COMPLETE,
                 )
+                duration = round(Metadata(output_path).duration())
+                self.upload.update(self.upload.row_id, duration=duration)
             else:
                 self.upload.update_state(
                     UploadStates.OPTIMIZATION_PREFIX,
                     UploadState.OPTIMIZATION_SEE_LOG,
                 )
-
-            log = f"{log}\nFinal running time: {duration}"
-            self.upload.update_optimizing_log(log)
+                self.upload.update(self.upload.row_id, optimization_log=log)
 
             self.__upload_named_file(output_path, "opt", "optimized_file")
 
