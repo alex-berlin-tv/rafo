@@ -43,7 +43,20 @@
         </article>
     </div>
 
-    <div x-show="data_loaded && !fetch_error && !maintenance_mode">
+    <div x-show="data_loaded && !fetch_error && !form_enabled">
+        <article class="message is-warning">
+            <div class="message-header">
+                <p>Formular deaktiviert</p>
+            </div>
+            <div class="message-body">
+                <p>Das Upload-Formular ist für diese Person nicht aktiviert. Wenn es sich um einen Fehler handelt, wende
+                    dich bitte an die Sendeabwicklung, <a
+                        href="mailto:sendeabwicklung@alex-berlin.de">sendeabwicklung@alex-berlin.de</a></p>
+            </div>
+        </article>
+    </div>
+
+    <div x-show="data_loaded && !fetch_error && !maintenance_mode && form_enabled">
         <h1>Uploadformular</h1>
         <form id="form" enctype="multipart/form-data" @submit="upload()">
             <template x-if="dev_mode">
@@ -215,6 +228,7 @@
             wait_for_server: false,
             maintenance_mode: false,
             maintenance_message: "",
+            form_enabled: false,
             max_datetime: null,
             title_changed_manually: false,
             fetch_data() {
@@ -233,6 +247,7 @@
                             this.dev_mode = data.dev_mode;
                             this.maintenance_mode = data.maintenance_mode;
                             this.maintenance_message = data.maintenance_message;
+                            this.form_enabled = data.form_enabled;
                             window.addEventListener('beforeunload', this.confirm_close);
                             this.init_show_selection();
                             this.auto_set_title();
