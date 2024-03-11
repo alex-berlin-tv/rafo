@@ -9,15 +9,15 @@
 
     <p>Wir haben den Upload deiner Sendung erhalten. Vielen Dank! Hier nochmals eine Zusammenfassung:</p>
 
-    <p>
-        <b>ID:</b> u-{{ "%05d" % episode.row_id }}<br>
-        <b>Format:</b> {{ show.name }} (s-{{ "%03d" % show.row_id }})<br>
-        <b>Produzent:in:</b> {{ producer.name }} (p-{{ "%03d" % producer.row_id }})<br>
-        <b>Sendedatum:</b> {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}<br>
-        <b>Titel:</b> {{ episode.name }}<br>
-        <b>Öffentliche Beschreibung:</b> {{ episode.description }}
-        {%- if episode.comment_producer %}<br><b>Kommentar an ALEX:</b> {{ episode.comment_producer }}{% endif %}
-    </p>
+    <ul>
+        <li><b>ID:</b> u-{{ "%05d" % episode.row_id }}</li>
+        <li><b>Format:</b> {{ show.name }} (s-{{ "%03d" % show.row_id }})</li>
+        <li><b>Produzent:in:</b> {{ producer.name }} (p-{{ "%03d" % producer.row_id }})</li>
+        <li><b>Sendedatum:</b> {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}</li>
+        <li><b>Titel:</b> {{ episode.name }}</li>
+        <li><b>Öffentliche Beschreibung:</b> {{ episode.description }}</li>
+        {%- if episode.comment_producer %}<li><b>Kommentar an ALEX:</b> {{ episode.comment_producer }}</li>{% endif %}
+    </ul>
 
     <p>Bitte melde dich bei Fragen bei {{ contact_mail }}.</p>
 
