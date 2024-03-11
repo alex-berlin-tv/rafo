@@ -1,6 +1,6 @@
 import enum
 
-from .baserow import DurationField, MultipleSelectEntry, MultipleSelectField, RowLink, Table, TableLinkField
+from .baserow import DurationField, MultipleSelectEntry, MultipleSelectField, RowLink, SingleSelectField, Table, TableLinkField
 from .config import settings
 
 from datetime import datetime
@@ -19,6 +19,9 @@ class BaserowPerson(Table):
     email: str = Field(alias=str("E-Mail"))
     shows: TableLinkField = Field(alias=str("Format"))
     uuid: str = Field(alias=str("UUID"))
+    upload_form_state: SingleSelectField = Field(
+        alias=str("Status Upload Form")
+    )
 
     table_id: ClassVar[int] = settings.br_person_table
     table_name: ClassVar[str] = "Person"
@@ -30,6 +33,10 @@ class BaserowPerson(Table):
             row_id=self.row_id,
             key=None,
         )
+
+    def is_form_enabled(self) -> bool:
+        """Returns whether the upload form is enabled for this person."""
+        return self.upload_form_state is not None and self.upload_form_state.value == "Aktiviert"
 
 
 class BaserowShow(Table):
@@ -73,6 +80,7 @@ class ProducerUploadData(BaseModel):
     dev_mode: bool
     maintenance_mode: bool
     maintenance_message: str
+    form_enabled: bool
 
     @classmethod
     def from_db(cls, person_uuid: str):
@@ -84,6 +92,7 @@ class ProducerUploadData(BaseModel):
             dev_mode=settings.dev_mode,
             maintenance_mode=settings.maintenance_mode,
             maintenance_message=settings.maintenance_message,
+            form_enabled=person.is_form_enabled()
         )
 
 

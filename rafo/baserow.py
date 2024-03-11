@@ -80,6 +80,45 @@ class TableLinkField(RootModel[list[RowLink]]):
         return ",".join([str(link.row_id) for link in self.root])
 
 
+class SingleSelectEntry(BaseModel):
+    """A entry in a sinlge select field."""
+    entry_id: Optional[int] = Field(alias="id")
+    value: Optional[str]
+    color: Optional[str]
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    @model_validator(mode="after")
+    def id_or_value_must_be_set(self: "SingleSelectEntry") -> "SingleSelectEntry":
+        if self.entry_id is None and self.value is None:
+            raise ValueError(
+                "At least one of the entry_id and value fields must be set"
+            )
+        return self
+
+    @model_serializer
+    def serialize(self) -> Union[int, str]:
+        """
+        Serializes the field into the data structure required by the Baserow
+        API. If an entry has both an id and a value set, the id is used.
+        Otherwise the set field is used.
+
+        From the Baserow API documentation: Accepts an integer or a text value
+        representing the chosen select option id or option value. A null value
+        means none is selected. In case of a text value, the first matching
+        option is selected. 
+        """
+        if self.entry_id is not None:
+            return self.entry_id
+        if self.value is not None:
+            return self.value
+        raise ValueError("both fields id and value are unset for this entry")
+
+
+SingleSelectField = Optional[SingleSelectEntry]
+"""Single select field in a table."""
+
+
 class MultipleSelectEntry(BaseModel):
     """A entry in a multiple select field."""
     entry_id: Optional[int] = Field(alias="id")
