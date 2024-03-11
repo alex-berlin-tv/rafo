@@ -366,6 +366,7 @@ class Table(BaseModel, abc.ABC):
                 record. Will throw a `NoResultError' if the query returns an
                 empty result.Cannot be set at the same time as `one`.
         """
+        print(link_field)
         description = f"query in {cls.table_name} for linked fields with ID's [{link_field.id_str()}]"
         logger.debug(
             f"baserow {description}"
@@ -489,7 +490,7 @@ class Table(BaseModel, abc.ABC):
         """
         rsl = Client().create_database_table_row(
             self.table_id,
-            self.model_dump(by_alias=True, mode="json"),
+            self.model_dump(by_alias=True, mode="json", exclude_none=True),
             user_field_names=True
         )
         return self.model_validate(rsl)

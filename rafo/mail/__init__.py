@@ -60,11 +60,7 @@ class Mail:
         )
         self.send(recipient, "Dein Radio-Uploadlink", message)
 
-    def send_on_upload_internal(
-        self,
-        upload_id: int,
-    ):
-        upload = BaserowUpload.by_id(upload_id).one()
+    def send_on_upload_internal(self, upload: BaserowUpload):
         uploader = upload.get_uploader()
         show = upload.get_show()
         data = {
@@ -79,16 +75,12 @@ class Mail:
             "new_upload_internal.html.jinja2").render(data)
         self.send(
             settings.on_upload_mail,
-            f"{self.__test()}e-{upload.row_id:05d}: Neuer Upload {show.name}",
+            f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload {show.name}",
             html,
             plain,
         )
 
-    def send_on_upload_external(
-        self,
-        upload_id: int,
-    ):
-        upload = BaserowUpload.by_id(upload_id).one()
+    def send_on_upload_external(self, upload: BaserowUpload):
         uploader = upload.get_uploader()
         show = upload.get_show()
         data = {
@@ -108,6 +100,32 @@ class Mail:
             html,
             plain,
         )
+
+    def send_on_upload_supervisor(self, upload: BaserowUpload):
+        show = upload.get_show()
+        supervisors = show.get_supervisors()
+        # supervisors = BaserowPerson.by_link_field(show.supervisors).any()
+        if len(supervisors) == 0:
+            return
+        uploader = upload.get_uploader()
+        data = {
+            "episode": upload,
+            "producer": uploader,
+            "show": show,
+            "dev_mode": settings.dev_mode,
+            "contact_mail": settings.contact_mail,
+        }
+        plain = self.__get_template(
+            "new_upload_supervisor.txt.jinja2").render(data)
+        html = self.__get_template(
+            "new_upload_supervisor.html.jinja2").render(data)
+        for supervisor in supervisors:
+            self.send(
+                supervisor.email,
+                f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload {show.name}",
+                html,
+                plain,
+            )
 
     def __test(self) -> str:
         """

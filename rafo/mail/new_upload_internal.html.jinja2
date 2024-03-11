@@ -8,16 +8,16 @@
     <p>Hallo Sendeabwicklung,</p>
 
     <p>Es wurde am {{ episode.created_at.strftime("%d.%m.%Y") }} um {{ episode.created_at.strftime("%H:%M") }} von {{
-        producer.first_name }} {{ producer.last_name }} eine neue Sendung auf {{ site_url }} hochgeladen:</p>
+        producer.name }} eine neue Sendung auf {{ site_url }} hochgeladen:</p>
 
     <p>
-        <b>ID:</b> e-{{ "%05d" % episode.noco_id }}<br>
-        <b>Format:</b> {{ show.name }} (s-{{ "%03d" % show.noco_id }})<br>
-        <b>Produzent:in:</b> {{ producer.first_name }} {{ producer.last_name }} (p-{{ "%03d" % producer.noco_id }})<br>
+        <b>ID:</b> u-{{ "%05d" % episode.row_id }}<br>
+        <b>Format:</b> {{ show.name }} (s-{{ "%03d" % show.row_id }})<br>
+        <b>Produzent:in:</b> {{ producer.name }} (p-{{ "%03d" % producer.row_id }})<br>
         <b>Sendedatum:</b> {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}<br>
-        <b>Titel:</b> {{ episode.title }}<br>
-        <b>Beschreibung:</b> {{ episode.description }}
-        {%- if episode.comment_producer %}<br><b>Kommentar:</b> {{ episode.comment_producer }}{% endif %}
+        <b>Titel:</b> {{ episode.name }}<br>
+        <b>Öffentliche Beschreibung:</b> {{ episode.description }}
+        {%- if episode.comment_producer %}<br><b>Kommentar an ALEX:</b> {{ episode.comment_producer }}{% endif %}
     </p>
 
     <p>

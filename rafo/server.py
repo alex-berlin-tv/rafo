@@ -171,27 +171,28 @@ async def upload_file(
         comment_producer=comment,
     )
     upload = new_upload.create()
-    worker = FileWorker(file_path, cover_path, temp_folder, upload.row_id)
+    worker = FileWorker(file_path, cover_path, temp_folder, upload)
     mail = Mail.from_settings()
     background_tasks.add_task(worker.upload_raw)
     background_tasks.add_task(worker.upload_cover)
     background_tasks.add_task(worker.generate_waveform)
     background_tasks.add_task(worker.optimize_file)
     background_tasks.add_task(worker.delete_temp_folder_on_completion)
-    background_tasks.add_task(mail.send_on_upload_internal, upload.row_id)
-    background_tasks.add_task(mail.send_on_upload_external, upload.row_id)
+    background_tasks.add_task(mail.send_on_upload_internal, upload)
+    background_tasks.add_task(mail.send_on_upload_external, upload)
+    # background_tasks.add_task(mail.send_on_upload_supervisor, upload)
     return {
         "success": True,
     }
 
 
-@app.post("/webhook/update")
-async def webhook(secret: str, request: Request):
-    if secret != settings.webhook_secret:
-        raise HTTPException(
-            status_code=401, detail=f"Invalid webhook secret")
-    data = await request.json()
-    noco_id = data["data"]["previous_rows"][0]["Id"]
-    path = data["data"]["previous_rows"][0]["Optimierte Datei"][0]["path"]
-    title = data["data"]["previous_rows"][0]["Optimierte Datei"][0]["title"]
-    state = data["data"]["previous_rows"][0]["Status Omnia"]
+# @app.post("/webhook/update")
+# async def webhook(secret: str, request: Request):
+#     if secret != settings.webhook_secret:
+#         raise HTTPException(
+#             status_code=401, detail=f"Invalid webhook secret")
+#     data = await request.json()
+#     noco_id = data["data"]["previous_rows"][0]["Id"]
+#     path = data["data"]["previous_rows"][0]["Optimierte Datei"][0]["path"]
+#     title = data["data"]["previous_rows"][0]["Optimierte Datei"][0]["title"]
+#     state = data["data"]["previous_rows"][0]["Status Omnia"]

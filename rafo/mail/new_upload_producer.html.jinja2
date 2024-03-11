@@ -5,18 +5,18 @@
 <body>
     <p><i>{%- if dev_mode %}***rafo läuft im Entwicklungsmodus; dies ist also eine Testmail.***{% endif %}</i></p>
 
-    <p>Hallo {{ producer.first_name }} {{ producer.last_name }},</p>
+    <p>Hallo {{ producer.name }},</p>
 
     <p>Wir haben den Upload deiner Sendung erhalten. Vielen Dank! Hier nochmals eine Zusammenfassung:</p>
 
     <p>
-        <b>ID:</b> e-{{ "%05d" % episode.noco_id }}<br>
-        <b>FORMAT:</b> {{ show.name }} (s-{{ "%03d" % show.noco_id }})<br>
-        <b>PRODUZENT:IN:</b> {{ producer.first_name }} {{ producer.last_name }} (p-{{ "%03d" % producer.noco_id }})<br>
-        <b>SENDEDATUM:</b> {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}<br>
-        <b>TITEL:</b> {{ episode.title }}<br>
-        <b>BESCHREIBUNG:</b> {{ episode.description }}
-        {%- if episode.comment_producer %}<br><b>KOMMENTAR:</b> {{ episode.comment_producer }}{% endif %}
+        <b>ID:</b> u-{{ "%05d" % episode.row_id }}<br>
+        <b>Format:</b> {{ show.name }} (s-{{ "%03d" % show.row_id }})<br>
+        <b>Produzent:in:</b> {{ producer.name }} (p-{{ "%03d" % producer.row_id }})<br>
+        <b>Sendedatum:</b> {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}<br>
+        <b>Titel:</b> {{ episode.name }}<br>
+        <b>Öffentliche Beschreibung:</b> {{ episode.description }}
+        {%- if episode.comment_producer %}<br><b>Kommentar an ALEX:</b> {{ episode.comment_producer }}{% endif %}
     </p>
 
     <p>Bitte melde dich bei Fragen bei {{ contact_mail }}.</p>

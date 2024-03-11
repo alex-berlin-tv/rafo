@@ -2,15 +2,16 @@
 
 Hallo Sendeabwicklung,
 
-Es wurde am {{ episode.created_at.strftime("%d.%m.%Y") }} um {{ episode.created_at.strftime("%H:%M") }} von {{ producer.first_name }} {{ producer.last_name }} eine neue Sendung auf {{ site_url }} hochgeladen:
+Es wurde am {{ episode.created_at.strftime("%d.%m.%Y") }} um {{ episode.created_at.strftime("%H:%M") }} von {{
+producer.name }} eine neue Sendung auf {{ site_url }} hochgeladen:
 
-ID: e-{{ "%05d" % episode.noco_id }}
-FORMAT: {{ show.name }} (s-{{ "%03d" % show.noco_id }})
-PRODUZENT:IN: {{ producer.first_name }} {{ producer.last_name }} (p-{{ "%03d" % producer.noco_id }})
+ID: u-{{ "%05d" % episode.row_id }}
+FORMAT: {{ show.name }} (s-{{ "%03d" % show.row_id }})
+PRODUZENT:IN: {{ producer.name }} (p-{{ "%03d" % producer.row_id }})
 SENDEDATUM: {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}
-TITEL: {{ episode.title }}
-BESCHREIBUNG: {{ episode.description }}
-{%- if episode.comment_producer %}KOMMENTAR: {{ episode.comment_producer }}{% endif %}
+TITEL: {{ episode.name }}
+ÖFFENTLICHE BESCHREIBUNG: {{ episode.description }}
+{%- if episode.comment_producer %}KOMMENTAR AN ALEX: {{ episode.comment_producer }}{% endif %}
 
 Es grüßt,
 rafo

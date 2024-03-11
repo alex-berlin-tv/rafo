@@ -1,15 +1,16 @@
 {%- if dev_mode %}***rafo läuft im Entwicklungsmodus; dies ist also eine Testmail.***{% endif %}
 
-Hallo {{ producer.first_name }} {{ producer.last_name }},
+Hallo {{ producer.name }},
 
 Wir haben den Upload deiner Sendung erhalten. Vielen Dank! Hier nochmals eine Zusammenfassung:
 
+ID: u-{{ "%05d" % episode.row_id }}
 FORMAT: {{ show.name }}
-PRODUZENT:IN: {{ producer.first_name }} {{ producer.last_name }}
+PRODUZENT:IN: {{ producer.name }}
 SENDEDATUM: {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}
-TITEL: {{ episode.title }}
-BESCHREIBUNG: {{ episode.description }}
-{%- if episode.comment_producer %}KOMMENTAR: {{ episode.comment_producer }}{% endif %}
+TITEL: {{ episode.name }}
+ÖFFENTLICHE BESCHREIBUNG: {{ episode.description }}
+{%- if episode.comment_producer %}KOMMENTAR AN ALEX: {{ episode.comment_producer }}{% endif %}
 
 Bitte melde dich bei Fragen bei {{ contact_mail }}.
 
