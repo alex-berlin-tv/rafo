@@ -38,9 +38,9 @@ class BaserowShow(Table):
     """
     row_id: int = Field(alias=str("id"))
     name: str = Field(alias=str("Name"))
-    responsible: Any = Field(alias=str("Verantwortlich"))
+    responsible: TableLinkField = Field(alias=str("Verantwortlich"))
     uuid: str = Field(alias=str("UUID"))
-    supervisors: Any = Field(alias=str("Betreuung"))
+    supervisors: TableLinkField = Field(alias=str("Betreuung"))
 
     table_id: ClassVar[int] = settings.br_show_table
     table_name: ClassVar[str] = "Format"
@@ -52,9 +52,6 @@ class BaserowShow(Table):
             row_id=self.row_id,
             key=None,
         )
-
-    def get_supervisors(self) -> list[BaserowPerson]:
-        return BaserowPerson.by_link_field(self.supervisors).any()
 
 
 class ShowFormData(BaseModel):

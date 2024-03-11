@@ -103,21 +103,22 @@ class Mail:
         ).any()
         if len(supervisors) == 0:
             return
-        data = {
-            "episode": upload,
-            "producer": upload.cached_uploader,
-            "show": upload.cached_show,
-            "dev_mode": settings.dev_mode,
-            "contact_mail": settings.contact_mail,
-        }
-        plain = self.__get_template(
-            "new_upload_supervisor.txt.jinja2").render(data)
-        html = self.__get_template(
-            "new_upload_supervisor.html.jinja2").render(data)
         for supervisor in supervisors:
+            data = {
+                "supervisor": supervisor,
+                "episode": upload,
+                "producer": upload.cached_uploader,
+                "show": upload.cached_show,
+                "dev_mode": settings.dev_mode,
+                "contact_mail": settings.contact_mail,
+            }
+            plain = self.__get_template(
+                "new_upload_supervisor.txt.jinja2").render(data)
+            html = self.__get_template(
+                "new_upload_supervisor.html.jinja2").render(data)
             self.send(
                 supervisor.email,
-                f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload {upload.cached_show.name}",
+                f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload für {upload.cached_show.name} (Information für Betreuungsperson)",
                 html,
                 plain,
             )
