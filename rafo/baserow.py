@@ -153,6 +153,14 @@ class FileField(RootModel[list[File]]):
     root: list[File]
 
 
+DurationField = Union[str, int]
+"""
+The duration can be represented as a string in the format specified in the Field
+settings (e.g. 'h:mm') or as an integer representing the total number of
+seconds.
+"""
+
+
 class Client(BaserowClient):
     """
     Encapsulates the baserow client into a singleton.

@@ -1,6 +1,6 @@
 import enum
 
-from .baserow import MultipleSelectEntry, MultipleSelectField, RowLink, Table, TableLinkField
+from .baserow import DurationField, MultipleSelectEntry, MultipleSelectField, RowLink, Table, TableLinkField
 from .config import settings
 
 from datetime import datetime
@@ -183,6 +183,9 @@ class BaserowUpload(Table):
     comment_producer: Optional[str] = Field(
         alias=str("Kommentar Produzent"), default=None
     )
+    waveform: Optional[Any] = Field(
+        alias=str("Waveform"), default=None
+    )
     source_file: Optional[Any] = Field(
         alias=str("Quelldatei"), default=None
     )
@@ -195,8 +198,8 @@ class BaserowUpload(Table):
     cover: Optional[Any] = Field(
         alias=str("Cover"), default=None
     )
-    waveform: Optional[Any] = Field(
-        alias=str("Waveform"), default=None
+    duration: Optional[DurationField] = Field(
+        alias=str("Dauer"), default=None
     )
     state: MultipleSelectField = Field(
         alias=str("Status"),

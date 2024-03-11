@@ -73,8 +73,6 @@ class FileWorker:
                 UploadStates.WAVEFORM_PREFIX,
                 UploadState.WAVEFORM_COMPLETE,
             )
-            print("JA!")
-            print(self.upload.state)
         logger.info(
             f"Waveform generated for {self.raw_file} and written to {output_path}")
         with self.count_lock:
