@@ -3,6 +3,8 @@ This module contains a thin wrapper around the Baserow Client library.
 """
 
 from dataclasses import asdict
+
+from pydantic.fields import computed_field
 from .config import settings
 from .log import logger
 
@@ -245,7 +247,7 @@ class Result(Generic[T]):
         If this requirement is not met, a `NoSingleResultFoundError` is thrown.
         """
         if len(self.__value) == 0:
-            raise NoSingleResultFoundError(
+            raise NoResultError(
                 f"empty result when {self.__query_description}, exactly one result expected"
             )
         if len(self.__value) > 1:
@@ -373,6 +375,26 @@ class Table(BaseModel, abc.ABC):
         )
 
     @classmethod
+    def filter(cls: Type[T], **kwargs) -> Result[T]:
+        """
+        Filters for entries whose fields equals the specified values. Note that
+        this method does not allow you to query for records by their unique ID.
+        """
+        filters: list[Filter] = []
+        for key, value in kwargs.items():
+            # Check, whether the submitted key-value pairs are in the model and
+            # the value passes the validation specified by the field.
+            cls.__validate_single_field(key, value)
+
+            # Constructs the filter using the alias, if it exists.
+            filter_key = key
+            alias = cls.model_fields[key].alias  # One for the type checking.
+            if alias is not None:
+                filter_key = alias
+            filters.append(Column(filter_key).equal(value))
+        return cls.query(filters)
+
+    @classmethod
     def by_uuid(cls: Type[T], uuid: str) -> Result[T]:
         logger.debug(f"baserow query in {cls.table_name} by UUID {uuid}")
         return cls.query([Column("UUID").equal(uuid)])
@@ -434,41 +456,17 @@ class Table(BaseModel, abc.ABC):
             raise NoResultError(
                 f"error while {description}, {e}")
 
-    @classmethod
-    def __validate_single_field(cls, field_name: str, value: Any) -> dict[str, Any] | tuple[dict[str, Any], dict[str, Any] | None, set[str]]:
-        return cls.__pydantic_validator__.validate_assignment(
-            cls.model_construct(), field_name, value
+    def create(self) -> Self:
+        """
+        Creates a new row in the Baserow table using the values of the instance.
+        Returns the object of Baserow's response.
+        """
+        rsl = Client().create_database_table_row(
+            self.table_id,
+            self.model_dump(by_alias=True, mode="json", exclude_none=True),
+            user_field_names=True
         )
-
-    @classmethod
-    def __model_dump_subset(cls, by_alias: bool, **kwargs: Any) -> dict[str, Any]:
-        """
-        This method takes a dictionary of keyword arguments (kwargs) and
-        validates it against the model before serializing it as a dictionary. It
-        is used for the update and batch_update methods. If a field value is
-        inherited from a BaseModel, it will be serialized using model_dump.
-
-        Please refer to the documentation on the update method to learn more
-        about its limitations and underlying ideas.
-        """
-        rsl = {}
-        for key, value in kwargs.items():
-            # Check, field by field, whether the submitted key-value pairs are
-            # in the model and the value passes the validation specified by the
-            # field.
-            cls.__validate_single_field(key, value)
-
-            # If a field has an alias, replace the key with the alias.
-            rsl_key = key
-            alias = cls.model_fields[key].alias
-            if by_alias and alias:
-                rsl_key = alias
-
-            # When the field value is a pydantic model, serialize it.
-            rsl[rsl_key] = value
-            if isinstance(value, BaseModel):
-                rsl[rsl_key] = value.model_dump(by_alias=by_alias)
-        return rsl
+        return self.model_validate(rsl)
 
     @classmethod
     def update(cls, row_id: int, by_alias: bool = True, **kwargs: Any):
@@ -529,14 +527,37 @@ class Table(BaseModel, abc.ABC):
             "Baserow client library currently does not support batch update operations on rows"
         )
 
-    def create(self) -> Self:
-        """
-        Creates a new row in the Baserow table using the values of the instance.
-        Returns the object of Baserow's response.
-        """
-        rsl = Client().create_database_table_row(
-            self.table_id,
-            self.model_dump(by_alias=True, mode="json", exclude_none=True),
-            user_field_names=True
+    @classmethod
+    def __validate_single_field(cls, field_name: str, value: Any) -> dict[str, Any] | tuple[dict[str, Any], dict[str, Any] | None, set[str]]:
+        return cls.__pydantic_validator__.validate_assignment(
+            cls.model_construct(), field_name, value
         )
-        return self.model_validate(rsl)
+
+    @classmethod
+    def __model_dump_subset(cls, by_alias: bool, **kwargs: Any) -> dict[str, Any]:
+        """
+        This method takes a dictionary of keyword arguments (kwargs) and
+        validates it against the model before serializing it as a dictionary. It
+        is used for the update and batch_update methods. If a field value is
+        inherited from a BaseModel, it will be serialized using model_dump.
+
+        Please refer to the documentation on the update method to learn more
+        about its limitations and underlying ideas.
+        """
+        rsl = {}
+        for key, value in kwargs.items():
+            # Check, whether the submitted key-value pairs are in the model and
+            # the value passes the validation specified by the field.
+            cls.__validate_single_field(key, value)
+
+            # If a field has an alias, replace the key with the alias.
+            rsl_key = key
+            alias = cls.model_fields[key].alias
+            if by_alias and alias:
+                rsl_key = alias
+
+            # When the field value is a pydantic model, serialize it.
+            rsl[rsl_key] = value
+            if isinstance(value, BaseModel):
+                rsl[rsl_key] = value.model_dump(by_alias=by_alias)
+        return rsl
