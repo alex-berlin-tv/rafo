@@ -5,24 +5,31 @@
 <body>
     <p><i>{%- if dev_mode %}rafo läuft im Entwicklungsmodus; dies ist also eine Testmail.{% endif %}</i></p>
 
-    <p>Hallo Sendeabwicklung,</p>
+    <p>Hallo {{ recipient }},</p>
 
-    <p>Es wurde am {{ episode.created_at.strftime("%d.%m.%Y") }} um {{ episode.created_at.strftime("%H:%M") }} von {{
-        producer.name }} eine neue Sendung auf {{ site_url }} hochgeladen:</p>
+    <p>es wurde am {{ upload.created_at.strftime("%d.%m.%Y") }} um {{ upload.created_at.strftime("%H:%M") }} von {{
+        uploader.name }} eine neue Sendung auf {{ site_url }} hochgeladen:</p>
 
     <ul>
-        <li><b>ID:</b> e-{{ "%05d" % episode.row_id }}</li>
+        <li><b>ID:</b> e-{{ "%05d" % upload.row_id }}</ /i>
         <li><b>Format:</b> {{ show.name }} (s-{{ "%03d" % show.row_id }})</li>
-        <li><b>Produzent:in:</b> {{ producer.name }} (p-{{ "%03d" % producer.row_id }})</li>
-        <li><b>Sendedatum:</b> {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}</li>
-        <li><b>Titel:</b> {{ episode.name }}</li>
-        <li><b>Öffentliche Beschreibung:</b> {{ episode.description }}</li>
-        {%- if episode.comment_producer %}<li><b>Kommentar an ALEX:</b> {{ episode.comment_producer }}</li>{% endif %}
+        <li><b>Produzent:in:</b> {{ uploader.name }} (p-{{ "%03d" % uploader.row_id }})</li>
+        <li><b>Sendedatum:</b> {{ upload.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}</li>
+        <li><b>Titel:</b> {{ upload.name }}</li>
+        <li><b>Öffentliche Beschreibung:</b> {{ upload.description }}</li>
+        {%- if upload.comment_uploader %}<li><b>Kommentar an ALEX:</b> {{ upload.comment_uploader }}</li>{% endif %}
+        {%- if legacy_url_used %}<li><b>URL:</b> Legacy URL wurde benutzt</li>{% endif %}
     </ul>
+    {% if is_supervisor_message %}
+    <p>
+        Du erhälst diese Nachricht, da du als Betreuungsperson für das Format »{{ show.name }}« eingetragen bist.
+        Bei Fragen melde dich bitte bei der <a href="mailto:{{ contact_mail }}">Sendeabwicklung</a>:
+    </p>
+    {% endif %}
 
     <p>
         Es grüßt,<br>
-        rafo
+        rafo, {{ version }}
     </p>
 </body>
 

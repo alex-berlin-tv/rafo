@@ -4,7 +4,7 @@ from .config import settings
 from .file_worker import FileWorker
 from .log import logger
 from .mail import Mail
-from .model import BaserowPerson, BaserowShow, BaserowUpload, ProducerUploadData
+from .model import BaserowPerson, BaserowShow, BaserowUpload, ProducerUploadData, UploadState, UploadStates
 
 import datetime
 from uuid import uuid4
@@ -44,7 +44,7 @@ async def upload(
 ):
     data = {
         "request": request,
-        "producer_uuid": uuid,
+        "requested_uuid": uuid,
         "base_url": settings.base_url,
         "version": VERSION,
     }
@@ -109,6 +109,7 @@ async def upload_file(
     description_target = ValueTarget()
     planned_broadcast_target = ValueTarget()
     comment_target = ValueTarget()
+    legacy_url_used_target = ValueTarget()
     try:
         parser = StreamingFormDataParser(headers=request.headers)
         parser.register("file", file_target)
@@ -119,6 +120,7 @@ async def upload_file(
         parser.register("description", description_target)
         parser.register("datetime", planned_broadcast_target)
         parser.register("comment", comment_target)
+        parser.register("legacy_url_used", legacy_url_used_target)
         async for chunk in request.stream():
             body_validator(chunk)
             parser.data_received(chunk)
@@ -158,6 +160,7 @@ async def upload_file(
     comment = comment_target.value.decode()
     if comment == "":
         comment = None
+    legacy_url_used = legacy_url_used_target.value.decode() == "true"
 
     uploader = BaserowPerson.by_uuid(producer_target.value.decode()).one()
     show = BaserowShow.by_uuid(show_target.value.decode()).one()
@@ -169,6 +172,9 @@ async def upload_file(
         description=description_target.value.decode(),
         planned_broadcast_at=planned_broadcast_at,
         comment_producer=comment,
+        state=UploadStates.all_pending_with_legacy_url_state(
+            legacy_url_used,
+        ).to_multiple_select_field(),
     )
     upload = new_upload.create()
     worker = FileWorker(file_path, cover_path, temp_folder, upload)
@@ -180,7 +186,7 @@ async def upload_file(
     background_tasks.add_task(worker.delete_temp_folder_on_completion)
     background_tasks.add_task(mail.send_on_upload_internal, upload)
     background_tasks.add_task(mail.send_on_upload_external, upload)
-    # background_tasks.add_task(mail.send_on_upload_supervisor, upload)
+    background_tasks.add_task(mail.send_on_upload_supervisor, upload)
     return {
         "success": True,
     }

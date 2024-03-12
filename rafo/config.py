@@ -1,3 +1,5 @@
+from datetime import datetime
+from typing import Optional
 import typed_settings
 
 
@@ -16,11 +18,6 @@ class Settings:
     br_upload_table: int
     max_file_size: int
 
-    raw_column: str  # TODO: remove
-    waveform_column: str  # TODO: remove
-    producer_column: str  # TODO: remove
-    show_column: str  # TODO: remove
-
     on_upload_mail: str
     on_upload_sender_name: str
     contact_mail: str
@@ -36,8 +33,8 @@ class Settings:
     """Sample rate for optimized audio."""
     audio_crop_allowance: float
     """
-    When automatically cutting away silence the given duration of silence will remain.
-    This is to prevent to harsh/fast cut ins.
+    When automatically cutting away silence the given duration of silence will
+    remain. This is to prevent to harsh/fast cut ins.
     """
     maintenance_mode: bool
     """
@@ -47,6 +44,8 @@ class Settings:
     """
     maintenance_message: str
     """Message to shown to the user if maintenance mode is enabled."""
+    legacy_url_grace_date: Optional[datetime]
+    """Defines a date until when users can use the legacy URL."""
 
     nocodb_api_key: str
     baserow_api_key: str

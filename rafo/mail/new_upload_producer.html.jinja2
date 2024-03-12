@@ -5,22 +5,36 @@
 <body>
     <p><i>{%- if dev_mode %}***rafo läuft im Entwicklungsmodus; dies ist also eine Testmail.***{% endif %}</i></p>
 
-    <p>Hallo {{ producer.name }},</p>
+    {% if legacy_url_used %}
+    <div style="border: 2px solid red; padding: 5px; width: fit-content;">
+        <p><b>Achtung: Deine URL ist nicht mehr aktuell!</b></p>
+        <p>
+            Im Zuge eines umfassenden Updates unseres Datenbackends wird die von dir verwendete URL ab dem {{
+            legacy_url_grace_date }} nicht mehr funktionieren. Bitte nutze <b>ab jetzt</b> folgende URL:
+        </p>
+        <p><a href="{{ upload_url }}">{{ upload_url }}</a></p>
+        <p>
+            Der neue Link ist ab sofort in Betrieb. Aktualisiere deine Bookmarks und nutze die neue
+            URL. Ab dem {{ legacy_url_grace_date }} wird es nicht mehr möglich sein, über den alten Link
+            auf den Upload zuzugreifen. </p>
+    </div>
+    {% endif %}
 
-    <p>Wir haben den Upload deiner Sendung erhalten. Vielen Dank! Hier nochmals eine Zusammenfassung:</p>
+    <p>Hallo {{ uploader.name }},</p>
+
+    <p>wir haben den Upload deiner Sendung erhalten. Vielen Dank! Hier nochmals eine Zusammenfassung:</p>
 
     <ul>
-        <li><b>ID:</b> u-{{ "%05d" % episode.row_id }}</li>
+        <li><b>ID:</b> u-{{ "%05d" % upload.row_id }}</li>
         <li><b>Format:</b> {{ show.name }} (s-{{ "%03d" % show.row_id }})</li>
-        <li><b>Produzent:in:</b> {{ producer.name }} (p-{{ "%03d" % producer.row_id }})</li>
-        <li><b>Sendedatum:</b> {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}</li>
-        <li><b>Titel:</b> {{ episode.name }}</li>
-        <li><b>Öffentliche Beschreibung:</b> {{ episode.description }}</li>
-        {%- if episode.comment_producer %}<li><b>Kommentar an ALEX:</b> {{ episode.comment_producer }}</li>{% endif %}
+        <li><b>Produzent:in:</b> {{ uploader.name }} (p-{{ "%03d" % uploader.row_id }})</li>
+        <li><b>Sendedatum:</b> {{ upload.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}</li>
+        <li><b>Titel:</b> {{ upload.name }}</li>
+        <li><b>Öffentliche Beschreibung:</b> {{ upload.description }}</li>
+        {%- if upload.comment_uploader %}<li><b>Kommentar an ALEX:</b> {{ upload.comment_uploader }}</li>{% endif %}
     </ul>
 
-    <p>Bitte melde dich bei Fragen bei {{ contact_mail }}.</p>
-
+    <p>Bitte melde dich bei Fragen bei <a href="mailto:{{ contact_mail }}">{{ contact_mail }}</a>.</p>
 
     <p>
         Liebe Grüße,<br>

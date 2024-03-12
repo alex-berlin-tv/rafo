@@ -1,16 +1,29 @@
 {%- if dev_mode %}***rafo läuft im Entwicklungsmodus; dies ist also eine Testmail.***{% endif %}
 
-Hallo {{ producer.name }},
+{% if legacy_url_used %}
+ACHTUNG: DEINE URL IST NICHT MEHR AKTUELL!
 
-Wir haben den Upload deiner Sendung erhalten. Vielen Dank! Hier nochmals eine Zusammenfassung:
+Im Zuge eines umfassenden Updates unseres Datenbackends wird die von dir verwendete URL ab dem {{
+legacy_url_grace_date }} nicht mehr funktionieren. Bitte nutze <b>ab jetzt</b> folgende URL:
 
-ID: u-{{ "%05d" % episode.row_id }}
+{{ upload_url }}
+
+Der neue Link ist ab sofort in Betrieb. Aktualisiere deine Bookmarks und nutze die neue URL. Ab dem {{
+legacy_url_grace_date }} wird es nicht mehr möglich sein, über den alten Link auf den Upload zuzugreifen.
+{% endif %}
+
+
+Hallo {{ uploader.name }},
+
+wir haben den Upload deiner Sendung erhalten. Vielen Dank! Hier nochmals eine Zusammenfassung:
+
+ID: u-{{ "%05d" % upload.row_id }}
 FORMAT: {{ show.name }}
-PRODUZENT:IN: {{ producer.name }}
-SENDEDATUM: {{ episode.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}
-TITEL: {{ episode.name }}
-ÖFFENTLICHE BESCHREIBUNG: {{ episode.description }}
-{%- if episode.comment_producer %}KOMMENTAR AN ALEX: {{ episode.comment_producer }}{% endif %}
+PRODUZENT:IN: {{ uploader.name }}
+SENDEDATUM: {{ upload.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}
+TITEL: {{ upload.name }}
+ÖFFENTLICHE BESCHREIBUNG: {{ upload.description }}
+{%- if upload.comment_uploader %}KOMMENTAR AN ALEX: {{ upload.comment_uploader }}{% endif %}
 
 Bitte melde dich bei Fragen bei {{ contact_mail }}.
 

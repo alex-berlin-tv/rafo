@@ -1,11 +1,12 @@
 import enum
 
-from .baserow import DurationField, MultipleSelectEntry, MultipleSelectField, RowLink, SingleSelectField, Table, TableLinkField
+from .baserow import DurationField, MultipleSelectEntry, MultipleSelectField, NoResultError, RowLink, SingleSelectField, Table, TableLinkField
 from .config import settings
 
 from datetime import datetime
 from enum import Enum
 from typing import Any, ClassVar, Optional
+from urllib.parse import urljoin
 
 from pydantic import BaseModel, Field, RootModel
 from pydantic.config import ConfigDict
@@ -22,6 +23,7 @@ class BaserowPerson(Table):
     upload_form_state: SingleSelectField = Field(
         alias=str("Status Upload Form")
     )
+    legacy_uuid: Optional[str] = Field(alias=str("Legacy UUID"), default=None)
 
     table_id: ClassVar[int] = settings.br_person_table
     table_name: ClassVar[str] = "Person"
@@ -37,6 +39,10 @@ class BaserowPerson(Table):
     def is_form_enabled(self) -> bool:
         """Returns whether the upload form is enabled for this person."""
         return self.upload_form_state is not None and self.upload_form_state.value == "Aktiviert"
+
+    def upload_url(self) -> str:
+        """Returns the URL of the personalized upload form for this person."""
+        return urljoin(settings.base_url, f"upload/{self.uuid}")
 
 
 class BaserowShow(Table):
@@ -76,23 +82,36 @@ class ShowFormData(BaseModel):
 class ProducerUploadData(BaseModel):
     """Contains all information needed to display the upload form frontend."""
     producer_name: str
+    producer_uuid: str
+    base_url: str
     shows: Optional[list[ShowFormData]]
     dev_mode: bool
     maintenance_mode: bool
     maintenance_message: str
     form_enabled: bool
+    legacy_url_used: bool
+    legacy_url_grace_date: Optional[datetime]
 
     @classmethod
     def from_db(cls, person_uuid: str):
-        person = BaserowPerson.by_uuid(person_uuid).one()
+        legacy_url_used = False
+        try:
+            person = BaserowPerson.by_uuid(person_uuid).one()
+        except NoResultError:
+            person = BaserowPerson.filter(legacy_uuid=person_uuid).one()
+            legacy_url_used = True
         shows = BaserowShow.by_link_field(person.shows).any()
         return cls(
             producer_name=person.name,
+            producer_uuid=person.uuid,
+            base_url=settings.base_url,
             shows=[ShowFormData.from_db_show(show) for show in shows],
             dev_mode=settings.dev_mode,
             maintenance_mode=settings.maintenance_mode,
             maintenance_message=settings.maintenance_message,
-            form_enabled=person.is_form_enabled()
+            form_enabled=person.is_form_enabled(),
+            legacy_url_used=legacy_url_used,
+            legacy_url_grace_date=settings.legacy_url_grace_date,
         )
 
 
@@ -111,6 +130,7 @@ class UploadState(str, Enum):
     OMNIA_RUNNING = "Omnia: Upload läuft"
     OMNIA_COMPLETE = "Omnia: Liegt auf Omnia"
     OMNIA_ERROR = "Omnia: Fehler während Upload"
+    URL_LEGACY_USED = "URL: Legacy benutzt"
 
 
 class UploadStates(RootModel[list[UploadState]]):
@@ -122,8 +142,9 @@ class UploadStates(RootModel[list[UploadState]]):
     WAVEFORM_PREFIX: ClassVar[str] = "Waveform"
     OPTIMIZATION_PREFIX: ClassVar[str] = "Optimierung"
     OMNIA_PREFIX: ClassVar[str] = "Omnia"
+    URL_PREFIX: ClassVar[str] = "URL"
     ORDER: ClassVar[list[str]] = [
-        WAVEFORM_PREFIX, OPTIMIZATION_PREFIX, OMNIA_PREFIX
+        WAVEFORM_PREFIX, OPTIMIZATION_PREFIX, OMNIA_PREFIX, URL_PREFIX,
     ]
 
     @classmethod
@@ -139,13 +160,19 @@ class UploadStates(RootModel[list[UploadState]]):
         return rsl
 
     @classmethod
-    def all_pending(cls) -> "UploadStates":
-        """Returns all states to be pending."""
-        return cls(root=[
+    def all_pending_with_legacy_url_state(cls, legacy_url_used: bool) -> "UploadStates":
+        """
+        Returns all states to be pending. When a legacy URL is used the
+        appropriate state will be added as well.
+        """
+        rsl = [
             UploadState.WAVEFORM_PENDING,
             UploadState.OPTIMIZATION_PENDING,
             UploadState.OMNIA_PENDING,
-        ])
+        ]
+        if legacy_url_used:
+            rsl.append(UploadState.URL_LEGACY_USED)
+        return cls(root=rsl)
 
     def values(self) -> list[str]:
         """Returns all values as list of strings."""
@@ -209,7 +236,8 @@ class BaserowUpload(Table):
     )
     state: MultipleSelectField = Field(
         alias=str("Status"),
-        default=UploadStates.all_pending().to_multiple_select_field(),
+        default=UploadStates.all_pending_with_legacy_url_state(
+            False).to_multiple_select_field(),
     )
     optimization_log: Optional[str] = Field(
         alias=str("Log Optimierung"), default=None

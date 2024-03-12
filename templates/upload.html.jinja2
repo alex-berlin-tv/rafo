@@ -9,8 +9,22 @@
         <div class="modal-content">
             <div class="notification is-primary">
                 <p><b>Upload erfolgreich abgeschlossen</b></p>
-                <p>Wir haben deine Sendung erhalten, vielen Dank! Du wirst in Kürze eine Bestätigung per Mail erhalten
+                <p>Wir haben deine Sendung erhalten, vielen Dank! Du wirst in Kürze eine Bestätigung per Mail
+                    erhalten
                     (bitte schau auch im Spamordner nach).</p>
+            </div>
+            <div class="notification is-danger" x-show="legacy_url_used">
+                <p>
+                    <b><i class="fa-solid fa-heart-crack"></i> Achtung: Deine URL ist nicht mehr aktuell!</b>
+                </p>
+                <p>
+                    Im Zuge eines umfassenden Updates unseres Datenbackends wird die von dir verwendete URL ab dem
+                    <span x-text="format_grace_date()"></span>
+                    nicht mehr funktionieren. Bitte nutze <b>ab jetzt</b> folgende URL:
+                </p>
+                <p>
+                    <code><span x-text="url()"></span></code>
+                </p>
             </div>
         </div>
         <button class="modal-close is-large" aria-label="close" @click="success=false"></button>
@@ -43,13 +57,42 @@
         </article>
     </div>
 
+    <div class="pb-4" x-show="data_loaded && !fetch_error && legacy_url_used">
+        <article class="message is-danger">
+            <div class="message-header">
+                <p><i class="fa-solid fa-circle-exclamation"></i> Achtung: Deine URL ist nicht mehr aktuell!</p>
+            </div>
+            <div class="message-body">
+                <p>Im Zuge eines umfassenden Updates unseres Datenbackends wird die von dir verwendete URL ab dem
+                    <span x-text="format_grace_date()"></span>
+                    nicht mehr funktionieren. Bitte nutze <b>ab jetzt</b> folgende URL:
+                </p>
+                <p>
+                    <code><span x-text="url()"></span></code>
+                    <button class="button is-small is-danger ml-2" @click="copy_url_to_clipboard()">
+                        <span class="icon is-small">
+                            <i class="fa-regular fa-clipboard"></i>
+                        </span>
+                        <span x-text="copy_button_text"></span>
+                    </button>
+                </p>
+                <p>
+                    Der neue Link ist ab sofort in Betrieb. Aktualisiere deine Bookmarks und nutze <em>ab jetzt</em> die
+                    neue URL. Ab dem <span x-text="format_grace_date()"></span> wird es nicht mehr möglich sein, über
+                    den alten Link auf den Upload zuzugreifen.
+                </p>
+            </div>
+        </article>
+    </div>
+
     <div x-show="data_loaded && !fetch_error && !form_enabled">
         <article class="message is-warning">
             <div class="message-header">
                 <p>Formular deaktiviert</p>
             </div>
             <div class="message-body">
-                <p>Das Upload-Formular ist für diese Person nicht aktiviert. Wenn es sich um einen Fehler handelt, wende
+                <p>Das Upload-Formular ist für diese Person nicht aktiviert. Wenn es sich um einen Fehler handelt,
+                    wende
                     dich bitte an die Sendeabwicklung, <a
                         href="mailto:sendeabwicklung@alex-berlin.de">sendeabwicklung@alex-berlin.de</a></p>
             </div>
@@ -72,7 +115,8 @@
                     <input class="input" id="producer" name="producer" type="text" x-model="producer_name" disabled>
                     <span class="icon is-small is-left"><i class="fa-regular fa-user"></i></span>
                 </div>
-                <p class="help">Dieses Feld ist nicht veränderbar und stellt die verantwortliche Person da, die bei uns
+                <p class="help">Dieses Feld ist nicht veränderbar und stellt die verantwortliche Person da, die bei
+                    uns
                     im System hinterlegt ist.</p>
             </div>
             <div class="field">
@@ -101,7 +145,8 @@
                         @change="auto_set_title()">
                     <div class="icon is-small is-left"><i class="fa-solid fa-calendar-days"></i></div>
                 </div>
-                <p class="help">Trage hier die Sendezeit der Erstausstrahlung ein. Sollte dir diese nicht bekannt sein
+                <p class="help">Trage hier die Sendezeit der Erstausstrahlung ein. Sollte dir diese nicht bekannt
+                    sein
                     wende dich bitte an
                     deine Bezugsperson bei ALEX Berlin oder direkt an <a
                         href="mailto:dispo@alex-berlin.de">dispo@alex-berlin.de</a> bevor du die Datei hochlädst.
@@ -116,7 +161,8 @@
                     <div class="icon is-small is-left"><i class="fa-solid fa-pen"></i></div>
                 </div>
                 <p class="help">Der Titel deiner Episode. Dieses Feld bestimmt, wie die Sendung öffentlich in der
-                    Mediathek heißt. Idealerweise ist dies der Formatname und bei Bedarf eine Ergänzung um Folgennummer
+                    Mediathek heißt. Idealerweise ist dies der Formatname und bei Bedarf eine Ergänzung um
+                    Folgennummer
                     oder Thema. <i>Pflichtfeld, zwischen 8 und 200 Zeichen lang</i>.
                 </p>
             </div>
@@ -127,9 +173,11 @@
                         maxlength="1000" required :disabled="upload_running"></textarea>
                 </div>
                 <p class="help">
-                    Dieses Feld bestimmt, wie die Sendungsbeschreibung <b>öffentlich in der Mediathek</b> aussehen wird.
+                    Dieses Feld bestimmt, wie die Sendungsbeschreibung <b>öffentlich in der Mediathek</b> aussehen
+                    wird.
                     Soll
-                    kein individueller Text eingeblendet werden, sondern nur der Standarttext des Formates, lass dieses
+                    kein individueller Text eingeblendet werden, sondern nur der Standarttext des Formates, lass
+                    dieses
                     Feld leer. <b>Bitte keine Nachrichten an ALEX Mitarbeiter!</b> Nutze hierfür das Kommentarfeld.
                 </p>
             </div>
@@ -148,7 +196,8 @@
                         <span class="file-name" x-text="get_file_name(file)"></span>
                     </label>
                 </div>
-                <p class="help">Lade hier deine Audiodatei der Sendung hoch. Bedenke bitte eine Länge von max. 59:30min
+                <p class="help">Lade hier deine Audiodatei der Sendung hoch. Bedenke bitte eine Länge von max.
+                    59:30min
                     und die unterstützen Audioformate MP3 oder WAV. <i>Pflichtfeld.</i></p>
             </div>
             <div class="field">
@@ -166,7 +215,8 @@
                         <span class="file-name" x-text="get_file_name(cover)"></span>
                     </label>
                 </div>
-                <p class="help">Sollte die Sendung eine individuelles Cover bekommen, gibt es hier die Möglichkeit ein
+                <p class="help">Sollte die Sendung eine individuelles Cover bekommen, gibt es hier die Möglichkeit
+                    ein
                     solches hochzuladen.
                     Das Seitenverhältnis muss 1:1 und die Auflösung mindestens 512 x 512 Pixel betragen.
                     Ignoriere es, damit wir das Standardbild des Formats beibehalten.
@@ -178,7 +228,8 @@
                     <textarea class="textarea" id="comment" name="comment" type="text" x-model="comment"
                         maxlength="1000" :disabled="upload_running"></textarea>
                 </div>
-                <p class="help">Hier kann eine Nachricht an die Sendeabwicklung verfasst werden, sollte es Abweichungen
+                <p class="help">Hier kann eine Nachricht an die Sendeabwicklung verfasst werden, sollte es
+                    Abweichungen
                     oder wichtige Kommentare geben.</p>
             </div>
             <div class="field mb-5" x-show="upload_running">
@@ -208,7 +259,8 @@
             fetch_error: null,
             fetch_error_detail: "",
             producer_name: "",
-            producer_uuid: "{{producer_uuid}}",
+            producer_uuid: "",
+            base_url: "",
             show: null,
             available_shows: {},
             datetime: {},
@@ -217,10 +269,6 @@
             file: null,
             cover: null,
             comment: "",
-            form_data: {
-                producer: "{{producer_uuid}}",
-                show: null,
-            },
             success: false,
             dev_mode: false,
             upload_running: false,
@@ -231,8 +279,12 @@
             form_enabled: false,
             max_datetime: null,
             title_changed_manually: false,
+            copy_button_text: "In Zwischenablage kopieren",
+            legacy_url_used: false,
+            legacy_url_grace_date: null,
+            within_legacy_url_grace: false,
             fetch_data() {
-                fetch(`../api/producer_for_upload/${this.producer_uuid}`)
+                fetch(`../api/producer_for_upload/{{ requested_uuid }}`)
                     .then(res => {
                         if (!res.ok) {
                             this.fetch_error = res;
@@ -243,11 +295,16 @@
                         if (this.fetch_error === null) {
                             this.data_loaded = true;
                             this.producer_name = data.producer_name;
+                            this.producer_uuid = data.producer_uuid;
                             this.available_shows = data.shows;
+                            this.base_url = data.base_url;
                             this.dev_mode = data.dev_mode;
                             this.maintenance_mode = data.maintenance_mode;
                             this.maintenance_message = data.maintenance_message;
                             this.form_enabled = data.form_enabled;
+                            this.legacy_url_used = data.legacy_url_used;
+                            this.legacy_url_grace_date = new Date(data.legacy_url_grace_date);
+                            this.within_legacy_url_grace = this.legacy_url_grace_date > new Date();
                             window.addEventListener('beforeunload', this.confirm_close);
                             this.init_show_selection();
                             this.auto_set_title();
@@ -311,6 +368,25 @@
                 }
                 return segments[segments.length - 1];
             },
+            format_grace_date() {
+                if (this.legacy_url_grace_date === null) {
+                    return "";
+                }
+                const date = this.legacy_url_grace_date;
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                return `${day}.${month}.${date.getFullYear()}`;
+            },
+            url() {
+                return `${this.base_url}/upload/${this.producer_uuid}`;
+            },
+            copy_url_to_clipboard() {
+                navigator.clipboard.writeText(this.url()).then(() => {
+                    this.copy_button_text = "Kopiert!";
+                }).catch(err => {
+                    this.copy_button_text = "Kopieren fehlgeschlagen";
+                });
+            },
             upload() {
                 event.preventDefault();
                 const form = document.getElementById("form");
@@ -318,6 +394,7 @@
                 const xhr = new XMLHttpRequest();
                 var data = new FormData(form);
                 data.append("producer", this.producer_uuid);
+                data.append("legacy_url_used", this.legacy_url_used);
 
                 xhr.upload.addEventListener("progress", (e) => {
                     this.upload_progress = (e.loaded / e.total) * 100;

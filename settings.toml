@@ -11,12 +11,6 @@ br_show_table = 263793
 episode_table = "Episoden"
 br_upload_table = 263794
 max_file_size = 2
-
-raw_column = "Quelldatei" # TODO: remove
-waveform_column = "Waveform" # TODO: remove
-producer_column = "Eingereicht von" # TODO: remove
-show_column = "Format" # TODO: remove
-
 on_upload_mail = "sendeabwicklung@alex-berlin.de"
 on_upload_sender_name = "Sendeabwicklung ALEX Berlin"
 contact_mail = "sendeabwicklung@alex-berlin.de"
@@ -29,3 +23,4 @@ sample_rate = 44100
 audio_crop_allowance = 0.5
 maintenance_mode = false
 maintenance_message = "Die Software wird aktualisiert und sollte um 15:00 wieder verfügbar sein."
+legacy_url_grace_date = "2024-05-01"

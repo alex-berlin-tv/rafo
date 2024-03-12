@@ -1,5 +1,8 @@
+from datetime import datetime
+
+from rafo import VERSION
 from ..config import settings
-from ..model import BaserowPerson, BaserowUpload
+from ..model import BaserowPerson, BaserowUpload, UploadState
 
 import emails
 import jinja2
@@ -62,10 +65,14 @@ class Mail:
 
     def send_on_upload_internal(self, upload: BaserowUpload):
         data = {
-            "episode": upload,
-            "producer": upload.cached_uploader,
+            "recipient": "Sendeabwicklung",
+            "is_supervisor_message": False,
+            "upload": upload,
+            "uploader": upload.cached_uploader,
             "show": upload.cached_show,
             "dev_mode": settings.dev_mode,
+            "legacy_url_used": UploadState.URL_LEGACY_USED in upload.state_enum.root,
+            "version": VERSION,
         }
         plain = self.__get_template(
             "new_upload_internal.txt.jinja2").render(data)
@@ -79,12 +86,18 @@ class Mail:
         )
 
     def send_on_upload_external(self, upload: BaserowUpload):
+        grace_date = None
+        if settings.legacy_url_grace_date is not None:
+            grace_date = settings.legacy_url_grace_date.strftime("%d.%m.%Y")
         data = {
-            "episode": upload,
-            "producer": upload.cached_uploader,
+            "upload": upload,
+            "uploader": upload.cached_uploader,
             "show": upload.cached_show,
             "dev_mode": settings.dev_mode,
             "contact_mail": settings.contact_mail,
+            "upload_url": upload.cached_uploader.upload_url(),
+            "legacy_url_used": UploadState.URL_LEGACY_USED in upload.state_enum.root,
+            "legacy_url_grace_date": grace_date,
         }
         plain = self.__get_template(
             "new_upload_producer.txt.jinja2").render(data)
@@ -105,17 +118,20 @@ class Mail:
             return
         for supervisor in supervisors:
             data = {
-                "supervisor": supervisor,
-                "episode": upload,
-                "producer": upload.cached_uploader,
+                "recipient": supervisor.name,
+                "is_supervisor_message": True,
+                "upload": upload,
+                "uploader": upload.cached_uploader,
                 "show": upload.cached_show,
                 "dev_mode": settings.dev_mode,
                 "contact_mail": settings.contact_mail,
+                "legacy_url_used": UploadState.URL_LEGACY_USED in upload.state_enum.root,
+                "version": VERSION,
             }
             plain = self.__get_template(
-                "new_upload_supervisor.txt.jinja2").render(data)
+                "new_upload_internal.txt.jinja2").render(data)
             html = self.__get_template(
-                "new_upload_supervisor.html.jinja2").render(data)
+                "new_upload_internal.html.jinja2").render(data)
             self.send(
                 supervisor.email,
                 f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload für {upload.cached_show.name} (Information für Betreuungsperson)",
