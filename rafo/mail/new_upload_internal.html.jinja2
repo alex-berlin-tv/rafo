@@ -18,7 +18,7 @@
         <li><b>Titel:</b> {{ upload.name }}</li>
         <li><b>Öffentliche Beschreibung:</b> {{ upload.description }}</li>
         {%- if upload.comment_uploader %}<li><b>Kommentar an ALEX:</b> {{ upload.comment_uploader }}</li>{% endif %}
-        {%- if legacy_url_used %}<li><b>URL:</b> Legacy URL wurde benutzt</li>{% endif %}
+        {%- if legacy_url_used %}<li><b>URL:</b> Legacy URL wurde benutzt.</li>{% endif %}
     </ul>
     {% if is_supervisor_message %}
     <p>
@@ -29,7 +29,7 @@
 
     <p>
         Es grüßt,<br>
-        rafo, {{ version }}
+        rafo, v{{ version }}
     </p>
 </body>
 

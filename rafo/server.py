@@ -163,7 +163,7 @@ async def upload_file(
     legacy_url_used = legacy_url_used_target.value.decode() == "true"
 
     uploader = BaserowPerson.by_uuid(producer_target.value.decode()).one()
-    show = BaserowShow.by_uuid(show_target.value.decode()).one()
+    show = BaserowShow.by_id(int(show_target.value.decode())).one()
     new_upload = BaserowUpload(
         row_id=-1,
         name=title_target.value.decode(),

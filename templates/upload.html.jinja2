@@ -62,7 +62,7 @@
             <div class="message-header">
                 <p><i class="fa-solid fa-circle-exclamation"></i> Achtung: Deine URL ist nicht mehr aktuell!</p>
             </div>
-            <div class="message-body">
+            <div class="message-body" x-show="!out_of_grace_period()">
                 <p>Im Zuge eines umfassenden Updates unseres Datenbackends wird die von dir verwendete URL ab dem
                     <span x-text="format_grace_date()"></span>
                     nicht mehr funktionieren. Bitte nutze <b>ab jetzt</b> folgende URL:
@@ -82,6 +82,12 @@
                     den alten Link auf den Upload zuzugreifen.
                 </p>
             </div>
+            <div class="message-body" x-show="out_of_grace_period()">
+                <p>
+                    Nach Ablauf der Übergangsfrist funktioniert das Upload-Formular nur noch mit dem neuen Link. Diesen
+                    hast du per E-Mail erhalten. Bei Fragen wende dich bitte an die Sendeabwicklung.
+                </p>
+            </div>
         </article>
     </div>
 
@@ -99,7 +105,7 @@
         </article>
     </div>
 
-    <div x-show="data_loaded && !fetch_error && !maintenance_mode && form_enabled">
+    <div x-show="data_loaded && !fetch_error && !maintenance_mode && form_enabled && !out_of_grace_period()">
         <h1>Uploadformular</h1>
         <form id="form" enctype="multipart/form-data" @submit="upload()">
             <template x-if="dev_mode">
@@ -115,9 +121,10 @@
                     <input class="input" id="producer" name="producer" type="text" x-model="producer_name" disabled>
                     <span class="icon is-small is-left"><i class="fa-regular fa-user"></i></span>
                 </div>
-                <p class="help">Dieses Feld ist nicht veränderbar und stellt die verantwortliche Person da, die bei
-                    uns
-                    im System hinterlegt ist.</p>
+                <p class="help">
+                    Dieses Feld ist nicht veränderbar und stellt die verantwortliche Person da, die bei uns im System
+                    hinterlegt ist.
+                </p>
             </div>
             <div class="field">
                 <label class="label" for="show">Format</label>
@@ -129,7 +136,7 @@
                                 <option disabled selected value="">Format auswählen</option>
                             </template>
                             <template x-for="show in available_shows">
-                                <option :value="show.uuid" x-text="show.name"></option>
+                                <option :value="show.show_id" x-text="show.name"></option>
                             </template>
                             <p class="help">Wähle bitte das Format aus.</p>
                         </select>
@@ -145,10 +152,9 @@
                         @change="auto_set_title()">
                     <div class="icon is-small is-left"><i class="fa-solid fa-calendar-days"></i></div>
                 </div>
-                <p class="help">Trage hier die Sendezeit der Erstausstrahlung ein. Sollte dir diese nicht bekannt
-                    sein
-                    wende dich bitte an
-                    deine Bezugsperson bei ALEX Berlin oder direkt an <a
+                <p class="help">
+                    Trage hier die Sendezeit der Erstausstrahlung ein. Sollte dir diese nicht bekannt sein wende dich
+                    bitte an deine Bezugsperson bei ALEX Berlin oder direkt an <a
                         href="mailto:dispo@alex-berlin.de">dispo@alex-berlin.de</a> bevor du die Datei hochlädst.
                     <i>Pflichtfeld.</i>
                 </p>
@@ -376,6 +382,15 @@
                 const day = String(date.getDate()).padStart(2, '0');
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 return `${day}.${month}.${date.getFullYear()}`;
+            },
+            out_of_grace_period() {
+                if (!this.legacy_url_used) {
+                    return false;
+                }
+                if (this.legacy_url_grace_date === null) {
+                    return false;
+                }
+                return new Date() > this.legacy_url_grace_date;
             },
             url() {
                 return `${this.base_url}/upload/${this.producer_uuid}`;

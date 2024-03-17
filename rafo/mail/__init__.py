@@ -71,7 +71,7 @@ class Mail:
             "uploader": upload.cached_uploader,
             "show": upload.cached_show,
             "dev_mode": settings.dev_mode,
-            "legacy_url_used": UploadState.URL_LEGACY_USED in upload.state_enum.root,
+            "legacy_url_used": UploadState.INTERNAL_LEGACY_URL_USED in upload.state_enum.root,
             "version": VERSION,
         }
         plain = self.__get_template(
@@ -96,7 +96,7 @@ class Mail:
             "dev_mode": settings.dev_mode,
             "contact_mail": settings.contact_mail,
             "upload_url": upload.cached_uploader.upload_url(),
-            "legacy_url_used": UploadState.URL_LEGACY_USED in upload.state_enum.root,
+            "legacy_url_used": UploadState.INTERNAL_LEGACY_URL_USED in upload.state_enum.root,
             "legacy_url_grace_date": grace_date,
         }
         plain = self.__get_template(
@@ -125,7 +125,7 @@ class Mail:
                 "show": upload.cached_show,
                 "dev_mode": settings.dev_mode,
                 "contact_mail": settings.contact_mail,
-                "legacy_url_used": UploadState.URL_LEGACY_USED in upload.state_enum.root,
+                "legacy_url_used": UploadState.INTERNAL_LEGACY_URL_USED in upload.state_enum.root,
                 "version": VERSION,
             }
             plain = self.__get_template(

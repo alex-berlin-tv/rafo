@@ -188,6 +188,14 @@ class File(BaseModel):
         response = Client().upload_file(file)
         return cls.model_validate(asdict(response))
 
+    @classmethod
+    def upload_via_url(cls, url: str) -> "File":
+        """
+        Loads a file from the given URL into Baserow.
+        """
+        response = Client().upload_via_url(url)
+        return cls.model_validate(asdict(response))
+
 
 class FileField(RootModel[list[File]]):
     """File field which can hold uploaded files."""

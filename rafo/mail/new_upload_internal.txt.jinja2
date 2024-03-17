@@ -12,7 +12,7 @@ SENDEDATUM: {{ upload.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}
 TITEL: {{ upload.name }}
 ÖFFENTLICHE BESCHREIBUNG: {{ upload.description }}
 {%- if upload.comment_uploader %}KOMMENTAR AN ALEX: {{ upload.comment_uploader }}{% endif %}
-{%- if legacy_url_used %}URL: Legacy URL wurde benutzt{% endif %}
+{%- if legacy_url_used %}URL: Legacy URL wurde benutzt.{% endif %}
 
 {% if is_supervisor_message %}
 Du erhälst diese Nachricht, da du als Betreuungsperson für das Format »{{ show.name }}« eingetragen bist.
@@ -20,4 +20,4 @@ Bei Fragen melde dich bitte bei der Sendeabwicklung ({{ contact_mail }}).
 {% endif %}
 
 Es grüßt,
-rafo, {{ version }}
+rafo, v{{ version }}

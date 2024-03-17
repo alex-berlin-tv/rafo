@@ -1,5 +1,3 @@
-import enum
-
 from .baserow import DurationField, MultipleSelectEntry, MultipleSelectField, NoResultError, RowLink, SingleSelectField, Table, TableLinkField
 from .config import settings
 
@@ -25,7 +23,7 @@ class BaserowPerson(Table):
     )
     legacy_uuid: Optional[str] = Field(alias=str("Legacy UUID"), default=None)
 
-    table_id: ClassVar[int] = settings.br_person_table
+    table_id: ClassVar[int] = settings.person_table
     table_name: ClassVar[str] = "Person"
     model_config = ConfigDict(populate_by_name=True)
 
@@ -52,10 +50,9 @@ class BaserowShow(Table):
     row_id: int = Field(alias=str("id"))
     name: str = Field(alias=str("Name"))
     responsible: TableLinkField = Field(alias=str("Verantwortlich"))
-    uuid: str = Field(alias=str("UUID"))
     supervisors: TableLinkField = Field(alias=str("Betreuung"))
 
-    table_id: ClassVar[int] = settings.br_show_table
+    table_id: ClassVar[int] = settings.show_table
     table_name: ClassVar[str] = "Format"
     model_config = ConfigDict(populate_by_name=True)
 
@@ -68,13 +65,13 @@ class BaserowShow(Table):
 
 
 class ShowFormData(BaseModel):
-    uuid: str
+    show_id: int
     name: str
 
     @classmethod
     def from_db_show(cls, show: BaserowShow):
         return cls(
-            uuid=show.uuid,
+            show_id=show.row_id,
             name=show.name,
         )
 
@@ -130,7 +127,8 @@ class UploadState(str, Enum):
     OMNIA_RUNNING = "Omnia: Upload läuft"
     OMNIA_COMPLETE = "Omnia: Liegt auf Omnia"
     OMNIA_ERROR = "Omnia: Fehler während Upload"
-    URL_LEGACY_USED = "URL: Legacy benutzt"
+    INTERNAL_LEGACY_URL_USED = "Intern: Legacy URL benutzt"
+    INTERNAL_NOCODB_IMPORT = "Intern: NocoDB Import"
 
 
 class UploadStates(RootModel[list[UploadState]]):
@@ -142,9 +140,9 @@ class UploadStates(RootModel[list[UploadState]]):
     WAVEFORM_PREFIX: ClassVar[str] = "Waveform"
     OPTIMIZATION_PREFIX: ClassVar[str] = "Optimierung"
     OMNIA_PREFIX: ClassVar[str] = "Omnia"
-    URL_PREFIX: ClassVar[str] = "URL"
+    INTERNAL_PREFIX: ClassVar[str] = "URL"
     ORDER: ClassVar[list[str]] = [
-        WAVEFORM_PREFIX, OPTIMIZATION_PREFIX, OMNIA_PREFIX, URL_PREFIX,
+        WAVEFORM_PREFIX, OPTIMIZATION_PREFIX, OMNIA_PREFIX, INTERNAL_PREFIX,
     ]
 
     @classmethod
@@ -171,7 +169,7 @@ class UploadStates(RootModel[list[UploadState]]):
             UploadState.OMNIA_PENDING,
         ]
         if legacy_url_used:
-            rsl.append(UploadState.URL_LEGACY_USED)
+            rsl.append(UploadState.INTERNAL_LEGACY_URL_USED)
         return cls(root=rsl)
 
     def values(self) -> list[str]:
@@ -245,7 +243,10 @@ class BaserowUpload(Table):
     created_at: Optional[datetime] = Field(
         alias=str("Hochgeladen am"), default=None
     )
-    table_id: ClassVar[int] = settings.br_upload_table
+    legacy_uuid: Optional[str] = Field(
+        alias=str("Legacy UUID"), default=None,
+    )
+    table_id: ClassVar[int] = settings.upload_table
     table_name: ClassVar[str] = "Upload"
     model_config = ConfigDict(populate_by_name=True)
 

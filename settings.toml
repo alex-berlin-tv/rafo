@@ -1,15 +1,11 @@
 [rafo]
-nocodb_url = "https://db.alex-berlin.de"
-baserow_url = "https://api.baserow.io"
+baserow_url = "https://data.alex-berlin.de/"
 base_url = "https://upload.alex-berlin.de"
 port = 8000
 project_name = "Radioupload"
-producer_table = "Produzenten"
-br_person_table = 260942
-show_table = "Formate"
-br_show_table = 263793
-episode_table = "Episoden"
-br_upload_table = 263794
+person_table = 988
+show_table = 1174
+upload_table = 1175
 max_file_size = 2
 on_upload_mail = "sendeabwicklung@alex-berlin.de"
 on_upload_sender_name = "Sendeabwicklung ALEX Berlin"
@@ -23,4 +19,4 @@ sample_rate = 44100
 audio_crop_allowance = 0.5
 maintenance_mode = false
 maintenance_message = "Die Software wird aktualisiert und sollte um 15:00 wieder verfügbar sein."
-legacy_url_grace_date = "2024-05-01"
+legacy_url_grace_date = "2024-03-01"

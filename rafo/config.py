@@ -6,16 +6,12 @@ import typed_settings
 @typed_settings.settings
 class Settings:
     baserow_url: str
-    nocodb_url: str
     base_url: str
     port: int
     project_name: str
-    producer_table: str
-    br_person_table: int
-    show_table: str
-    br_show_table: int
-    episode_table: str
-    br_upload_table: int
+    person_table: int
+    show_table: int
+    upload_table: int
     max_file_size: int
 
     on_upload_mail: str
@@ -40,14 +36,13 @@ class Settings:
     """
     States whether the maintenance mode should be enabled. If the maintenance
     mode is enabled it's not possible to upload new files. This mode should be
-    used during backend (NocoDB) updates
+    used during backend (Baserow) updates
     """
     maintenance_message: str
     """Message to shown to the user if maintenance mode is enabled."""
     legacy_url_grace_date: Optional[datetime]
     """Defines a date until when users can use the legacy URL."""
 
-    nocodb_api_key: str
     baserow_api_key: str
     smtp_sender_address: str
     smtp_host: str
@@ -58,7 +53,7 @@ class Settings:
     omnia_api_secret: str
     omnia_session_id: str
     webhook_secret: str
-    """Arbitrary secret for webhook calls from NocoDB."""
+    """Arbitrary secret for webhook calls from Baserow."""
 
 
 @typed_settings.settings
