@@ -46,11 +46,17 @@ rafo uses the application [Baserow](https://baserow.io/) as a backend for the da
 
 - Person (Table)
     - Name : Text
-	- Typ: `Single Select[Intern, Alumni, Extern, Test]`
+	- Typ: `Single Select`
+        - Intern
+        - Alumni
+        - Extern
+        - Test
 	- E-Mail: `Email`
 	- Telefon: `Text`
 	- Upload Form: `Function`
-	- Status Upload Form: `Single Select[Aktiviert, Deaktiviert]`
+	- Status Upload Form: `Single Select`
+        - Aktiviert
+        - Deaktiviert
 	- Upload Link erhalten?: `Bool`
 	- UUID: `UUID`
 	- Legacy UUID: `Text`
