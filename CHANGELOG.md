@@ -54,3 +54,19 @@ Weitere Änderungen:
 - Test data in upload form is now a little bit more meaningful.
 - Form now presents user with a meaningful default title based on selected show and air-date.
 - Broadcasting date can not be more than 24h in the past.
+
+
+## v1.3.0 – Backend migrated to Baserow and further improvements
+
+With this version, Baserow replaces NocoDB as the backend of the software. This is the basis for the further migration of our broadcast planning to Baserow. Furthermore, Baserow currently offers a better range of functions and stability of the API than NocoDB. The backend is now accessed via a Pydantic model. This means that the structure of the Baserow tables is always automatically validated. In addition, various changes and optimizations have been made to the data model based on the experience gained in recent months.
+
+In addition, a number of changes and optimisations have been made:
+
+- The upload model now caches the linked format and uploader centrally. This reduces the required calls to the backend per upload. Especially in the mail module.
+- The states of an upload are now saved as multiselect.
+- The duration of an upload is written to a dedicated duration field after optimisation. This means that the duration is available in the backend in a machine-readable format.
+- The upload form can now be activated per person. This makes it possible to create people in the backend without them being able to use the upload form. This is particularly important as the backend will also be responsible for managing TV content in future, but TV producers should not be able to use the upload form.
+- Supervisors can now be defined for a show. They receive a confirmation email after uploading this show.
+- Confirmation emails now use the HTML list tag for rendering.
+- The templates for the confirmation mails have been updated and their variables have been adapted to reflect the changes in the data model.
+- Implementation of a migration process for legacy UUIDs at personen. As the switch to Baserow and its native UUID field means that the existing UUIDs cannot be transferred from noco, there are new URLs for all producers. To make the transition phase as simple as possible, a grace phase has been implemented in which the old URL can still be used. In this case, however, users are informed several times (in the form as well as in the emails) that they should use the new URL. After the grace period has expired, the new URL must be used.
