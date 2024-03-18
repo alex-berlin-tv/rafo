@@ -70,3 +70,4 @@ In addition, a number of changes and optimisations have been made:
 - Confirmation emails now use the HTML list tag for rendering.
 - The templates for the confirmation mails have been updated and their variables have been adapted to reflect the changes in the data model.
 - Implementation of a migration process for legacy UUIDs at personen. As the switch to Baserow and its native UUID field means that the existing UUIDs cannot be transferred from noco, there are new URLs for all producers. To make the transition phase as simple as possible, a grace phase has been implemented in which the old URL can still be used. In this case, however, users are informed several times (in the form as well as in the emails) that they should use the new URL. After the grace period has expired, the new URL must be used.
+- New logo.
