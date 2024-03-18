@@ -44,45 +44,64 @@ rafo uses the application [Baserow](https://baserow.io/) as a backend for the da
 
 ### Tables
 
-- Radioupload (Project)
-    - Produzenten (Table)
-        - Ident (`Formula` Field): `CONCAT("p", {Id}, "-", LEFT({Vorname}, 2), LEFT({Name}, 2))`
-        - Vorname (`SingleLineText` Field)
-        - Nachname (`SingleLineText` Field)
-        - Email (`Email` Field)
-        - UUID (`SingleLineText` Field)
-    - Formate (Table)
-        - Name (`SingleLineText` Field)
-        - Ident (`Formula` Field): `CONCAT("s-", {Id})`
-        - UUID (`SingleLineText` Field)
-        - Produzent (`LinkToAnotherRecord` Field): Produzenten
-        - Description (`LongText` Field)
-    - Episoden (Table)
-        - Titel (`SingleLineText` Field)
-        - Eingereicht von (`LinkToAnotherRecord` Field): Produzenten
-        - Format (`LinkToAnotherRecord` Field): Formate
-        - Waveform (`Attachment` Field)
-        - Beschreibung (`LongText` Field)
-        - Waveform (`Attachment` Field)
-        - Quelldatei (`Attachment` Field)
-        - Optimierte Datei (`Attachment` Field)
-        - Manuelle Datei (`Attachment` Field)
-        - Cover (`Attachment` Field)
-        - Status Waveform (`SingleSelect` Field): Ausstehend / Läuft / Fertig / Fehler
-        - Status Optimierung (`SingleSelect` Field): Ausstehend / Läuft / Fertig / Fertig – Siehe Log / Fehler
-        - Status Omnia (`SingleSelect` Field): Nicht auf Omnia / STARTE Upload zu Omnia / Liegt auf Omnia bereit / VERÖFFENTLICHEN / Online in der Mediathek
-        - Log Optimierung (`LongText` Field)
-    
+- Person (Table)
+    - Name : Text
+	- Typ: `Single Select[Intern, Alumni, Extern, Test]`
+	- E-Mail: `Email`
+	- Telefon: `Text`
+	- Upload Form: `Function`
+	- Status Upload Form: `Single Select[Aktiviert, Deaktiviert]`
+	- Upload Link erhalten?: `Bool`
+	- UUID: `UUID`
+	- Legacy UUID: `Text`
 
-### Webhooks
-
-Further you have to configure two webhooks. The secret is configured in the `.secrets.toml` file using the `webhook_secret`.
-
-- After insert: TBA
-- After Update
-    - Name: rafo after update
-    - Type: `URL`
-    - Method: `POST`
-    - URL: `<YOUR_RAFO_DOMAIN>/webhook/update`
-    - Params
-        - Key: `secret`, Value `<YOUR_SECRET>`
+- Format (Table)
+	- Name: `Text`
+	- Verantwortlich: `Relationship[Person, n:n]`
+	- Herkunft: `Single Select`
+        - Intern
+        - AMW
+        - Extern
+        - Test
+	- Medium: `Single Select`
+        - TV
+        - Radio
+        - Podcast
+	- Beschreibung: `Long Text`
+	- Cover: `File`
+	- URL: `Long Text`
+	- Betreuung: `Relationship[Person, n:n]`
+- Upload (Table)
+	- Name: `Text`
+	- Geplante Ausstrahlung: `Datetime`
+	- Beschreibung: `Long Text`
+	- Kommentar Produzent: `Long Text`
+	- Format: `Relationship[Format, 1:n]`
+	- Eingereicht von: `Relationship[Person, 1:n]`
+	- Episode: `Relationship[Episode, 1:n]`
+	- Waveform: `File`
+	- Quelldatei: `File`
+	- Optimierte Datei: `File`
+	- Manuelle Datei: `File`
+	- Cover: `File`
+	- Dauer: `Duration`
+    - Status: `Multiple Select`
+        - Waveform: Ausstehend
+        - Waveform: Läuft
+        - Waveform: Fertig
+        - Waveform: Fehler
+        - Optimierung: Ausstehend
+        - Optimierung: Läuft
+        - Optimierung: Fertig
+        - Optimierung: Fertig, Log beachten!
+        - Optimierung: Fehler
+        - Omnia: Nicht auf Omnia
+        - Omnia: Upload läuft
+        - Omnia: Liegt auf Omnia
+        - Omnia: Fehler während Upload
+        - Intern: Legacy URL benutzt
+        - Intern: NocoDB Import
+	- Log Optimierung: `Long Text`
+	- Upload Omnia (Button): `Formula`
+	- Hochgeladen am: `Datetime`
+	- UUID: `UUID`
