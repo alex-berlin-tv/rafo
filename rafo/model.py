@@ -1,4 +1,4 @@
-from .baserow import DurationField, MultipleSelectEntry, MultipleSelectField, NoResultError, RowLink, SingleSelectField, Table, TableLinkField
+from .baserow import DurationField, FileField, MultipleSelectEntry, MultipleSelectField, NoResultError, RowLink, SingleSelectField, Table, TableLinkField
 from .config import settings
 
 from datetime import datetime
@@ -214,19 +214,19 @@ class BaserowUpload(Table):
     comment_producer: Optional[str] = Field(
         alias=str("Kommentar Produzent"), default=None
     )
-    waveform: Optional[Any] = Field(
+    waveform: Optional[FileField] = Field(
         alias=str("Waveform"), default=None
     )
-    source_file: Optional[Any] = Field(
+    source_file: Optional[FileField] = Field(
         alias=str("Quelldatei"), default=None
     )
-    optimized_file: Optional[Any] = Field(
+    optimized_file: Optional[FileField] = Field(
         alias=str("Optimierte Datei"), default=None
     )
-    manual_file: Optional[Any] = Field(
+    manual_file: Optional[FileField] = Field(
         alias=str("Manuelle Datei"), default=None
     )
-    cover: Optional[Any] = Field(
+    cover: Optional[FileField] = Field(
         alias=str("Cover"), default=None
     )
     duration: Optional[DurationField] = Field(
