@@ -25,6 +25,20 @@ class Bool(int, Enum):
         return True
 
 
+class StreamType(str, Enum):
+    VIDEO = "videos"
+    AUDIO = "audio"
+    SHOW = "shows"
+
+
+class ApiType(str, Enum):
+    MEDIA = "media"
+    MANAGEMENT = "management"
+    UPLOAD_LINK_MANAGEMENT = "upload_link_management"
+    SYSTEM = "system"
+    DOMAIN = "domain"
+
+
 class ResponseMetadata(BaseModel):
     """Metadata part of an API response."""
 
@@ -91,8 +105,16 @@ class MediaResultGeneral(BaseModel):
     is_ugc: Bool = Field(alias="isUGC")
 
 
+class ItemUpdate(BaseModel):
+    stream_type: StreamType = Field(alias="streamtype")
+    generated_id: int = Field(alias="generatedID")
+    generated_gid: int = Field(alias="generatedGID")
+
+
 class ManagementResult(BaseModel):
     message: str
+    item_update: Optional[ItemUpdate] = Field(alias="itemupdate")
+    operation_id: int = Field(alias="operationid")
 
 
 class MediaResult(BaseModel):
@@ -103,22 +125,9 @@ class MediaResult(BaseModel):
 
 class Response(BaseModel):
     metadata: ResponseMetadata
-    result: Union[ManagementResult, MediaResult, list[MediaResult], None] = None
+    result: Union[ManagementResult, MediaResult,
+                  list[MediaResult], None] = None
     paging: Optional[ResponsePaging] = None
-
-
-class StreamType(str, Enum):
-    VIDEO = "videos"
-    AUDIO = "audio"
-    SHOW = "shows"
-
-
-class ApiType(str, Enum):
-    MEDIA = "media"
-    MANAGEMENT = "management"
-    UPLOAD_LINK_MANAGEMENT = "upload_link_management"
-    SYSTEM = "system"
-    DOMAIN = "domain"
 
 
 class Omnia:
@@ -155,7 +164,7 @@ class Omnia:
             [str(item_id)],
             parameters,
         )
-    
+
     def update(
         self,
         stream_type: StreamType,
@@ -180,7 +189,7 @@ class Omnia:
         url: str,
         use_queue: bool,
         filename: Optional[str] = None,
-    ):
+    ) -> Response:
         """
         will create a new Media Item of the given Streamtype, if the given
         urlParameter contains a valid Source for the given Streamtype.
