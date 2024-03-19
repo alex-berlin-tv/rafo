@@ -1,11 +1,12 @@
-from rafo.baserow import TableLinkField
 from . import VERSION
+from .baserow import TableLinkField
 from .config import settings
 from .file_worker import FileWorker
 from .log import logger
 from .mail import Mail
-from .model import BaserowPerson, BaserowShow, BaserowUpload, ProducerUploadData, UploadState, UploadStates
+from .model import BaserowPerson, BaserowShow, BaserowUpload, ProducerUploadData, UploadStates
 
+import asyncio
 import datetime
 from uuid import uuid4
 from pathlib import Path
@@ -15,7 +16,9 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from nocodb.exceptions import NocoDBAPIError
+from pydantic.main import BaseModel
 from starlette.requests import ClientDisconnect
+from starlette.responses import StreamingResponse
 from streaming_form_data import StreamingFormDataParser
 from streaming_form_data.targets import FileTarget, ValueTarget
 from streaming_form_data.validators import MaxSizeValidator, ValidationError
@@ -51,6 +54,25 @@ async def upload(
     return templates.TemplateResponse("upload.html.jinja2", data)
 
 
+@app.get("/upload/{id}/omnia_export")
+async def upload_omnia_export(
+    request: Request,
+    id: int,
+    key: str,
+):
+    if key != settings.webhook_secret:
+        raise HTTPException(
+            status_code=403,
+            detail="operation forbidden"
+        )
+    data = {
+        "request": request,
+        "base_url": settings.base_url,
+        "version": VERSION,
+    }
+    return templates.TemplateResponse("upload_omnia_export.html.jinja2", data)
+
+
 @app.get("/api/producer_for_upload/{uuid}")
 async def producer_for_upload_info(
     uuid: str,
@@ -67,6 +89,45 @@ async def producer_for_upload_info(
             detail=f"NocoDBAPIError. Message: {e}. Response Text: {e.response_text}",
         )
     return data
+
+
+class Notification(BaseModel):
+    """
+    Notification sent via server-sent-events. Used to update the user about long
+    running processes.
+    """
+    target: str
+    title: str
+    state: str
+    description: str
+
+
+@app.get("/api/upload/{id}/omnia_export")
+async def api_upload_omnia_export(
+    request: Request,
+    id: int,
+    key: str,
+):
+    if key != settings.webhook_secret:
+        raise HTTPException(
+            status_code=403,
+            detail="operation forbidden"
+        )
+
+    async def event_stream():
+        test = Notification(
+            target="test",
+            title="Test",
+            state="running",
+            description="Dies ist ein Test",
+        )
+        yield f"data: {test.model_dump_json()}\n\n"
+        await asyncio.sleep(1)
+        test.state = "done"
+        yield f"data: {test.model_dump_json()}\n\n"
+        yield f"data: CLOSE CONNECTION\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
 class MaxBodySizeException(Exception):
@@ -190,15 +251,3 @@ async def upload_file(
     return {
         "success": True,
     }
-
-
-# @app.post("/webhook/update")
-# async def webhook(secret: str, request: Request):
-#     if secret != settings.webhook_secret:
-#         raise HTTPException(
-#             status_code=401, detail=f"Invalid webhook secret")
-#     data = await request.json()
-#     noco_id = data["data"]["previous_rows"][0]["Id"]
-#     path = data["data"]["previous_rows"][0]["Optimierte Datei"][0]["path"]
-#     title = data["data"]["previous_rows"][0]["Optimierte Datei"][0]["title"]
-#     state = data["data"]["previous_rows"][0]["Status Omnia"]
