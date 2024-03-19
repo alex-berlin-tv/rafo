@@ -8,7 +8,11 @@ rafo aka "radio form" is a small application that allows external producers to s
 
 ## Installation
 
-Make sure that Python and pip are installed in a relatively new version. Then download the code with git.
+Your system must fulfil the following requirements:
+
+- Requires a minimum Python version of **3.11**
+- Python development headers (for example in Ubuntu `apt install python3-dev`)
+- ffmpeg (for example in Ubuntu `apt install ffmpeg`)
 
 ```
 git clone https://github.com/alex-berlin-tv/rafo.git
