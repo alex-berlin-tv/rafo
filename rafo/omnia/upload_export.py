@@ -32,6 +32,30 @@ class InitNotification(Notification):
         return cls.from_exception(e, "Initialisierung fehlgeschlagen")
 
 
+class FetchShowNotification(Notification):
+    target = "show"
+
+    @classmethod
+    def running(cls):
+        return cls._running(
+            "Formatinformationen von Omnia laden...",
+            "Informationen zum Upload gehörende Format werden von Omnia abgerufen.",
+            None,
+        )
+
+    @classmethod
+    def done(cls, data: dict[str, str]):
+        return cls._done(
+            "Formatinformationen wurden von Omnia geladen",
+            f"Die Informationen zum zugehörigen Format wurden von Omnia geladen.",
+            data,
+        )
+
+    @classmethod
+    def error(cls, e: Exception):
+        return cls.from_exception(e, "Abfragen der Sendung in Omnia gescheitert")
+
+
 class UploadNotification(Notification):
     target = "upload"
 
@@ -111,42 +135,38 @@ class OmniaUploadExport:
         self.row_id = row_id
 
     async def run(self):
+        ntf_class = InitNotification
         try:
             upload = BaserowUpload.by_id(self.row_id).one()
-            yield InitNotification.done(upload).to_message()
-        except Exception as e:
-            yield InitNotification.error(e).to_message()
-            yield self.__close_connection()
-            return
+            yield ntf_class.done(upload).to_message()
 
-        try:
-            yield UploadNotification.running().to_message()
-            omnia_id, data = self.__upload_file(upload)
-            yield UploadNotification.done(data).to_message()
-        except Exception as e:
-            yield UploadNotification.error(e).to_message()
-            yield self.__close_connection()
-            return
+            ntf_class = FetchShowNotification
+            yield ntf_class.running().to_message()
+            omnia_show_id, data = self.__fetch_omnia_show(upload)
+            yield ntf_class.done(data).to_message()
 
-        try:
-            yield MetadataNotification.running(omnia_id).to_message()
-            data = self.__set_metadata(omnia_id, upload)
-            yield MetadataNotification.done(omnia_id, data).to_message()
-        except Exception as e:
-            yield MetadataNotification.error(e).to_message()
-            yield self.__close_connection()
-            return
+            ntf_class = UploadNotification
+            yield ntf_class.running().to_message()
+            omnia_element_id, data = self.__upload_file(upload)
+            yield ntf_class.done(data).to_message()
 
-        try:
-            yield UpdateBaserowEntryNotification.running(omnia_id).to_message()
-            self.__update_baserow_entry(omnia_id, upload)
-            yield UpdateBaserowEntryNotification.done(omnia_id).to_message()
+            ntf_class = MetadataNotification
+            yield ntf_class.running(omnia_element_id).to_message()
+            data = self.__set_metadata(omnia_element_id, upload)
+            yield ntf_class.done(omnia_element_id, data).to_message()
+
+            ntf_class = UpdateBaserowEntryNotification
+            yield ntf_class.running(omnia_element_id).to_message()
+            self.__update_baserow_entry(omnia_element_id, upload)
+            yield ntf_class.done(omnia_element_id).to_message()
+
         except Exception as e:
-            yield UpdateBaserowEntryNotification.error(e).to_message()
-            yield self.__close_connection()
-            return
+            yield ntf_class.error(e).to_message()
 
         yield self.__close_connection()
+
+    def __fetch_omnia_show(self, upload: BaserowUpload) -> tuple[int, dict[str, str]]:
+        return (0, {})
 
     def __upload_file(self, upload: BaserowUpload) -> tuple[int, dict[str, str]]:
         omnia = Omnia.from_config()

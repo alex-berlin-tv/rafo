@@ -8,7 +8,7 @@ from pydantic.fields import computed_field
 from .omnia import *
 
 import abc
-from typing import ClassVar, Optional
+from typing import ClassVar, Optional, Type, TypeVar
 
 from pydantic.main import BaseModel
 
@@ -18,6 +18,9 @@ class NotificationState(str, enum.Enum):
     DONE = "done"
     WARNING = "warning"
     ERROR = "error"
+
+
+T = TypeVar("T", bound="Notification")
 
 
 class Notification(BaseModel):
@@ -36,6 +39,11 @@ class Notification(BaseModel):
     title: str
     description: str
     items: Optional[dict[str, str]]
+
+    @classmethod
+    @abc.abstractmethod
+    def error(cls: Type[T], e: Exception) -> T:
+        pass
 
     @classmethod
     def from_exception(cls, e: Exception, title: str):
