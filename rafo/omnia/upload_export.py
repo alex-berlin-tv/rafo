@@ -2,6 +2,7 @@
 Handles the export of upload entries from Baserow.
 """
 
+from typing import Optional
 from .import ManagementResult, Notification, Omnia, StreamType
 from ..model import BaserowUpload, UploadState, UploadStates
 
@@ -11,15 +12,15 @@ from datetime import timedelta
 DATE_FORMAT = "%d.%m.%Y %H:%M"
 
 
-class UploadExportNotification(Notification):
+class InitNotification(Notification):
+    target = "init"
+
     @classmethod
-    def init_done(cls, upload: BaserowUpload):
-        return cls(
-            target="init",
-            title="Initialisiert",
-            state="done",
-            description="Eintrag wurde von Baserow geladen:",
-            items={
+    def done(cls, upload: BaserowUpload):
+        return cls._done(
+            "Initialisiert",
+            "Daten wurde von Baserow geladen",
+            {
                 "Baserow ID": str(upload.row_id),
                 "Name": upload.name,
                 "Geplante Ausstrahlung": upload.planned_broadcast_at.strftime(DATE_FORMAT),
@@ -27,138 +28,80 @@ class UploadExportNotification(Notification):
         )
 
     @classmethod
-    def init_failed(cls, e: Exception):
-        return cls(
-            target="init",
-            title="Initialisierung fehlgeschlagen",
-            state="error",
-            description=str(e),
-            items=None,
+    def error(cls, e: Exception):
+        return cls.from_exception(e, "Initialisierung fehlgeschlagen")
+
+
+class UploadNotification(Notification):
+    target = "upload"
+
+    @classmethod
+    def running(cls):
+        return cls._running(
+            "Element wird in Omnia angelegt...",
+            "Es wird ein neues Element in Omnia für den Upload angelegt.",
+            None,
         )
 
     @classmethod
-    def upload_running(cls):
-        return cls(
-            target="upload",
-            title="Element wird in Omnia angelegt...",
-            state="running",
-            description="Es wird ein neues Element in Omnia für den Upload angelegt.",
-            items=None,
+    def done(cls, data: dict[str, str]):
+        return cls._done(
+            "Element in Omnia angelegt",
+            f"Das Element wurde in Omnia angelegt. Der Upload des Sendefiles läuft nun im Hintergrund weiter.",
+            data,
         )
 
     @classmethod
-    def upload_done(cls, data: dict[str, str]):
-        return cls(
-            target="upload",
-            title="Element in Omnia angelegt",
-            state="done",
-            description=f"Das Element wurde in Omnia angelegt. Der Upload des Sendefiles läuft nun im Hintergrund weiter.",
-            items=data,
+    def error(cls, e: Exception):
+        return cls.from_exception(e, "Element in Omnia anlegen gescheitert")
+
+
+class MetadataNotification(Notification):
+    target = "metadata"
+
+    @classmethod
+    def running(cls, omnia_id: int):
+        return cls._running(
+            "Metadaten werden in Omnia gesetzt...",
+            f"Die Metadaten für das Omnia Element {omnia_id} werden gesetzt.",
+            None,
         )
 
     @classmethod
-    def metadata_running(cls, omnia_id: int):
-        return cls(
-            target="metadata",
-            title="Metadaten werden in Omnia gesetzt...",
-            state="running",
-            description=f"Die Metadaten für das Omnia Element {omnia_id} werden gesetzt.",
-            items=None,
+    def done(cls, omnia_id: int, data: dict[str, str]):
+        return cls._done(
+            "Metadaten in Omnia gesetzt",
+            f"Die Metadaten für das Omnia Element {omnia_id} sind gesetzt.",
+            data,
         )
 
     @classmethod
-    def metadata_done(cls, omnia_id: int, data: dict[str, str]):
-        return cls(
-            target="metadata",
-            title="Metadaten in Omnia gesetzt",
-            state="done",
-            description=f"Die Metadaten für das Omnia Element {omnia_id} sind gesetzt.",
-            items=data,
+    def error(cls, e: Exception):
+        return cls.from_exception(e, "Setzten der Metadaten in Omnia gescheitert")
+
+
+class UpdateBaserowEntryNotification(Notification):
+    target = "update_baserow_entry"
+
+    @classmethod
+    def running(cls, omnia_id: int):
+        return cls._running(
+            "Eintrag in Baserow wird aktualisiert...",
+            f"Die ID ({omnia_id}) des neu in Omnia angelegten Elements wird in Baserow gespeichert.",
+            None,
         )
 
     @classmethod
-    def metadata_failed(cls, e: Exception):
-        return cls(
-            target="metadata",
-            title="Setzten der Metadaten in Omnia gescheitert",
-            state="error",
-            description=f"Fehlermeldung: {e}",
-            items=None,
+    def done(cls, omnia_id: int):
+        return cls._done(
+            "Eintrag in Baserow ist aktualisiert",
+            f"Die ID ({omnia_id}) des neu in Omnia angelegten Elements wurde in Baserow gespeichert.",
+            None,
         )
 
     @classmethod
-    def upload_failed(cls, e: Exception):
-        return cls(
-            target="upload",
-            title="Element in Omnia anlegen gescheitert",
-            state="error",
-            description=f"Fehlermeldung: {e}",
-            items=None,
-        )
-
-    @classmethod
-    def cover_running(cls):
-        return cls(
-            target="cover",
-            title="Cover wird gesetzt...",
-            state="running",
-            description="Falls ein spezifisches Bild für die Episode vorhanden ist, wird dieses in Omnia hochgeladen. Andernfalls wird das für die Sendung festgelegte Bild in Omnia verwendet.",
-            items=None,
-        )
-
-    @classmethod
-    def cover_done(cls, data: dict[str, str]):
-        return cls(
-            target="upload",
-            title="Element in Omnia angelegt",
-            state="done",
-            description=f"Das Element wurde in Omnia angelegt. Der Upload des Sendefiles läuft nun im Hintergrund weiter.",
-            items=data,
-        )
-
-    @classmethod
-    def cover_failed(cls, e: Exception):
-        return cls(
-            target="upload",
-            title="Element in Omnia anlegen gescheitert",
-            state="error",
-            description=f"Fehlermeldung: {e}",
-            items=None,
-        )
-
-    @classmethod
-    def update_baserow_entry_running(cls, omnia_id: int):
-        return cls(
-            target="update_upload",
-            title="Eintrag in Baserow wird aktualisiert...",
-            state="running",
-            description=f"Die ID ({omnia_id}) des neu in Omnia angelegten Elements wird in Baserow gespeichert.",
-            items=None,
-        )
-
-    @classmethod
-    def update_baserow_entry_done(cls, omnia_id: int):
-        return cls(
-            target="update_upload",
-            title="Eintrag in Baserow ist aktualisiert",
-            state="done",
-            description=f"Die ID ({omnia_id}) des neu in Omnia angelegten Elements wurde in Baserow gespeichert.",
-            items={},
-        )
-
-    @classmethod
-    def update_baserow_entry_failed(cls, e: Exception):
-        return cls(
-            target="update_upload",
-            title="Aktualisieren des Baserow Eintrags gescheitert",
-            state="error",
-            description=f"Fehlermeldung: {e}",
-            items={},
-        )
-
-    def to_message(self) -> str:
-        """Returns as a message for the SSE event source."""
-        return f"data: {self.model_dump_json()}\n\n"
+    def error(cls, e: Exception):
+        return cls.from_exception(e, "Aktualisieren des Baserow Eintrags gescheitert")
 
 
 class OmniaUploadExport:
@@ -170,36 +113,36 @@ class OmniaUploadExport:
     async def run(self):
         try:
             upload = BaserowUpload.by_id(self.row_id).one()
-            yield UploadExportNotification.init_done(upload).to_message()
+            yield InitNotification.done(upload).to_message()
         except Exception as e:
-            yield UploadExportNotification.init_failed(e).to_message()
+            yield InitNotification.error(e).to_message()
             yield self.__close_connection()
             return
 
         try:
-            yield UploadExportNotification.upload_running().to_message()
+            yield UploadNotification.running().to_message()
             omnia_id, data = self.__upload_file(upload)
-            yield UploadExportNotification.upload_done(data).to_message()
+            yield UploadNotification.done(data).to_message()
         except Exception as e:
-            yield UploadExportNotification.upload_failed(e).to_message()
+            yield UploadNotification.error(e).to_message()
             yield self.__close_connection()
             return
 
         try:
-            yield UploadExportNotification.metadata_running(omnia_id).to_message()
+            yield MetadataNotification.running(omnia_id).to_message()
             data = self.__set_metadata(omnia_id, upload)
-            yield UploadExportNotification.metadata_done(omnia_id, data).to_message()
+            yield MetadataNotification.done(omnia_id, data).to_message()
         except Exception as e:
-            yield UploadExportNotification.metadata_failed(e).to_message()
+            yield MetadataNotification.error(e).to_message()
             yield self.__close_connection()
             return
 
         try:
-            yield UploadExportNotification.update_baserow_entry_running(omnia_id).to_message()
+            yield UpdateBaserowEntryNotification.running(omnia_id).to_message()
             self.__update_baserow_entry(omnia_id, upload)
-            yield UploadExportNotification.update_baserow_entry_done(omnia_id).to_message()
+            yield UpdateBaserowEntryNotification.done(omnia_id).to_message()
         except Exception as e:
-            yield UploadExportNotification.update_baserow_entry_failed(e).to_message()
+            yield UpdateBaserowEntryNotification.error(e).to_message()
             yield self.__close_connection()
             return
 
