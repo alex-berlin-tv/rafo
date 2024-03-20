@@ -1,3 +1,4 @@
+import asyncio
 from ..config import settings
 from ..log import logger
 
@@ -6,6 +7,7 @@ from enum import Enum
 import hashlib
 from typing import Any, Optional, Union
 
+import aiohttp
 from pydantic import BaseModel, Field
 import requests
 
@@ -151,7 +153,7 @@ class Omnia:
             settings.omnia_session_id
         )
 
-    def upload_by_url(
+    async def upload_by_url(
         self,
         stream_type: StreamType,
         url: str,
@@ -176,7 +178,7 @@ class Omnia:
             parameters["autoPublish"] = "1" if auto_publish else "0"
         if notes is not None:
             parameters["notes"] = notes
-        return self.call(
+        return await self.call(
             "post",
             stream_type,
             ApiType.MANAGEMENT,
@@ -185,14 +187,14 @@ class Omnia:
             parameters
         )
 
-    def by_id(
+    async def by_id(
         self,
         stream_type: StreamType,
         item_id: int,
         parameters: dict[str, str] = {},
     ) -> Response:
         """Return a item of a given stream type by it's id."""
-        return self.call(
+        return await self.call(
             "get",
             stream_type,
             ApiType.MEDIA,
@@ -201,7 +203,7 @@ class Omnia:
             parameters,
         )
 
-    def update(
+    async def update(
         self,
         stream_type: StreamType,
         item_id: int,
@@ -210,7 +212,7 @@ class Omnia:
         """
         Will update the general Metadata of a Media Item. Uses the Management API.
         """
-        return self.call(
+        return await self.call(
             "put",
             stream_type,
             ApiType.MANAGEMENT,
@@ -219,7 +221,7 @@ class Omnia:
             parameters
         )
 
-    def update_restrictions(
+    async def update_restrictions(
         self,
         stream_type: StreamType,
         item_id: int,
@@ -228,7 +230,7 @@ class Omnia:
         """
         Will update the restrictions of a Media Item. Uses the Management API.
         """
-        return self.call(
+        return await self.call(
             "put",
             stream_type,
             ApiType.MANAGEMENT,
@@ -237,9 +239,9 @@ class Omnia:
             parameters
         )
 
-    def update_cover(self, stream_type: StreamType, item_id: int, url: str) -> Response:
+    async def update_cover(self, stream_type: StreamType, item_id: int, url: str) -> Response:
         """Upload and set a cover from a given URL."""
-        return self.call(
+        return await self.call(
             "post",
             stream_type,
             ApiType.MANAGEMENT,
@@ -250,9 +252,9 @@ class Omnia:
             },
         )
 
-    def approve(self, stream_type: StreamType, item_id: int, parameters: dict[str, str]) -> Response:
+    async def approve(self, stream_type: StreamType, item_id: int, parameters: dict[str, str]) -> Response:
         """Approve an item."""
-        return self.call(
+        return await self.call(
             "post",
             stream_type,
             ApiType.MANAGEMENT,
@@ -261,9 +263,9 @@ class Omnia:
             parameters,
         )
 
-    def connect_show(self, stream_type: StreamType, item_id: int, show_id: int) -> Response:
+    async def connect_show(self, stream_type: StreamType, item_id: int, show_id: int) -> Response:
         """Connect a media item with a given show."""
-        return self.call(
+        return await self.call(
             "put",
             stream_type,
             ApiType.MANAGEMENT_CONNECT,
@@ -272,9 +274,9 @@ class Omnia:
             {},
         )
 
-    def editable_attributes_for(self, stream_type: StreamType) -> Response:
+    async def editable_attributes_for(self, stream_type: StreamType) -> Response:
         """Returns a list of editable attributes for a given stream type."""
-        return self.call(
+        return await self.call(
             "get",
             stream_type,
             ApiType.SYSTEM,
@@ -283,9 +285,9 @@ class Omnia:
             {}
         )
 
-    def editable_restrictions_for(self, stream_type: StreamType) -> Response:
+    async def editable_restrictions_for(self, stream_type: StreamType) -> Response:
         """Returns a list of editable restrictions for a given stream type."""
-        return self.call(
+        return await self.call(
             "get",
             stream_type,
             ApiType.SYSTEM,
@@ -294,7 +296,7 @@ class Omnia:
             {}
         )
 
-    def call(
+    async def call(
         self,
         method: str,
         stream_type: StreamType,
@@ -304,11 +306,11 @@ class Omnia:
         parameters: dict[str, str]
     ) -> Response:
         """Generic call to the Omnia Media API. Won't work with the management API's."""
-        return self.__universal_call(
+        return await self.__universal_call(
             method, stream_type, api_type, operation, args, parameters
         )
 
-    def __universal_call(
+    async def __universal_call(
         self,
         method: str,
         stream_type: StreamType,
@@ -354,15 +356,19 @@ class Omnia:
             operation, self.domain_id, self.api_secret, self.session_id
         )
         logger.debug(
-            f"About to send {method} to {url} with header {header} and params {parameters}")
-        result = requests.request(
-            method,
-            headers=header,
-            url=url,
-            data=parameters,
+            f"About to send {method} to {url} with header {header} and params {parameters}"
         )
-        print(result.json())
-        return Response.model_validate(result.json(), strict=False)
+        await asyncio.sleep(1)
+        async with aiohttp.ClientSession() as session:
+            async with session.request(
+                method=method,
+                url=url,
+                headers=header,
+                data=parameters,
+            ) as response:
+                response_json = await response.json()
+                print(response_json)
+                return Response.model_validate(response_json, strict=False)
 
     def __request_header(
         self,
