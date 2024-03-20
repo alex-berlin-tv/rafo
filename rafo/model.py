@@ -49,6 +49,7 @@ class BaserowShow(Table):
     """
     row_id: int = Field(alias=str("id"))
     name: str = Field(alias=str("Name"))
+    description: str = Field(alias=str("Beschreibung"))
     responsible: TableLinkField = Field(alias=str("Verantwortlich"))
     supervisors: TableLinkField = Field(alias=str("Betreuung"))
 
@@ -245,6 +246,9 @@ class BaserowUpload(Table):
     )
     legacy_uuid: Optional[str] = Field(
         alias=str("Legacy UUID"), default=None,
+    )
+    omnia_id: Optional[int] = Field(
+        alias=str("Omnia ID"), default=None,
     )
     table_id: ClassVar[int] = settings.upload_table
     table_name: ClassVar[str] = "Upload"

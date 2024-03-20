@@ -5,6 +5,7 @@ from .file_worker import FileWorker
 from .log import logger
 from .mail import Mail
 from .model import BaserowPerson, BaserowShow, BaserowUpload, ProducerUploadData, UploadStates
+from .omnia.upload_export import OmniaUploadExport
 
 import asyncio
 import datetime
@@ -91,17 +92,6 @@ async def producer_for_upload_info(
     return data
 
 
-class Notification(BaseModel):
-    """
-    Notification sent via server-sent-events. Used to update the user about long
-    running processes.
-    """
-    target: str
-    title: str
-    state: str
-    description: str
-
-
 @app.get("/api/upload/{id}/omnia_export")
 async def api_upload_omnia_export(
     request: Request,
@@ -113,21 +103,8 @@ async def api_upload_omnia_export(
             status_code=403,
             detail="operation forbidden"
         )
-
-    async def event_stream():
-        test = Notification(
-            target="test",
-            title="Test",
-            state="running",
-            description="Dies ist ein Test",
-        )
-        yield f"data: {test.model_dump_json()}\n\n"
-        await asyncio.sleep(1)
-        test.state = "done"
-        yield f"data: {test.model_dump_json()}\n\n"
-        yield f"data: CLOSE CONNECTION\n\n"
-
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+    export = OmniaUploadExport(id)
+    return StreamingResponse(export.run(), media_type="text/event-stream")
 
 
 class MaxBodySizeException(Exception):

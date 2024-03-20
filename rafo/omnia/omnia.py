@@ -1,5 +1,5 @@
-from .config import settings
-from .log import logger
+from ..config import settings
+from ..log import logger
 
 from datetime import datetime
 from enum import Enum
@@ -113,8 +113,8 @@ class ItemUpdate(BaseModel):
 
 class ManagementResult(BaseModel):
     message: str
-    item_update: Optional[ItemUpdate] = Field(alias="itemupdate")
-    operation_id: int = Field(alias="operationid")
+    item_update: Optional[ItemUpdate] = Field(alias="itemupdate", default=None)
+    operation_id: Optional[int] = Field(alias="operationid", default=None)
 
 
 class MediaResult(BaseModel):
@@ -154,7 +154,7 @@ class Omnia:
         stream_type: StreamType,
         item_id: int,
         parameters: dict[str, str] = {},
-    ):
+    ) -> Response:
         """Return a item of a given stream type by it's id."""
         return self.call(
             "get",
@@ -170,7 +170,7 @@ class Omnia:
         stream_type: StreamType,
         item_id: int,
         parameters: dict[str, str],
-    ):
+    ) -> Response:
         """
         Will update the general Metadata of a Media Item. Uses the Management API.
         """
@@ -183,30 +183,83 @@ class Omnia:
             parameters
         )
 
+    def update_restrictions(
+        self,
+        stream_type: StreamType,
+        item_id: int,
+        parameters: dict[str, str],
+    ) -> Response:
+        """
+        Will update the restrictions of a Media Item. Uses the Management API.
+        """
+        return self.call(
+            "put",
+            stream_type,
+            ApiType.MANAGEMENT,
+            "updaterestrictions",
+            [str(item_id)],
+            parameters
+        )
+
+    def approve(self, stream_type: StreamType, item_id: int, parameters: dict[str, str]) -> Response:
+        """Approve an item."""
+        return self.call(
+            "post",
+            stream_type,
+            ApiType.MANAGEMENT,
+            "approve",
+            [str(item_id)],
+            parameters,
+        )
+
     def upload_by_url(
         self,
         stream_type: StreamType,
         url: str,
         use_queue: bool,
+        parameters: dict[str, str],
         filename: Optional[str] = None,
+        ref_nr: Optional[str] = None,
     ) -> Response:
         """
         will create a new Media Item of the given Streamtype, if the given
         urlParameter contains a valid Source for the given Streamtype.
         """
-        data = {
-            "url": url,
-            "useQueue": 1 if use_queue else 0,
-        }
+        parameters["url"] = url
+        parameters["useQueue"] = "1" if use_queue else "0"
         if filename:
-            data["filename"] = filename
+            parameters["filename"] = filename
+        if ref_nr:
+            parameters["refnr"] = ref_nr
         return self.call(
             "post",
             stream_type,
             ApiType.MANAGEMENT,
             "fromurl",
             [],
-            data
+            parameters
+        )
+
+    def editable_attributes_for(self, stream_type: StreamType) -> Response:
+        """Returns a list of editable attributes for a given stream type."""
+        return self.call(
+            "get",
+            stream_type,
+            ApiType.SYSTEM,
+            "editableattributesfor",
+            [stream_type],
+            {}
+        )
+
+    def editable_restrictions_for(self, stream_type: StreamType) -> Response:
+        """Returns a list of editable restrictions for a given stream type."""
+        return self.call(
+            "get",
+            stream_type,
+            ApiType.SYSTEM,
+            "editablerestrictionsfor",
+            [stream_type],
+            {}
         )
 
     def call(
