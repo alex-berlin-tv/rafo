@@ -52,6 +52,10 @@ class BaserowShow(Table):
     description: str = Field(alias=str("Beschreibung"))
     responsible: TableLinkField = Field(alias=str("Verantwortlich"))
     supervisors: TableLinkField = Field(alias=str("Betreuung"))
+    cover: Optional[FileField] = Field(
+        alias=str("Cover"), default=None
+    )
+    omnia_id: Optional[int] = Field(alias=str("Omnia ID"), default=None)
 
     table_id: ClassVar[int] = settings.show_table
     table_name: ClassVar[str] = "Format"

@@ -34,6 +34,7 @@ class StreamType(str, Enum):
 class ApiType(str, Enum):
     MEDIA = "media"
     MANAGEMENT = "management"
+    MANAGEMENT_CONNECT = "management_connect"
     UPLOAD_LINK_MANAGEMENT = "upload_link_management"
     SYSTEM = "system"
     DOMAIN = "domain"
@@ -92,17 +93,18 @@ class MediaResultGeneral(BaseModel):
     hash_value: str = Field(alias="hash")
     title: str = Field(alias="title")
     subtitle: str = Field(alias="subtitle")
-    genre_raw: str = Field(alias="genre_raw")
-    genre: str = Field(alias="genre")
-    content_moderation_aspects: str = Field(alias="contentModerationAspects")
-    uploaded: datetime = Field(alias="uploaded")
+    genre_raw: Optional[str] = Field(alias="genre_raw", default=None)
+    genre: Optional[str] = Field(alias="genre", default=None)
+    content_moderation_aspects: Optional[str] = Field(
+        alias="contentModerationAspects", default=None)
+    uploaded: Optional[datetime] = Field(alias="uploaded", default=None)
     created: datetime = Field(alias="created")
-    audio_type: str = Field(alias="audiotype")
-    runtime: str = Field(alias="runtime")
+    audio_type: Optional[str] = Field(alias="audiotype", default=None)
+    runtime: Optional[str] = Field(alias="runtime", default=None)
     is_picked: Bool = Field(alias="isPicked")
-    for_kids: Bool = Field(alias="forKids")
-    is_pay: Bool = Field(alias="isPay")
-    is_ugc: Bool = Field(alias="isUGC")
+    for_kids: Optional[Bool] = Field(alias="forKids", default=None)
+    is_pay: Optional[Bool] = Field(alias="isPay", default=None)
+    is_ugc: Optional[Bool] = Field(alias="isUGC", default=None)
 
 
 class ItemUpdate(BaseModel):
@@ -147,6 +149,40 @@ class Omnia:
             settings.omnia_domain_id,
             settings.omnia_api_secret,
             settings.omnia_session_id
+        )
+
+    def upload_by_url(
+        self,
+        stream_type: StreamType,
+        url: str,
+        use_queue: bool,
+        parameters: dict[str, str],
+        filename: Optional[str] = None,
+        ref_nr: Optional[str] = None,
+        auto_publish: Optional[bool] = None,
+        notes: Optional[str] = None,
+    ) -> Response:
+        """
+        will create a new Media Item of the given Streamtype, if the given
+        urlParameter contains a valid Source for the given Streamtype.
+        """
+        parameters["url"] = url
+        parameters["useQueue"] = "1" if use_queue else "0"
+        if filename:
+            parameters["filename"] = filename
+        if ref_nr:
+            parameters["refnr"] = ref_nr
+        if auto_publish is not None:
+            parameters["autoPublish"] = "1" if auto_publish else "0"
+        if notes is not None:
+            parameters["notes"] = notes
+        return self.call(
+            "post",
+            stream_type,
+            ApiType.MANAGEMENT,
+            "fromurl",
+            [],
+            parameters
         )
 
     def by_id(
@@ -201,6 +237,19 @@ class Omnia:
             parameters
         )
 
+    def update_cover(self, stream_type: StreamType, item_id: int, url: str) -> Response:
+        """Upload and set a cover from a given URL."""
+        return self.call(
+            "post",
+            stream_type,
+            ApiType.MANAGEMENT,
+            "cover",
+            [str(item_id)],
+            {
+                "url": url,
+            },
+        )
+
     def approve(self, stream_type: StreamType, item_id: int, parameters: dict[str, str]) -> Response:
         """Approve an item."""
         return self.call(
@@ -212,32 +261,15 @@ class Omnia:
             parameters,
         )
 
-    def upload_by_url(
-        self,
-        stream_type: StreamType,
-        url: str,
-        use_queue: bool,
-        parameters: dict[str, str],
-        filename: Optional[str] = None,
-        ref_nr: Optional[str] = None,
-    ) -> Response:
-        """
-        will create a new Media Item of the given Streamtype, if the given
-        urlParameter contains a valid Source for the given Streamtype.
-        """
-        parameters["url"] = url
-        parameters["useQueue"] = "1" if use_queue else "0"
-        if filename:
-            parameters["filename"] = filename
-        if ref_nr:
-            parameters["refnr"] = ref_nr
+    def connect_show(self, stream_type: StreamType, item_id: int, show_id: int) -> Response:
+        """Connect a media item with a given show."""
         return self.call(
-            "post",
+            "put",
             stream_type,
-            ApiType.MANAGEMENT,
-            "fromurl",
-            [],
-            parameters
+            ApiType.MANAGEMENT_CONNECT,
+            "connectshow",
+            [str(item_id), str(show_id)],
+            {},
         )
 
     def editable_attributes_for(self, stream_type: StreamType) -> Response:
@@ -289,18 +321,38 @@ class Omnia:
         url: str = ""
         if api_type is ApiType.MEDIA:
             url = self.__url_builder(
-                BASE_URL, self.domain_id, stream_type.value, operation, args_str)
+                BASE_URL, self.domain_id, stream_type.value, operation, args_str
+            )
         elif api_type is ApiType.MANAGEMENT:
             url = self.__url_builder(
-                BASE_URL, self.domain_id, "manage", stream_type.value, args_str, operation)
+                BASE_URL, self.domain_id, "manage", stream_type.value, args_str, operation
+            )
+        elif api_type is ApiType.MANAGEMENT_CONNECT:
+            if len(args) < 2:
+                raise ValueError(
+                    f"management connect calls need at least two args but only {len(args)} given"
+                )
+            args_tail = args[1:]
+            url = self.__url_builder(
+                BASE_URL,
+                self.domain_id,
+                "manage",
+                stream_type.value,
+                args[0],
+                operation,
+                "/".join(args_tail),
+            )
         elif api_type is ApiType.UPLOAD_LINK_MANAGEMENT:
             url = self.__url_builder(
-                BASE_URL, self.domain_id, "manage", "uploadlinks", operation)
+                BASE_URL, self.domain_id, "manage", "uploadlinks", operation
+            )
         elif api_type is ApiType.SYSTEM:
             url = self.__url_builder(
-                BASE_URL, self.domain_id, "system", operation, args_str)
+                BASE_URL, self.domain_id, "system", operation, args_str
+            )
         header = self.__request_header(
-            operation, self.domain_id, self.api_secret, self.session_id)
+            operation, self.domain_id, self.api_secret, self.session_id
+        )
         logger.debug(
             f"About to send {method} to {url} with header {header} and params {parameters}")
         result = requests.request(
@@ -310,7 +362,7 @@ class Omnia:
             data=parameters,
         )
         print(result.json())
-        return Response.model_validate(result.json())
+        return Response.model_validate(result.json(), strict=False)
 
     def __request_header(
         self,
