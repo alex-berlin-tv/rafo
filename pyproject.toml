@@ -6,6 +6,7 @@ authors = [
 description = "Collect files and metadata for a radio show uses Baserow as backend"
 version = "1.3.0"
 dependencies = [
+    "aiohttp",
     "baserow-client@git+https://github.com/alex-berlin-tv/python-baserow-client.git#egg=develop",
     "emails",
     "fastapi",

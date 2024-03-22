@@ -79,15 +79,15 @@ async def producer_for_upload_info(
     uuid: str,
 ):
     try:
-        data = ProducerUploadData.from_db(uuid)
+        data = await ProducerUploadData.from_db(uuid)
     except KeyError:
         raise HTTPException(
             status_code=404, detail=f"Unter dieser URL kann kein Formular gefunden werden. Stelle bitte sicher, dass du den Link korrekt kopiert hast und probiere es nochmals.")
-    except NocoDBAPIError as e:
+    except Exception as e:
         # TODO: Log this
         raise HTTPException(
             status_code=500,
-            detail=f"NocoDBAPIError. Message: {e}. Response Text: {e.response_text}",
+            detail=f"Exception, {e}",
         )
     return data
 
@@ -200,8 +200,10 @@ async def upload_file(
         comment = None
     legacy_url_used = legacy_url_used_target.value.decode() == "true"
 
-    uploader = BaserowPerson.by_uuid(producer_target.value.decode()).one()
-    show = BaserowShow.by_id(int(show_target.value.decode())).one()
+    uploader_rsl = await BaserowPerson.by_uuid(producer_target.value.decode())
+    uploader = uploader_rsl.one()
+    show_rsl = await BaserowShow.by_id(int(show_target.value.decode()))
+    show = show_rsl.one()
     new_upload = BaserowUpload(
         row_id=-1,
         name=title_target.value.decode(),

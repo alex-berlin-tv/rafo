@@ -95,14 +95,17 @@ class ProducerUploadData(BaseModel):
     legacy_url_grace_date: Optional[datetime]
 
     @classmethod
-    def from_db(cls, person_uuid: str):
+    async def from_db(cls, person_uuid: str):
         legacy_url_used = False
         try:
-            person = BaserowPerson.by_uuid(person_uuid).one()
+            person_rsl = await BaserowPerson.by_uuid(person_uuid)
+            person = person_rsl.one()
         except NoResultError:
-            person = BaserowPerson.filter(legacy_uuid=person_uuid).one()
+            person_rsl = await BaserowPerson.filter(legacy_uuid=person_uuid)
+            person = person_rsl.one()
             legacy_url_used = True
-        shows = BaserowShow.by_link_field(person.shows).any()
+        shows_rsl = await BaserowShow.by_link_field(person.shows)
+        shows = shows_rsl.any()
         return cls(
             producer_name=person.name,
             producer_uuid=person.uuid,
@@ -267,34 +270,35 @@ class BaserowUpload(Table):
         return UploadStates.from_multiple_select_field(self.state)
 
     @property
-    def cached_uploader(self) -> BaserowPerson:
+    async def cached_uploader(self) -> BaserowPerson:
         """
         The linked person who uploaded the entry. Is always expected to be one
         entry. This data is therefore only cached on the first request that the
         linked entry is actually loaded by Baserow.
         """
         if self._uploader_cache is None:
-            self._uploader_cache = BaserowPerson.by_link_field(
+            rsl = await BaserowPerson.by_link_field(
                 self.uploader,
-            ).one()
+            )
+            self._uploader_cache = rsl.one()
         return self._uploader_cache
 
     @property
-    def cached_show(self) -> BaserowShow:
+    async def cached_show(self) -> BaserowShow:
         """
         The linked show for this entry. Is always expected to be one entry. This
         data is therefore only cached on the first request that the linked entry
         is actually loaded by Baserow.
         """
         if self._show_cache is None:
-            self._show_cache = BaserowShow.by_link_field(
-                self.show,
-            ).one()
-        return self._show_cache
+            rsl = await BaserowShow.by_link_field(self.show)
+            self.__show_cache = rsl.one()
+        return self.__show_cache
 
-    def update_state(self, prefix: str, new_state: UploadState):
+    async def update_state(self, prefix: str, new_state: UploadState):
         """Update the the state with the given prefix."""
-        current_db_entry = BaserowUpload.by_id(self.row_id).one()
+        rsl = await BaserowUpload.by_id(self.row_id)
+        current_db_entry = rsl.one()
         enum = current_db_entry.state_enum
         enum.update_state(prefix, new_state)
         self.update(self.row_id, state=enum.to_multiple_select_field())

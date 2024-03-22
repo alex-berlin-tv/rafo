@@ -17,8 +17,6 @@ class FileWorker:
         self.upload = upload
         self.count_lock = threading.Lock()
         self.finished_workers = 0
-        self.__person_cache: Optional[BaserowPerson] = None
-        self.__show_cache: Optional[BaserowShow] = None
         self.__file_name_prefix: Optional[str] = None
 
     def upload_raw(self):
@@ -35,14 +33,14 @@ class FileWorker:
         with self.count_lock:
             self.finished_workers += 1
 
-    def generate_waveform(
+    async def generate_waveform(
         self,
         gain: int = 0,
         width: int = 600,
         height: int = 252,
         color: str = "#3399cc"
     ):
-        self.upload.update_state(
+        await self.upload.update_state(
             UploadStates.WAVEFORM_PREFIX,
             UploadState.WAVEFORM_RUNNING,
         )
@@ -58,18 +56,18 @@ class FileWorker:
         except Exception:
             with self.count_lock:
                 self.finished_workers += 1
-            self.upload.update_state(
+            await self.upload.update_state(
                 UploadStates.WAVEFORM_PREFIX,
                 UploadState.WAVEFORM_ERROR,
             )
             raise
         if err is not None:
-            self.upload.update_state(
+            await self.upload.update_state(
                 UploadStates.WAVEFORM_PREFIX,
                 UploadState.WAVEFORM_ERROR,
             )
         else:
-            self.upload.update_state(
+            await self.upload.update_state(
                 UploadStates.WAVEFORM_PREFIX,
                 UploadState.WAVEFORM_COMPLETE,
             )
@@ -78,8 +76,8 @@ class FileWorker:
         with self.count_lock:
             self.finished_workers += 1
 
-    def optimize_file(self):
-        self.upload.update_state(
+    async def optimize_file(self):
+        await self.upload.update_state(
             UploadStates.OPTIMIZATION_PREFIX,
             UploadState.OPTIMIZATION_RUNNING,
         )
@@ -91,21 +89,21 @@ class FileWorker:
             optimize = Optimize(
                 self.raw_file, silence,
                 self.upload,
-                self.upload.cached_uploader,
-                self.upload.cached_show,
+                await self.upload.cached_uploader,
+                await self.upload.cached_show,
             )
             optimize.run(output_path)
 
             log = silence.log()
             if log == "":
-                self.upload.update_state(
+                await self.upload.update_state(
                     UploadStates.OPTIMIZATION_PREFIX,
                     UploadState.OPTIMIZATION_COMPLETE,
                 )
                 duration = round(Metadata(output_path).duration())
                 self.upload.update(self.upload.row_id, duration=duration)
             else:
-                self.upload.update_state(
+                await self.upload.update_state(
                     UploadStates.OPTIMIZATION_PREFIX,
                     UploadState.OPTIMIZATION_SEE_LOG,
                 )
@@ -114,7 +112,7 @@ class FileWorker:
             self.__upload_named_file(output_path, "opt", "optimized_file")
 
         except Exception:
-            self.upload.update_state(
+            await self.upload.update_state(
                 UploadStates.OPTIMIZATION_PREFIX,
                 UploadState.OPTIMIZATION_ERROR,
             )

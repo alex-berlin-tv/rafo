@@ -2,16 +2,17 @@
 This module contains a thin wrapper around the Baserow Client library.
 """
 
-from dataclasses import asdict
 
-from pydantic.fields import computed_field
+import asyncio
+import functools
 from .config import settings
 from .log import logger
 
 import abc
+from dataclasses import asdict
 import datetime
 from io import BufferedReader
-from typing import Any, ClassVar, Generic, Optional, Self, Type, TypeVar, Union
+from typing import Any, Callable, ClassVar, Generic, Optional, Self, Type, TypeVar, Union
 
 from baserow.client import ApiError, BaserowClient
 from baserow.filter import Column, Filter
@@ -272,7 +273,7 @@ class Result(Generic[T]):
             )
         return self.__value
 
-    def is_empty(self) -> bool:
+    async def is_empty(self) -> bool:
         """Checks whether result contains any results."""
         return len(self.__value) > 0
 
@@ -348,7 +349,7 @@ class Table(BaseModel, abc.ABC):
             raise e
 
     @classmethod
-    def query(
+    async def query(
         cls: Type[T],
         filter: list[Filter],
     ) -> Result[T]:
@@ -370,10 +371,15 @@ class Table(BaseModel, abc.ABC):
                 record. Will throw a `NoResultError' if the query returns an
                 empty result.Cannot be set at the same time as `one`.
         """
-        response = Client().list_database_table_rows(
-            cls.table_id,
-            filter=filter,
-            user_field_names=True,
+        loop = asyncio.get_running_loop()
+        response = await loop.run_in_executor(
+            None,
+            functools.partial(
+                Client().list_database_table_rows,
+                cls.table_id,
+                filter=filter,
+                user_field_names=True,
+            )
         )
         if cls.dump_response:
             logger.debug(response)
@@ -383,7 +389,7 @@ class Table(BaseModel, abc.ABC):
         )
 
     @classmethod
-    def filter(cls: Type[T], **kwargs) -> Result[T]:
+    async def filter(cls: Type[T], **kwargs) -> Result[T]:
         """
         Filters for entries whose fields equals the specified values. Note that
         this method does not allow you to query for records by their unique ID.
@@ -400,23 +406,28 @@ class Table(BaseModel, abc.ABC):
             if alias is not None:
                 filter_key = alias
             filters.append(Column(filter_key).equal(value))
-        return cls.query(filters)
+        return await cls.query(filters)
 
     @classmethod
-    def by_uuid(cls: Type[T], uuid: str) -> Result[T]:
+    async def by_uuid(cls: Type[T], uuid: str) -> Result[T]:
         logger.debug(f"baserow query in {cls.table_name} by UUID {uuid}")
-        return cls.query([Column("UUID").equal(uuid)])
+        return await cls.query([Column("UUID").equal(uuid)])
 
     @classmethod
-    def by_id(cls: Type[T], row_id: int) -> Result[T]:
+    async def by_id(cls: Type[T], row_id: int) -> Result[T]:
         """
         Retrieve an entry by its unique row ID.
         """
         logger.debug(f"baserow query in {cls.table_name} by ID {row_id}")
-        response = Client().get_database_table_row(
-            cls.table_id,
-            row_id,
-            user_field_names=True,
+        loop = asyncio.get_running_loop()
+        response = await loop.run_in_executor(
+            None,
+            functools.partial(
+                Client().get_database_table_row,
+                cls.table_id,
+                row_id,
+                user_field_names=True,
+            )
         )
         if cls.dump_response:
             logger.debug(response)
@@ -425,8 +436,12 @@ class Table(BaseModel, abc.ABC):
             f"querying the table with the unique ID '{row_id}' for {cls.table_name} ({cls.table_id})",
         )
 
+    @staticmethod
+    async def test():
+        await asyncio.sleep(1)
+
     @classmethod
-    def by_link_field(
+    async def by_link_field(
         cls: Type[T],
         link_field: TableLinkField,
     ) -> Result[T]:
@@ -447,15 +462,25 @@ class Table(BaseModel, abc.ABC):
         logger.debug(
             f"baserow {description}"
         )
+        coroutines = []
+        for link in link_field.root:
+            if link.row_id is not None:
+                coroutines.append(cls.by_id(link.row_id))
+            else:
+                raise NotImplementedError(
+                    "retrieving linked rows via their key value is currently not implemented by this method"
+                )
+        cr_rsl = await asyncio.gather(
+            *coroutines,
+            return_exceptions=True,
+        )
+
         rsl: list[T] = []
         try:
-            for link in link_field.root:
-                if link.row_id is not None:
-                    rsl.append(cls.by_id(link.row_id).one())
-                else:
-                    raise NotImplementedError(
-                        "retrieving linked rows via their key value is currently not implemented by this method"
-                    )
+            for item in cr_rsl:
+                if isinstance(item, BaseException):
+                    raise item
+                rsl.append(item.one())
             return Result(rsl, description)
         except NoSingleResultFoundError as e:
             raise NoSingleResultFoundError(

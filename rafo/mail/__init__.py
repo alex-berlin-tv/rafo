@@ -63,13 +63,15 @@ class Mail:
         )
         self.send(recipient, "Dein Radio-Uploadlink", message)
 
-    def send_on_upload_internal(self, upload: BaserowUpload):
+    async def send_on_upload_internal(self, upload: BaserowUpload):
+        uploader = await upload.cached_uploader
+        show = await upload.cached_show
         data = {
             "recipient": "Sendeabwicklung",
             "is_supervisor_message": False,
             "upload": upload,
-            "uploader": upload.cached_uploader,
-            "show": upload.cached_show,
+            "uploader": uploader,
+            "show": show,
             "dev_mode": settings.dev_mode,
             "legacy_url_used": UploadState.INTERNAL_LEGACY_URL_USED in upload.state_enum.root,
             "version": VERSION,
@@ -80,22 +82,24 @@ class Mail:
             "new_upload_internal.html.jinja2").render(data)
         self.send(
             settings.on_upload_mail,
-            f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload {upload.cached_show.name}",
+            f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload {show.name}",
             html,
             plain,
         )
 
-    def send_on_upload_external(self, upload: BaserowUpload):
+    async def send_on_upload_external(self, upload: BaserowUpload):
+        uploader = await upload.cached_uploader
+        show = await upload.cached_show
         grace_date = None
         if settings.legacy_url_grace_date is not None:
             grace_date = settings.legacy_url_grace_date.strftime("%d.%m.%Y")
         data = {
             "upload": upload,
-            "uploader": upload.cached_uploader,
-            "show": upload.cached_show,
+            "uploader": uploader,
+            "show": show,
             "dev_mode": settings.dev_mode,
             "contact_mail": settings.contact_mail,
-            "upload_url": upload.cached_uploader.upload_url(),
+            "upload_url": uploader.upload_url(),
             "legacy_url_used": UploadState.INTERNAL_LEGACY_URL_USED in upload.state_enum.root,
             "legacy_url_grace_date": grace_date,
         }
@@ -104,16 +108,17 @@ class Mail:
         html = self.__get_template(
             "new_upload_producer.html.jinja2").render(data)
         self.send(
-            upload.cached_uploader.email,
+            uploader.email,
             f"{self.__test()}Sendung erfolgreich hochgeladen",
             html,
             plain,
         )
 
-    def send_on_upload_supervisor(self, upload: BaserowUpload):
-        supervisors = BaserowPerson.by_link_field(
-            upload.cached_show.supervisors
-        ).any()
+    async def send_on_upload_supervisor(self, upload: BaserowUpload):
+        uploader = await upload.cached_uploader
+        show = await upload.cached_show
+        supervisors_rsl = await BaserowPerson.by_link_field(show.supervisors)
+        supervisors = supervisors_rsl.any()
         if len(supervisors) == 0:
             return
         for supervisor in supervisors:
@@ -121,8 +126,8 @@ class Mail:
                 "recipient": supervisor.name,
                 "is_supervisor_message": True,
                 "upload": upload,
-                "uploader": upload.cached_uploader,
-                "show": upload.cached_show,
+                "uploader": uploader,
+                "show": show,
                 "dev_mode": settings.dev_mode,
                 "contact_mail": settings.contact_mail,
                 "legacy_url_used": UploadState.INTERNAL_LEGACY_URL_USED in upload.state_enum.root,
@@ -134,7 +139,7 @@ class Mail:
                 "new_upload_internal.html.jinja2").render(data)
             self.send(
                 supervisor.email,
-                f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload für {upload.cached_show.name} (Information für Betreuungsperson)",
+                f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload für {show.name} (Information für Betreuungsperson)",
                 html,
                 plain,
             )

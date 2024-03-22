@@ -2,6 +2,7 @@
 Handles the export of upload entries from Baserow.
 """
 
+import asyncio
 import enum
 from pydantic.main import BaseModel
 from pydantic.types import Base64UrlBytes
@@ -256,14 +257,16 @@ class OmniaUploadExport:
         yield self.__close_connection()
 
     async def __fetch_baserow_upload(self) -> BaserowUpload:
-        return BaserowUpload.by_id(self.row_id).one()
+        rsl = await BaserowUpload.by_id(self.row_id)
+        return rsl.one()
 
     async def __fetch_omnia_show(self, upload: BaserowUpload) -> OmniaShow:
-        if upload.cached_show.omnia_id is None:
+        show = await upload.cached_show
+        if show.omnia_id is None:
             raise ValueError(
-                f"omnia ID of show '{upload.cached_show.name}' (ID {upload.cached_show.row_id}) in Baserow is not set"
+                f"omnia ID of show '{show.name}' (ID {show.row_id}) in Baserow is not set"
             )
-        rsp = self.omnia.by_id(StreamType.SHOW, upload.cached_show.omnia_id)
+        rsp = await self.omnia.by_id(StreamType.SHOW, show.omnia_id)
         return OmniaShow.from_omnia_response(rsp)
 
     async def __upload_file(self, upload: BaserowUpload) -> tuple[int, dict[str, str]]:
@@ -276,7 +279,7 @@ class OmniaUploadExport:
             raise ValueError("first upload field entry has no url")
         name = upload.file_name_prefix()
 
-        rsp = self.omnia.upload_by_url(
+        rsp = await self.omnia.upload_by_url(
             StreamType.AUDIO,
             file.url,
             True,
@@ -308,7 +311,8 @@ class OmniaUploadExport:
             description = upload.description
             description_src = "von Upload Eintrag"
         else:
-            description = upload.cached_show.description
+            show = await upload.cached_show
+            description = show.description
             description_src = "von Format Beschreibung, da dem Upload keine Beschreibung hinzugefügt wurde"
         valid_from = upload.planned_broadcast_at + timedelta(hours=1)
         valid_to = upload.planned_broadcast_at + timedelta(days=7, hours=1)
@@ -322,13 +326,13 @@ class OmniaUploadExport:
             "validUntil": str(int(valid_to.timestamp())),
         }
 
-        self.omnia.update(StreamType.AUDIO, omnia_item_id, attributes)
-        self.omnia.update_restrictions(
+        await self.omnia.update(StreamType.AUDIO, omnia_item_id, attributes)
+        await self.omnia.update_restrictions(
             StreamType.AUDIO,
             omnia_item_id,
             restrictions
         )
-        self.omnia.connect_show(
+        await self.omnia.connect_show(
             StreamType.AUDIO, omnia_item_id, omnia_show_id
         )
 
@@ -354,21 +358,22 @@ class OmniaUploadExport:
                 )
             source = CoverSource.UPLOAD
         else:
-            if upload.cached_show.cover is None:
+            show = await upload.cached_show
+            if show.cover is None:
                 raise ValueError(
-                    f"upload element in Baserow with ID {upload.row_id} and show element with ID {upload.cached_show.row_id} both have no cover set"
+                    f"upload element in Baserow with ID {upload.row_id} and show element with ID {show.row_id} both have no cover set"
                 )
-            if len(upload.cached_show.cover.root) != 1:
+            if len(show.cover.root) != 1:
                 raise ValueError(
-                    f"show element in Baserow with ID {upload.cached_show.row_id} has not exactly one cover set (got {len(upload.cached_show.cover.root)} instead)"
+                    f"show element in Baserow with ID {show.row_id} has not exactly one cover set (got {len(show.cover.root)} instead)"
                 )
-            url = upload.cached_show.cover.root[0].url
+            url = show.cover.root[0].url
             if url is None:
                 raise ValueError(
-                    f"url in cover field of show element in Baserow with ID {upload.cached_show.row_id} is None"
+                    f"url in cover field of show element in Baserow with ID {show.row_id} is None"
                 )
             source = CoverSource.SHOW
-        self.omnia.update_cover(StreamType.AUDIO, omnia_item_id, url)
+        await self.omnia.update_cover(StreamType.AUDIO, omnia_item_id, url)
         return CoverInfo(
             source=source,
             thumbnail="",
@@ -380,7 +385,7 @@ class OmniaUploadExport:
             by_alias=True,
             omnia_id=omnia_item_id,
         )
-        upload.update_state(
+        await upload.update_state(
             UploadStates.OMNIA_PREFIX,
             UploadState.OMNIA_COMPLETE,
         )
