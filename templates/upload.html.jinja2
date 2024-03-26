@@ -116,13 +116,14 @@
                 </div>
             </template>
             <div class="field">
-                <label class="label" for="producer">Sendeverantwortlich</label>
+                <label class="label" for="producer">Upload durch</label>
                 <div class="control has-icons-left">
                     <input class="input" id="producer" name="producer" type="text" x-model="producer_name" disabled>
                     <span class="icon is-small is-left"><i class="fa-regular fa-user"></i></span>
                 </div>
                 <p class="help">
-                    Dieses Feld ist nicht veränderbar und stellt die verantwortliche Person da, die bei uns im System
+                    Dieses Feld ist nicht veränderbar und stellt die für den Upload verantwortliche Person da, die bei
+                    uns im System
                     hinterlegt ist.
                 </p>
             </div>
@@ -290,6 +291,7 @@
             legacy_url_grace_date: null,
             within_legacy_url_grace: false,
             fetch_data() {
+                console.log("fnord");
                 fetch(`../api/producer_for_upload/{{ requested_uuid }}`)
                     .then(res => {
                         if (!res.ok) {
