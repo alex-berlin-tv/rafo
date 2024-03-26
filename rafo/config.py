@@ -32,6 +32,10 @@ class Settings:
     When automatically cutting away silence the given duration of silence will
     remain. This is to prevent to harsh/fast cut ins.
     """
+    shows_for_all_upload_exports: list[int]
+    """
+    A list of Omnia Show id's which each upload export to Omnia should be linked to.
+    """
     maintenance_mode: bool
     """
     States whether the maintenance mode should be enabled. If the maintenance

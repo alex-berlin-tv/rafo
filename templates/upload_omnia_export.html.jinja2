@@ -1,0 +1,97 @@
+{% extends "base.html.jinja2" %}
+{% block content %}
+<div class="content" x-data="data()">
+    <div class="notification is-danger" x-show="error !== null">
+        <b>Fehler bei <span x-text="error_source"></span>:</b> <span x-text="JSON.stringify(error)"></span>
+    </div>
+    <section>
+        <h1>Export eines Upload Items nach Omnia</h1>
+        <p class="paragraph">Die gewünschte Datei wird nach Omnia exportiert.</p>
+        <template x-for="notification in notifications">
+            <article class="message" :class="{
+                'is-link' : notification.state === 'running',
+                'is-success' : notification.state === 'done',
+                'is-warning' : notification.state === 'warning',
+                'is-danger' : notification.state === 'error',
+            }">
+                <div class="message-header">
+                    <p>
+                        <img x-show="notification.state === 'running'" src="/static/img/spinner.svg"
+                            alt="loading animation" aria-hidden="true">
+                        <span x-show="notification.state === 'done'" class="icon" aria-hidden="true"><i
+                                class="fas fa-circle-check"></i></span>
+                        <span x-show="notification.state === 'warning'" class="icon" aria-hidden="true"><i
+                                class="fas fa-triangle-exclamation"></i></span>
+                        <span x-show="notification.state === 'error'" class="icon" aria-hidden="true"><i
+                                class="fas fa-skull-crossbones"></i></span>
+                        <span x-text="notification.title"></span>
+                    </p>
+                </div>
+                <div class="message-body is-size-7">
+                    <span x-text="notification.description"></span>
+                    <ul x-show="notification.items">
+                        <template x-for="(value, key) in notification.items">
+                            <li><b><span x-text="key"></span>:</b> <span x-text="value"></span></li>
+                        </template>
+                    </ul>
+                </div>
+            </article>
+        </template>
+</div>
+</section>
+</div>
+{% endblock %}
+{% block script_footer %}
+<script>
+    function data() {
+        return {
+            error: null,
+            error_source: "",
+            notifications: [{
+                target: "init",
+                title: "Initialisierung läuft...",
+                state: "running",
+                description: "Upload-Eintrag wird von Baserow geladen...",
+                itmes: null,
+            }],
+            init() {
+                params = parameters();
+                const event_source = new EventSource(`/api/upload/${params.id}/omnia_export?key=${params.key}`);
+                event_source.onmessage = (event) => {
+                    if (event.data === "CLOSE CONNECTION") {
+                        event_source.close();
+                        return
+                    }
+                    this.on_notification(event);
+                };
+                event_source.onerror = (error) => {
+                    console.log(error);
+                    this.error_source = "Server Event-Stream";
+                    this.error = JSON.stringify(error);
+                };
+            },
+            on_notification(event) {
+                const data = JSON.parse(event.data);
+                for (let i = 0; i < this.notifications.length; i++) {
+                    if (data.target === this.notifications[i].target) {
+                        this.notifications[i] = data;
+                        return
+                    }
+                }
+                this.notifications.push(data);
+            },
+        }
+    }
+    function parameters() {
+        let id = "";
+        const segments = window.location.pathname.split("/");
+        if (segments.length > 2) {
+            id = segments[2];
+        }
+        return {
+            id: id,
+            key: new URLSearchParams(window.location.search).get('key'),
+        }
+    }
+</script>
+{% endblock %}

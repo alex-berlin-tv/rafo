@@ -7,7 +7,9 @@ import enum
 from typing import Any, Optional
 from pydantic.main import BaseModel
 
+
 from . import ManagementResult, MediaResult, MediaResultGeneral, Response, Notification, Omnia, StreamType
+from ..config import settings
 from ..model import BaserowUpload, UploadState, UploadStates
 
 
@@ -422,14 +424,19 @@ class OmniaUploadExport:
         await self.omnia.connect_show(
             StreamType.AUDIO, omnia_item_id, omnia_show_id
         )
-
+        connected_shows: list[str] = [str(omnia_show_id)]
+        for show_id in settings.shows_for_all_upload_exports:
+            await self.omnia.connect_show(
+                StreamType.AUDIO, omnia_item_id, show_id
+            )
+            connected_shows.append(str(show_id))
         return {
             "Titel": attributes["title"],
             "Beschreibung": f"{attributes['description']} ({description_src})",
             "Erstsendedatum": upload.planned_broadcast_at.strftime(DATE_FORMAT),
             "Verfügbar ab": valid_from.strftime(DATE_FORMAT),
             "Verfügbar bis": valid_to.strftime(DATE_FORMAT),
-            "Verknüpft mit Sendung": f"{omnia_show_id} (ID)",
+            "Verknüpft mit Sendung": f"{', '.join(connected_shows)} (ID's)",
         }
 
     async def __set_cover(self, omnia_item_id: int, upload: BaserowUpload) -> CoverInfo:

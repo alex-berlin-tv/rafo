@@ -17,6 +17,7 @@ silence_duration = 1
 bit_rate = "320k"
 sample_rate = 44100
 audio_crop_allowance = 0.5
+shows_for_all_upload_exports = [4071]
 maintenance_mode = false
 maintenance_message = "Die Software wird aktualisiert und sollte um 15:00 wieder verfügbar sein."
 legacy_url_grace_date = "2024-03-01"
