@@ -1,9 +1,9 @@
 from .baserow import DurationField, FileField, MultipleSelectEntry, MultipleSelectField, NoResultError, RowLink, SingleSelectField, Table, TableLinkField
 from .config import settings
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, ClassVar, Optional
+from typing import ClassVar, Optional
 from urllib.parse import urljoin
 
 from pydantic import BaseModel, Field, RootModel
@@ -318,3 +318,29 @@ class BaserowUpload(Table):
         defined.
         """
         return self.file_name_prefix()
+
+    async def omnia_description(self) -> tuple[str, bool]:
+        """
+        The description for the online publication. If none was specified during
+        the upload, the description of the linked show is used. Bool is True if
+        description was from upload itself. False if description originates from
+        the linked show.
+        """
+        if self.description is not None and self.description != "":
+            return self.description, True
+        show = await self.cached_show
+        return show.description, False
+
+    def available_online_from(self) -> datetime:
+        """
+        Calculates the time at which the episode is to be published online.
+        (First transmission time plus one hour.)
+        """
+        return self.planned_broadcast_at + timedelta(hours=1)
+
+    def available_online_to(self) -> datetime:
+        """
+        Calculates the time when the episode should be de-published online.
+        (First transmission time plus seven days and one hour.)
+        """
+        return self.planned_broadcast_at + timedelta(days=7, hours=1)

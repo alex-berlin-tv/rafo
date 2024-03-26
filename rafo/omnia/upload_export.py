@@ -2,16 +2,13 @@
 Handles the export of upload entries from Baserow.
 """
 
-import asyncio
+from datetime import datetime
 import enum
+from typing import Any, Optional
 from pydantic.main import BaseModel
-from pydantic.types import Base64UrlBytes
 
-from rafo.omnia.omnia import MediaResult, MediaResultGeneral, Response
-from .import ManagementResult, Notification, Omnia, StreamType
+from . import ManagementResult, MediaResult, MediaResultGeneral, Response, Notification, Omnia, StreamType
 from ..model import BaserowUpload, UploadState, UploadStates
-
-from datetime import timedelta
 
 
 DATE_FORMAT = "%d.%m.%Y %H:%M"
@@ -86,6 +83,38 @@ class InitNotification(Notification):
     @classmethod
     def error(cls, e: Exception):
         return cls.from_exception(e, "Initialisierung fehlgeschlagen")
+
+
+class CheckRefnrNotification(Notification):
+    target = "refnr"
+
+    @classmethod
+    def running(cls, ref_nr: str):
+        return cls._running(
+            "Check auf bereits existierende Einträge in Omnia",
+            f"Es wird überprüft, ob in Omnia bereits ein Element mit der Referenz '{ref_nr}' vorhanden ist.",
+            None,
+        )
+
+    @classmethod
+    def done(cls, ref_nr: str):
+        return cls._done(
+            "Keine Dublette in Omnia gefunden",
+            f"Auf Omnia existiert noch kein Element mit der Referenz '{ref_nr}'.",
+            None,
+        )
+
+    @classmethod
+    def warning(cls, ref_nr: str, data: dict[str, str]):
+        return cls._warning(
+            "Eintrag mit Referenznummer bereits vorhanden",
+            f"Achtung: Nach dem Upload befindet sich _mindestens_ ein Elemente auf Omnia mit der Referenznummer '{ref_nr}'. Dies deutet in aller Regel auf einen mehrfachen Export hin. Der Export wird fortgesetzt. Bitte führe eine manuelle Überprüfung durch.",
+            data,
+        )
+
+    @classmethod
+    def error(cls, e: Exception):
+        return cls.from_exception(e, "Abfragen nach Referenz-Nummer gescheitert")
 
 
 class FetchShowNotification(Notification):
@@ -170,7 +199,7 @@ class CoverNotification(Notification):
     def running(cls):
         return cls._running(
             "Upload Cover",
-            f"Das Cover wird nach Omnia hochgeladen. Dieser Vorgang kann ein paar Minuten in Anspruch nehmen...",
+            f"Das Cover wird nach Omnia hochgeladen. Dieser Vorgang kann einige Minuten in Anspruch nehmen...",
             None,
         )
 
@@ -231,10 +260,10 @@ class OmniaValidationNotification(Notification):
         )
 
     @classmethod
-    def warning(cls, ref_nr: str, data: dict[str, str]):
+    def warning(cls, omnia_id: int, data: dict[str, str]):
         return cls._warning(
-            "Mehrere Einträge mit selber Referenznummer vorhanden",
-            f"Achtung: Nach dem Upload befinden sich {len(data)} Elemente auf Omnia mit der Referenznummer '{ref_nr}'. Dies deutet in aller Regel auf einen mehrfachen Export hin. Bitte überprüfe dies.",
+            "Eintrag auf Omnia nicht korrekt",
+            f"Der Omnia Eintrag (ID: {omnia_id}) scheint nicht korrekt zu sein. Bitte überprüfe den Eintrag.",
             data,
         )
 
@@ -261,6 +290,14 @@ class OmniaUploadExport:
             omnia_show = await self.__fetch_omnia_show(upload)
             yield ntf_class.done(omnia_show).to_message()
 
+            ntf_class = CheckRefnrNotification
+            yield ntf_class.running(upload.ref_nr()).to_message()
+            ref_check_rsl = await self.__check_ref_nr(upload.ref_nr())
+            if ref_check_rsl:
+                yield ntf_class.warning(upload.ref_nr(), ref_check_rsl).to_message()
+            else:
+                yield ntf_class.done(upload.ref_nr()).to_message()
+
             ntf_class = UploadNotification
             yield ntf_class.running().to_message()
             omnia_item_id, data = await self.__upload_file(upload)
@@ -283,10 +320,13 @@ class OmniaUploadExport:
             await self.__update_baserow_entry(omnia_item_id, upload)
             yield ntf_class.done().to_message()
 
-            # TODO: Validation of element in Omnia
-            # ntf_class = OmniaValidationNotification
-            # yield ntf_class.running(omnia_item_id).to_message()
-            # data = await self.__omnia_validation(omnia_item_id, upload)
+            ntf_class = OmniaValidationNotification
+            yield ntf_class.running(omnia_item_id).to_message()
+            validation_rsl = await self.__omnia_validation(omnia_item_id, upload)
+            if len(validation_rsl) > 0:
+                yield ntf_class.warning(omnia_item_id, validation_rsl).to_message()
+            else:
+                yield ntf_class.done(omnia_item_id).to_message()
 
         except Exception as e:
             yield ntf_class.error(e).to_message()
@@ -303,8 +343,21 @@ class OmniaUploadExport:
             raise ValueError(
                 f"omnia ID of show '{show.name}' (ID {show.row_id}) in Baserow is not set"
             )
-        rsp = await self.omnia.by_id(StreamType.SHOW, show.omnia_id)
+        rsp = await self.omnia.by_id(StreamType.SHOW, show.omnia_id, True)
         return OmniaShow.from_omnia_response(rsp)
+
+    async def __check_ref_nr(self, ref_nr: str) -> Optional[dict[str, str]]:
+        rsp = await self.omnia.by_reference(StreamType.AUDIO, ref_nr, True)
+        if rsp.result is None:
+            return None
+        if not isinstance(rsp.result, MediaResult):
+            raise ValueError(
+                "'result' field in response is not of type MediaResult"
+            )
+        return {
+            "Schon bestehender Omnia Eintrag": f"ID: {rsp.result.general.item_id}, '{rsp.result.general.title}'",
+            "Achtung": f"Es kann sein, dass _mehr_ als nur ein Eintrag mit der Referenz '{ref_nr}' auf Omnia vorhanden ist! Du musst dies manuell prüfen."
+        }
 
     async def __upload_file(self, upload: BaserowUpload) -> tuple[int, dict[str, str]]:
         if upload.optimized_file is None:
@@ -343,23 +396,21 @@ class OmniaUploadExport:
         })
 
     async def __set_metadata(self, omnia_item_id: int, omnia_show_id: int, upload: BaserowUpload) -> dict[str, str]:
-        if upload.description is not None and upload.description != "":
-            description = upload.description
+        description, description_from_upload = await upload.omnia_description()
+        if description_from_upload:
             description_src = "von Upload Eintrag"
         else:
-            show = await upload.cached_show
-            description = show.description
             description_src = "von Format Beschreibung, da dem Upload keine Beschreibung hinzugefügt wurde"
-        valid_from = upload.planned_broadcast_at + timedelta(hours=1)
-        valid_to = upload.planned_broadcast_at + timedelta(days=7, hours=1)
+        valid_from = upload.available_online_from()
+        valid_to = upload.available_online_to()
         attributes = {
             "title": upload.name,
             "description": description,
-            "releasedate": str(int(upload.planned_broadcast_at.timestamp())),
+            "releasedate": Omnia.convert_dateformat(upload.planned_broadcast_at),
         }
         restrictions = {
-            "validFrom": str(int(valid_from.timestamp())),
-            "validUntil": str(int(valid_to.timestamp())),
+            "validFrom": Omnia.convert_dateformat(valid_from),
+            "validUntil": Omnia.convert_dateformat(valid_to)
         }
 
         await self.omnia.update(StreamType.AUDIO, omnia_item_id, attributes)
@@ -427,7 +478,99 @@ class OmniaUploadExport:
         )
 
     async def __omnia_validation(self, omnia_item_id: int, upload: BaserowUpload) -> dict[str, str]:
-        return {}
+        rsp = await self.omnia.by_id(
+            StreamType.AUDIO,
+            omnia_item_id,
+            True,
+            parameters={
+                "additionalFields": "description,releasedate",
+                "addConnectedMedia": "shows",
+            },
+        )
+        if not isinstance(rsp.result, MediaResult):
+            raise ValueError(
+                f"'result' field in response is not of type MediaResult got {type(rsp.result)} instead"
+            )
+        if rsp.result.publishing_data is None:
+            raise ValueError(
+                "'result.publishingdata' field is None, expected PublishingData"
+            )
+        rsl: dict[str, str] = {}
+        self.__validate_field(
+            rsl,
+            "Titel",
+            upload.name,
+            rsp.result.general.title,
+        )
+        self.__validate_field(
+            rsl,
+            "Beschreibung",
+            (await upload.omnia_description())[0],
+            rsp.result.general.description,
+        )
+        self.__validate_show_field(
+            rsl,
+            "Verknüpfte Sendung",
+            (await upload.cached_show).omnia_id,
+            rsp.result,
+        )
+        self.__validate_field(
+            rsl,
+            "Erstsendedatum",
+            upload.planned_broadcast_at,
+            rsp.result.general.release_date,
+        )
+        self.__validate_field(
+            rsl,
+            "Verfügbar ab (Desktop)",
+            upload.available_online_from(),
+            rsp.result.publishing_data.valid_from_desktop,
+        )
+        self.__validate_field(
+            rsl,
+            "Verfügbar bis (Desktop)",
+            upload.available_online_to(),
+            rsp.result.publishing_data.valid_until_desktop,
+        )
+        self.__validate_field(
+            rsl,
+            "Verfügbar ab (Mobil)",
+            upload.available_online_from(),
+            rsp.result.publishing_data.valid_from_mobile,
+        )
+        self.__validate_field(
+            rsl,
+            "Verfügbar bis (Mobil)",
+            upload.available_online_to(),
+            rsp.result.publishing_data.valid_until_mobile,
+        )
+        return rsl
+
+    @staticmethod
+    def __validate_field(rsl: dict[str, str], name: str, expected: Any, actual: Any):
+        if expected == actual:
+            return
+        if isinstance(expected, datetime) and isinstance(actual, datetime):
+            expected = expected.strftime(DATE_FORMAT)
+            actual = actual.strftime(DATE_FORMAT)
+        rsl[name] = f"Erwartet: '{expected}'; tatsächlich auf Omnia: '{actual}'."
+
+    @staticmethod
+    def __validate_show_field(rsl: dict[str, str], name: str, expected: Optional[int], omnia_rsl: MediaResult):
+        if expected is None:
+            raise ValueError(
+                f"omnia id field in linked show for upload in Baserow is None"
+            )
+        if omnia_rsl.connected_media is None:
+            rsl[name] = "Kein Format verknüpft."
+            return
+        if "shows" not in omnia_rsl.connected_media:
+            rsl[name] = "Keine Format verknüpft."
+            return
+        ids = [show.item_id for show in omnia_rsl.connected_media["shows"]]
+        if expected not in ids:
+            rsl[name] = f"Verknüpfung mit Format {expected} fehlt."
+        # rsp.result.connected_media["shows"],
 
     @staticmethod
     def __close_connection():

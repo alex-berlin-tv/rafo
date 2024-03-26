@@ -1,4 +1,8 @@
 import asyncio
+
+from attr import dataclass
+from baserow.filter import Date
+from typed_settings.types import OptionName
 from ..config import settings
 from ..log import logger
 
@@ -114,6 +118,28 @@ class MediaResultGeneral(BaseModel):
     for_kids: Optional[Bool] = Field(alias="forKids", default=None)
     is_pay: Optional[Bool] = Field(alias="isPay", default=None)
     is_ugc: Optional[Bool] = Field(alias="isUGC", default=None)
+    description: Optional[str] = Field(
+        alias="description", default=None)  # Additional field
+    release_date: Optional[Date] = Field(
+        alias="releasedate", default=None)  # Additional field
+
+
+class ConnectedMedia(BaseModel):
+    item_id: int = Field(alias="ID")
+    gid: int = Field(alias="GID")
+    hash_value: str = Field(alias="hash")
+    title: str = Field(alias="title")
+
+
+class PublishingData(BaseModel):
+    valid_from_desktop: Optional[datetime] = Field(
+        alias="validFromDesktop", default=None)
+    valid_until_desktop: Optional[datetime] = Field(
+        alias="validUntilDesktop", default=None)
+    valid_from_mobile: Optional[datetime] = Field(
+        alias="validFromMobile", default=None)
+    valid_until_mobile: Optional[datetime] = Field(
+        alias="validUntilMobile", default=None)
 
 
 class ItemUpdate(BaseModel):
@@ -130,8 +156,13 @@ class ManagementResult(BaseModel):
 
 class MediaResult(BaseModel):
     general: MediaResultGeneral = Field(alias="general")
-    # image_data: MediaResultImageData = Field(alias="imagedata")
     image_data: Any = Field(alias="imagedata")
+    publishing_data: Optional[PublishingData] = Field(
+        alias="publishingdata", default=None
+    )
+    connected_media: Optional[dict[str, list[ConnectedMedia]]] = Field(
+        alias="connectedmedia", default=None,
+    )
 
 
 class Response(BaseModel):
@@ -489,3 +520,11 @@ class Omnia:
         for arg in args:
             rsl.append(str(arg).lstrip("/").rstrip("/"))
         return "/".join(rsl)
+
+    @staticmethod
+    def convert_dateformat(time: datetime) -> str:
+        """
+        Converts a given datetime object into the time representation of Omnia.
+        Integer Unix timestamp as string.
+        """
+        return str(int(time.timestamp()))
