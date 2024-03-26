@@ -309,3 +309,12 @@ class BaserowUpload(Table):
         return f"{date}_{self.row_id}"
         # show = normalize_for_filename(self.get_show().name)
         # return f"e-{self.noco_id:05d}_{date}_{show}"
+
+    def ref_nr(self) -> str:
+        """
+        Canonical reference number used in Omnia. Currently and (according to
+        current planning) also in the future, this is the same as the file name
+        prefix. However, as this may be changed one day, this method is already
+        defined.
+        """
+        return self.file_name_prefix()

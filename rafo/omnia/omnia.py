@@ -33,6 +33,13 @@ class StreamType(str, Enum):
     SHOW = "shows"
 
 
+class QueryMode(str, Enum):
+    CLASSIC_WITH_AND = "classicwithand"
+    CLASSIC_WITH_OR = "classicwithor"
+    FULL_TEXT = "fulltext"
+    """Lucene Search with Relevance."""
+
+
 class ApiType(str, Enum):
     MEDIA = "media"
     MANAGEMENT = "management"
@@ -203,6 +210,61 @@ class Omnia:
             parameters,
         )
 
+    async def by_reference(
+        self,
+        stream_type: StreamType,
+        ref_nr: str,
+    ) -> Response:
+        """Return all items with a given reference number."""
+        return await self.call(
+            "get",
+            stream_type,
+            ApiType.MEDIA,
+            "byrefnr",
+            [ref_nr],
+            {},
+        )
+
+    async def by_query(
+        self,
+        stream_type: StreamType,
+        query: str,
+        query_mode: QueryMode,
+        query_fields: list[str],
+        include_substring_matches: bool,
+        minimal_query_score: Optional[int] = None,
+        skip_reporting: Optional[bool] = None,
+    ) -> Response:
+        """
+        Performs a regular Query on all Items. The "order" Parameters are
+        ignored, if query-mode is set to "fulltext".
+
+        Args:
+            query: The search term.
+            stream_type: As usual.
+            query_mode: Defines the Way, the Query is executed. Fore more results, "classicwithor" is optimal. For a Lucene Search with Relevance, use "fulltext".
+            query_fields: A comma separated List of Attributes, to search within. If omitted, the Search will use all available Text Attributes.
+            include_substring_matches: By default, the Query will only return Results on full Words. If also Substring Matches shall be returned, set this Parameter to 1. Only useful, if query-mode is not "fulltext".
+            minimal_query_score: Skip Results with a Query Score lower than the given Value. Only useful for query-mode "fulltext".
+            skip_reporting: if set to 0 or omitted, the Call will implicitly report this Query to the Omnia Reporting System.
+        """
+        data: dict[str, str] = {}
+        data["queryMode"] = query_mode.value
+        data["queryFields"] = ",".join(query_fields)
+        data["includeSubstringMatches"] = "1" if include_substring_matches else "0"
+        if minimal_query_score is not None:
+            data["minimalQueryScore"] = str(minimal_query_score)
+        data["skipReporting"] = "1" if skip_reporting else "0"
+        return await self.call(
+            "get",
+            stream_type,
+            ApiType.MEDIA,
+            "byquery",
+            [query],
+            {},
+            params=data,
+        )
+
     async def update(
         self,
         stream_type: StreamType,
@@ -303,11 +365,12 @@ class Omnia:
         api_type: ApiType,
         operation: str,
         args: list[str],
-        parameters: dict[str, str]
+        data: dict[str, str],
+        params: dict[str, str] = {},
     ) -> Response:
         """Generic call to the Omnia Media API. Won't work with the management API's."""
         return await self.__universal_call(
-            method, stream_type, api_type, operation, args, parameters
+            method, stream_type, api_type, operation, args, data, params=params
         )
 
     async def __universal_call(
@@ -317,7 +380,8 @@ class Omnia:
         api_type: ApiType,
         operation: str,
         args: list[str],
-        parameters: dict[str, str],
+        data: dict[str, str],
+        params: dict[str, str] = {},
     ) -> Response:
         args_str = "/".join(args)
         url: str = ""
@@ -356,15 +420,16 @@ class Omnia:
             operation, self.domain_id, self.api_secret, self.session_id
         )
         logger.debug(
-            f"About to send {method} to {url} with header {header} and params {parameters}"
+            f"About to send {method} to {url} with header {header} and params {data}"
         )
-        await asyncio.sleep(1)
+        await asyncio.sleep(.1)
         async with aiohttp.ClientSession() as session:
             async with session.request(
                 method=method,
                 url=url,
                 headers=header,
-                data=parameters,
+                data=data,
+                params=params,
             ) as response:
                 response_json = await response.json()
                 print(response_json)

@@ -107,7 +107,7 @@ class FetchShowNotification(Notification):
             {
                 "Omnia Show ID": str(show.item_id),
                 "Omnia Show Titel": show.title,
-            }
+            },
         )
 
     @classmethod
@@ -199,11 +199,43 @@ class UpdateBaserowEntryNotification(Notification):
         )
 
     @classmethod
-    def done(cls, omnia_id: int):
+    def done(cls):
         return cls._done(
             "Eintrag in Baserow ist aktualisiert",
             f"Der Upload Eintrag in Baserow wurde aktualisiert.",
             None,
+        )
+
+    @classmethod
+    def error(cls, e: Exception):
+        return cls.from_exception(e, "Aktualisieren des Baserow Eintrags gescheitert")
+
+
+class OmniaValidationNotification(Notification):
+    target = "omnia_validation"
+
+    @classmethod
+    def running(cls, omnia_id: int):
+        return cls._running(
+            "Eintrag wird auf Omnia validiert...",
+            f"Das neu in Omnia (ID: {omnia_id}) angelegte Element wird validiert.",
+            None,
+        )
+
+    @classmethod
+    def done(cls, omnia_id: int):
+        return cls._done(
+            "Eintrag auf Omnia wurde validiert",
+            f"Es konnten keine Probleme mit dem neue Eintrag in Omnia (ID {omnia_id}) festgestellt werden. Der Export ist hiermit erfolgreich beendet. 🎉",
+            None,
+        )
+
+    @classmethod
+    def warning(cls, ref_nr: str, data: dict[str, str]):
+        return cls._warning(
+            "Mehrere Einträge mit selber Referenznummer vorhanden",
+            f"Achtung: Nach dem Upload befinden sich {len(data)} Elemente auf Omnia mit der Referenznummer '{ref_nr}'. Dies deutet in aller Regel auf einen mehrfachen Export hin. Bitte überprüfe dies.",
+            data,
         )
 
     @classmethod
@@ -249,7 +281,12 @@ class OmniaUploadExport:
             ntf_class = UpdateBaserowEntryNotification
             yield ntf_class.running(omnia_item_id).to_message()
             await self.__update_baserow_entry(omnia_item_id, upload)
-            yield ntf_class.done(omnia_item_id).to_message()
+            yield ntf_class.done().to_message()
+
+            # TODO: Validation of element in Omnia
+            # ntf_class = OmniaValidationNotification
+            # yield ntf_class.running(omnia_item_id).to_message()
+            # data = await self.__omnia_validation(omnia_item_id, upload)
 
         except Exception as e:
             yield ntf_class.error(e).to_message()
@@ -277,15 +314,14 @@ class OmniaUploadExport:
         file = upload.optimized_file.root[0]
         if file.url is None:
             raise ValueError("first upload field entry has no url")
-        name = upload.file_name_prefix()
 
         rsp = await self.omnia.upload_by_url(
             StreamType.AUDIO,
             file.url,
             True,
             {},
-            filename=name,
-            ref_nr=name,
+            filename=upload.file_name_prefix(),
+            ref_nr=upload.ref_nr(),
             auto_publish=True,
             notes=upload.comment_producer,
         )
@@ -300,8 +336,8 @@ class OmniaUploadExport:
         omnia_id = rsp.result.item_update.generated_id
         return (omnia_id, {
             "Omnia Element ID": str(omnia_id),
-            "Omnia Referenznummer": name,
-            "Omnia Dateiname": name,
+            "Omnia Referenznummer": upload.ref_nr(),
+            "Omnia Dateiname": upload.file_name_prefix(),
             "Element wird automatisch publiziert": "Ja",
             "Hinweis Upload": upload.comment_producer if upload.comment_producer else "n.n.",
         })
@@ -389,6 +425,9 @@ class OmniaUploadExport:
             UploadStates.OMNIA_PREFIX,
             UploadState.OMNIA_COMPLETE,
         )
+
+    async def __omnia_validation(self, omnia_item_id: int, upload: BaserowUpload) -> dict[str, str]:
+        return {}
 
     @staticmethod
     def __close_connection():

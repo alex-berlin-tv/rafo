@@ -39,6 +39,7 @@ class Notification(BaseModel):
     title: str
     description: str
     items: Optional[dict[str, str]]
+    copy_value: Optional[dict[str, str]]
 
     @classmethod
     @abc.abstractmethod
@@ -56,15 +57,17 @@ class Notification(BaseModel):
             title=title,
             description=description,
             items=items,
+            copy_value=None,
         )
 
     @classmethod
-    def _done(cls, title: str, description: str, items: Optional[dict[str, str]]):
+    def _done(cls, title: str, description: str, items: Optional[dict[str, str]], copy_value: Optional[dict[str, str]] = None):
         return cls(
             state=NotificationState.DONE,
             title=title,
             description=description,
             items=items,
+            copy_value=copy_value,
         )
 
     @classmethod
@@ -74,6 +77,7 @@ class Notification(BaseModel):
             title=title,
             description=description,
             items=items,
+            copy_value=None,
         )
 
     @classmethod
@@ -83,6 +87,7 @@ class Notification(BaseModel):
             title=title,
             description=description,
             items=items,
+            copy_value=None,
         )
 
     def to_message(self) -> str:
