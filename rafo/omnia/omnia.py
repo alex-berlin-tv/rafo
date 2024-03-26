@@ -165,7 +165,7 @@ class Omnia:
         stream_type: StreamType,
         url: str,
         use_queue: bool,
-        parameters: dict[str, str],
+        data: dict[str, str],
         filename: Optional[str] = None,
         ref_nr: Optional[str] = None,
         auto_publish: Optional[bool] = None,
@@ -175,54 +175,71 @@ class Omnia:
         will create a new Media Item of the given Streamtype, if the given
         urlParameter contains a valid Source for the given Streamtype.
         """
-        parameters["url"] = url
-        parameters["useQueue"] = "1" if use_queue else "0"
+        data["url"] = url
+        data["useQueue"] = "1" if use_queue else "0"
         if filename:
-            parameters["filename"] = filename
+            data["filename"] = filename
         if ref_nr:
-            parameters["refnr"] = ref_nr
+            data["refnr"] = ref_nr
         if auto_publish is not None:
-            parameters["autoPublish"] = "1" if auto_publish else "0"
+            data["autoPublish"] = "1" if auto_publish else "0"
         if notes is not None:
-            parameters["notes"] = notes
+            data["notes"] = notes
         return await self.call(
             "post",
             stream_type,
             ApiType.MANAGEMENT,
             "fromurl",
             [],
-            parameters
+            data
         )
 
     async def by_id(
         self,
         stream_type: StreamType,
         item_id: int,
+        add_publishing_details: bool,
         parameters: dict[str, str] = {},
     ) -> Response:
-        """Return a item of a given stream type by it's id."""
+        """
+        Return a item of a given stream type by it's id. Use
+        `add_publishing_details` in order to also query for inactive/unpublished
+        objects.
+        """
+        if add_publishing_details:
+            parameters["addPublishingDetails"] = "1"
         return await self.call(
             "get",
             stream_type,
             ApiType.MEDIA,
             "byid",
             [str(item_id)],
-            parameters,
+            {},
+            params=parameters,
         )
 
     async def by_reference(
         self,
         stream_type: StreamType,
         ref_nr: str,
+        add_publishing_details: bool,
     ) -> Response:
-        """Return all items with a given reference number."""
+        """
+        Return all items with a given reference number. Use
+        `add_publishing_details` in order to also query for inactive/unpublished
+        objects.
+        """
+        parameters: dict[str, str] = {}
+        if add_publishing_details:
+            parameters["addPublishingDetails"] = "1"
         return await self.call(
             "get",
             stream_type,
             ApiType.MEDIA,
-            "byrefnr",
+            "byreference",
             [ref_nr],
             {},
+            params=parameters,
         )
 
     async def by_query(
@@ -232,6 +249,7 @@ class Omnia:
         query_mode: QueryMode,
         query_fields: list[str],
         include_substring_matches: bool,
+        add_publishing_details: bool,
         minimal_query_score: Optional[int] = None,
         skip_reporting: Optional[bool] = None,
     ) -> Response:
@@ -240,29 +258,45 @@ class Omnia:
         ignored, if query-mode is set to "fulltext".
 
         Args:
-            query: The search term.
-            stream_type: As usual.
-            query_mode: Defines the Way, the Query is executed. Fore more results, "classicwithor" is optimal. For a Lucene Search with Relevance, use "fulltext".
-            query_fields: A comma separated List of Attributes, to search within. If omitted, the Search will use all available Text Attributes.
-            include_substring_matches: By default, the Query will only return Results on full Words. If also Substring Matches shall be returned, set this Parameter to 1. Only useful, if query-mode is not "fulltext".
-            minimal_query_score: Skip Results with a Query Score lower than the given Value. Only useful for query-mode "fulltext".
-            skip_reporting: if set to 0 or omitted, the Call will implicitly report this Query to the Omnia Reporting System.
+            query: The search term. stream_type: As usual. query_mode: Defines
+                the Way, the Query is executed. Fore more results,
+                "classicwithor" is optimal. For a Lucene Search with Relevance,
+                use "fulltext".
+            query_fields: A comma separated List of Attributes, to search
+                within. If omitted, the Search will use all available Text
+                Attributes.
+            include_substring_matches: By default, the Query will only return
+                Results on full Words. If also Substring Matches shall be
+                returned, set this Parameter to 1. Only useful, if query-mode is
+                not "fulllext".
+            add_publishing_details: Add an Object of Publishing States and
+                Restrictions to each Item. When adding this Output Modifier, it
+                is possible (and that's he only accepted way) to query for
+                inactive/unpublished Objects. 
+            minimal_query_score: Skip Results with a Query Score
+                lower than the given Value. Only useful for query-mode
+                "fulltext".
+            skip_reporting: if set to 0 or omitted, the Call will implicitly
+                report this Query to the Omnia Reporting System.
         """
         data: dict[str, str] = {}
+        data["addPublishingDetails"] = "1" if add_publishing_details else "0"
         data["queryMode"] = query_mode.value
         data["queryFields"] = ",".join(query_fields)
         data["includeSubstringMatches"] = "1" if include_substring_matches else "0"
         if minimal_query_score is not None:
             data["minimalQueryScore"] = str(minimal_query_score)
-        data["skipReporting"] = "1" if skip_reporting else "0"
+        if skip_reporting is not None:
+            data["skipReporting"] = "1" if skip_reporting else "0"
+
         return await self.call(
             "get",
             stream_type,
             ApiType.MEDIA,
             "byquery",
             [query],
-            {},
-            params=data,
+            data,
+            # params=data,
         )
 
     async def update(
@@ -420,7 +454,7 @@ class Omnia:
             operation, self.domain_id, self.api_secret, self.session_id
         )
         logger.debug(
-            f"About to send {method} to {url} with header {header} and params {data}"
+            f"About to send {method} to {url} with header {header}, params {params}, and data {data}"
         )
         await asyncio.sleep(.1)
         async with aiohttp.ClientSession() as session:
