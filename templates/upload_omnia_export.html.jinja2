@@ -37,6 +37,7 @@
                 </div>
             </article>
         </template>
+        <div id="scroll_target"></div>
 </div>
 </section>
 </div>
@@ -79,6 +80,11 @@
                     }
                 }
                 this.notifications.push(data);
+                document.getElementById("scroll_target").scrollIntoView({
+                    behaviour: "smooth",
+                    block: "start",
+                    inline: "nearest"
+                });
             },
         }
     }
