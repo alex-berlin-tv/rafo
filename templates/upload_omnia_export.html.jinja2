@@ -50,10 +50,9 @@
                 </div>
             </article>
         </template>
-        <progress class="progress is-info" :value="current_step" :max="max_step" x-text="`${progress_percentage()}%`"
-            x-show="current_step !== max_step"></progress>
-</div>
-</section>
+        <progress id="progress" class="progress is-info" :value="current_step" :max="max_step"
+            x-text="`${progress_percentage()}%`" x-show="current_step !== max_step"></progress>
+    </section>
 </div>
 {% endblock %}
 {% block script_footer %}
@@ -93,17 +92,23 @@
                 for (let i = 0; i < this.notifications.length; i++) {
                     if (data.target === this.notifications[i].target) {
                         this.notifications[i] = data;
+                        this.scroll_to_end();
                         return
                     }
                 }
                 this.notifications.push(data);
                 this.current_step++;
-                document.getElementById("scroll_target").scrollIntoView({
-                    behavior: 'smooth',
-                });
+                this.scroll_to_end()
             },
             progress_percentage() {
                 return Math.round((this.current_step / this.max_step) * 100);
+            },
+            scroll_to_end() {
+                setTimeout(() => {
+                    document.getElementById("progress").scrollIntoView({
+                        behavior: "smooth",
+                    });
+                }, 200);
             }
         }
     }

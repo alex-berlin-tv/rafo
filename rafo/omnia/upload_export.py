@@ -404,8 +404,8 @@ class OmniaUploadExport:
             description_src = "von Upload Eintrag"
         else:
             description_src = "von Format Beschreibung, da dem Upload keine Beschreibung hinzugefügt wurde"
-        valid_from = upload.available_online_from()
-        valid_to = upload.available_online_to()
+        valid_from = await upload.available_online_from()
+        valid_to = await upload.available_online_to()
         attributes = {
             "title": upload.name,
             "description": description,
@@ -413,8 +413,12 @@ class OmniaUploadExport:
         }
         restrictions = {
             "validFrom": Omnia.convert_dateformat(valid_from),
-            "validUntil": Omnia.convert_dateformat(valid_to)
         }
+        if valid_to.timestamp() != 0:
+            restrictions["validUntil"] = Omnia.convert_dateformat(valid_to)
+            valid_to_info = valid_to.strftime(DATE_FORMAT)
+        else:
+            valid_to_info = "KEIN Depublikationsdatum gesetzt"
 
         await self.omnia.update(StreamType.AUDIO, omnia_item_id, attributes)
         await self.omnia.update_restrictions(
@@ -437,7 +441,7 @@ class OmniaUploadExport:
             "Beschreibung": f"{attributes['description']} ({description_src})",
             "Erstsendedatum": upload.planned_broadcast_at.strftime(DATE_FORMAT),
             "Verfügbar ab": valid_from.strftime(DATE_FORMAT),
-            "Verfügbar bis": valid_to.strftime(DATE_FORMAT),
+            "Verfügbar bis": valid_to_info,
             "Verknüpft mit Sendung": f"{', '.join(connected_shows)} (ID's)",
         }
 
@@ -532,25 +536,25 @@ class OmniaUploadExport:
         self.__validate_field(
             rsl,
             "Verfügbar ab (Desktop)",
-            upload.available_online_from(),
+            await upload.available_online_from(),
             rsp.result.publishing_data.valid_from_desktop,
         )
         self.__validate_field(
             rsl,
             "Verfügbar bis (Desktop)",
-            upload.available_online_to(),
+            await upload.available_online_to(),
             rsp.result.publishing_data.valid_until_desktop,
         )
         self.__validate_field(
             rsl,
             "Verfügbar ab (Mobil)",
-            upload.available_online_from(),
+            await upload.available_online_from(),
             rsp.result.publishing_data.valid_from_mobile,
         )
         self.__validate_field(
             rsl,
             "Verfügbar bis (Mobil)",
-            upload.available_online_to(),
+            await upload.available_online_to(),
             rsp.result.publishing_data.valid_until_mobile,
         )
         return rsl
@@ -560,8 +564,13 @@ class OmniaUploadExport:
         if expected == actual:
             return
         if isinstance(expected, datetime) and isinstance(actual, datetime):
-            expected = expected.strftime(DATE_FORMAT)
-            actual = actual.strftime(DATE_FORMAT)
+            unix_epoch = datetime.fromtimestamp(0)
+            if expected == unix_epoch and actual == unix_epoch:
+                expected = "Nicht gesetzt"
+                actual = "Nicht gesetzt"
+            else:
+                expected = expected.strftime(DATE_FORMAT)
+                actual = actual.strftime(DATE_FORMAT)
         rsl[name] = f"Erwartet: '{expected}'; tatsächlich auf Omnia: '{actual}'."
 
     @staticmethod

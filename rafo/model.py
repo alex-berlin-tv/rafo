@@ -2,7 +2,7 @@ import enum
 from .baserow import DurationField, FileField, MultipleSelectField, NoResultError, RowLink, SelectEntry, SingleSelectField, Table, TableLinkField
 from .config import settings
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import ClassVar, Optional
 from urllib.parse import urljoin
@@ -52,8 +52,8 @@ class BaserowPerson(Table):
 class ShowMedium(str, enum.Enum):
     """The different medium's a show can have."""
     TV = "TV"
-    Radio = "Radio"
-    Podcast = "Podcast"
+    RADIO = "Radio"
+    PODCAST = "Podcast"
 
 
 class BaserowShow(Table):
@@ -315,8 +315,8 @@ class BaserowUpload(Table):
         """
         if self._show_cache is None:
             rsl = await BaserowShow.by_link_field(self.show)
-            self.__show_cache = rsl.one()
-        return self.__show_cache
+            self._show_cache = rsl.one()
+        return self._show_cache
 
     async def update_state(self, prefix: str, new_state: UploadState):
         """Update the the state with the given prefix."""
@@ -354,16 +354,24 @@ class BaserowUpload(Table):
         show = await self.cached_show
         return show.description, False
 
-    def available_online_from(self) -> datetime:
+    async def available_online_from(self) -> datetime:
         """
         Calculates the time at which the episode is to be published online.
-        (First transmission time plus one hour.)
+        (Radio: First transmission time plus one hour. Podcasts: Is first
+        transmission time.)
         """
+        if (await self.cached_show).medium is ShowMedium.PODCAST:
+            return self.planned_broadcast_at
         return self.planned_broadcast_at + timedelta(hours=1)
 
-    def available_online_to(self) -> datetime:
+    async def available_online_to(self) -> datetime:
         """
         Calculates the time when the episode should be de-published online.
-        (First transmission time plus seven days and one hour.)
+        Returns the UNIX epoch if the item should stay online infinitely (aka
+        1.1.1970 00:00:00 UTC). For Omnia the UNIX epoch value is used to state
+        that no point in time is set at all. (Radio: First transmission time
+        plus seven days and one hour. Podcasts: No default de-publication date.) 
         """
+        if (await self.cached_show).medium.value is ShowMedium.PODCAST:
+            return datetime.fromtimestamp(0, timezone.utc)
         return self.planned_broadcast_at + timedelta(days=7, hours=1)
