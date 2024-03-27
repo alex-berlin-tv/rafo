@@ -84,7 +84,7 @@ class TableLinkField(RootModel[list[RowLink]]):
 
 
 class SingleSelectEntry(BaseModel):
-    """A entry in a sinlge select field."""
+    """A entry in a single select field."""
     entry_id: Optional[int] = Field(alias="id")
     value: Optional[str]
     color: Optional[str]

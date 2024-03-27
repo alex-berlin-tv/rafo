@@ -49,8 +49,9 @@ class BaserowShow(Table):
     """
     row_id: int = Field(alias=str("id"))
     name: str = Field(alias=str("Name"))
-    description: str = Field(alias=str("Beschreibung"))
     responsible: TableLinkField = Field(alias=str("Verantwortlich"))
+    medium: SingleSelectField = Field(alias=str("Medium"))
+    description: str = Field(alias=str("Beschreibung"))
     supervisors: TableLinkField = Field(alias=str("Betreuung"))
     cover: Optional[FileField] = Field(
         alias=str("Cover"), default=None
@@ -67,6 +68,12 @@ class BaserowShow(Table):
             row_id=self.row_id,
             key=None,
         )
+
+    def is_radio(self) -> bool:
+        """Returns whether the medium of the given show is Radio."""
+        if self.medium is None:
+            return False
+        return "Radio" == self.medium.value
 
 
 class ShowFormData(BaseModel):

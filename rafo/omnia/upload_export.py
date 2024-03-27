@@ -358,7 +358,7 @@ class OmniaUploadExport:
             )
         return {
             "Schon bestehender Omnia Eintrag": f"ID: {rsp.result.general.item_id}, '{rsp.result.general.title}'",
-            "Achtung": f"Es kann sein, dass _mehr_ als nur ein Eintrag mit der Referenz '{ref_nr}' auf Omnia vorhanden ist! Du musst dies manuell prüfen."
+            "Achtung": f"Es kann sein, dass _mehr_ als nur ein Eintrag mit der Referenz '{ref_nr}' bereits auf Omnia vorhanden ist! Du musst dies manuell prüfen."
         }
 
     async def __upload_file(self, upload: BaserowUpload) -> tuple[int, dict[str, str]]:
@@ -425,11 +425,12 @@ class OmniaUploadExport:
             StreamType.AUDIO, omnia_item_id, omnia_show_id
         )
         connected_shows: list[str] = [str(omnia_show_id)]
-        for show_id in settings.shows_for_all_upload_exports:
-            await self.omnia.connect_show(
-                StreamType.AUDIO, omnia_item_id, show_id
-            )
-            connected_shows.append(str(show_id))
+        if (await upload.cached_show).is_radio():
+            for show_id in settings.shows_for_all_upload_exports:
+                await self.omnia.connect_show(
+                    StreamType.AUDIO, omnia_item_id, show_id
+                )
+                connected_shows.append(str(show_id))
         return {
             "Titel": attributes["title"],
             "Beschreibung": f"{attributes['description']} ({description_src})",
