@@ -72,3 +72,38 @@ In addition, a number of changes and optimisations have been made:
 - Implementation of a migration process for legacy UUIDs at personen. As the switch to Baserow and its native UUID field means that the existing UUIDs cannot be transferred from noco, there are new URLs for all producers. To make the transition phase as simple as possible, a grace phase has been implemented in which the old URL can still be used. In this case, however, users are informed several times (in the form as well as in the emails) that they should use the new URL. After the grace period has expired, the new URL must be used.
 - New logo.
 - Internal Mails now state the current version of the software.
+
+## v1.4.0 – All Calls Async, Omnia Export, UI Enhancements, API Client Refactoring, Podcasts
+
+This release introduces advancements across various areas. The highlight is the fully automated export of Upload entries from Baserow to Omnia, including metadata and publication timelines. To achieve this, it was necessary to make all aspects of the software (especially API calls to Omnia and Baserow) asynchronous. In this process, initial divergent processes for podcasts were also implemented. Additionally, the structure of Single and Multiple Selects in the Baserow Abstraction Layer was refactored. Now, Single and Multiple Selects Fields are always tied to an Enum. Moreover, various minor tweaks were made to the Upload UI, along with several bug fixes.
+
+Detailed Changes:
+
+- Asynchronous Operations: All requests to both Baserow and Omnia are now asynchronous.
+- Omnia Export:
+    - An Upload entry from Baserow can now be exported to Omnia with a single button press.
+    - The progress of each step is displayed to the user on a dynamic page that updates through Server Sent Events. Errors and warnings are highlighted in color. Each notification can contain a series of additional information in a Key-Value format, displayed as a list. The page automatically scrolls to the latest notification. Progress is also shown in a progress bar.
+    - Loads data from Baserow.
+    - Loads information about the linked show from Omnia. (This feature might be removed in the future).
+    - Media file is exported to Omnia.
+    - Reference Number Check: Users are warned if there is already content on Omnia with the reference number of the Upload being exported.
+    - The following metadata are set in Omnia: Description, Reference Number, First Air Date, Publication and Depublication Date. If the Upload lacks a custom description, the description of the show linked in Baserow is used.
+    - Media file is linked with the appropriate show.
+    - In the config of rafo, a list of Omnia Show IDs can be defined in `shows_for_all_upload_exports`. A media file will always be linked with these shows as well.
+    - The cover is uploaded to Omnia and linked with the media content. If the Upload does not have a specific cover, the default cover of the show stored in Baserow is used.
+    - The Baserow entry of the Upload is updated with the Omnia ID of the exported item.
+    - All set metadata are validated to ensure that the entry on Omnia correctly has all metadata set.
+    - Upon completion of the export, users can copy the Omnia ID of the entry to their clipboard by clicking a button.
+- Refactoring of Single and Multiple Select Fields:
+    - The data type of the entries of the select fields is now unified.
+    - The entry fields are bound to an Enum that contains the possible values.
+- UI – Tweaks and Bug Fixes:
+    - General: The footer now correctly sticks to the bottom of the page in every situation.
+    - Logo: The logo is now simpler and scales better at smaller sizes.
+    - Upload View: The description field is now labeled as "public description."
+    - Upload View: The comment field has been renamed to "message to the broadcasting team."
+    - Upload View: The requirement for the description field has been removed.
+- Podcasts: Podcasts sometimes require different processes for Upload and export to Omnia. The first steps have now been implemented.
+    - If a user selects a show configured as a Podcast in Baserow (Medium) during Upload, a warning is displayed that the user must handle music rights clearance themselves.
+    - If a user selects a Podcast show for Upload, the date field is labeled as "Publication Date."
+    - When an Upload, whose linked show is marked as a Podcast, is exported to Omnia, no Depublication Date is set.
