@@ -132,7 +132,7 @@
                 <div class="control has-icons-left">
                     <div class="select">
                         <select x-model="show" id="show" name="show" required :disabled="upload_running"
-                            @change="auto_set_title(); show_changed()">
+                            @change="show_changed()">
                             <template x-if="available_shows.length > 1">
                                 <option disabled selected value="">Format auswählen</option>
                             </template>
@@ -349,32 +349,28 @@
             // Tries to set the title based on the selected show and broadcast date. Once the user
             // has edited the title field themselves, the value will no longer be overwritten
             auto_set_title() {
+                console.log(this.current_show);
                 if (this.title_changed_manually || this.show === null) {
                     return;
                 }
-                let show_name = "";
-                for (let i = 0; i < this.available_shows.length; i++) {
-                    if (this.available_shows[i].uuid === this.show) {
-                        show_name = this.available_shows[i].name;
-                    }
-                }
                 if (Object.keys(this.datetime).length === 0) {
-                    this.title = show_name;
+                    this.title = this.current_show.name;
                     return
                 }
                 const date = new Date(this.datetime);
                 const day = String(date.getDate()).padStart(2, '0');
                 const month = String(date.getMonth() + 1).padStart(2, '0');
-                this.title = `${show_name} vom ${day}.${month}.${date.getFullYear()}`;
+                this.title = `${this.current_show.name} vom ${day}.${month}.${date.getFullYear()}`;
             },
             // Called when the selected show changed.
             show_changed() {
                 for (let i = 0; i < this.available_shows.length; i++) {
                     if (this.available_shows[i].show_id == parseInt(this.show)) {
                         this.current_show = this.available_shows[i];
-                        return
+                        break;
                     }
                 }
+                this.auto_set_title();
             },
             // Calculates the max value for the broadcast datetime field. 24h ago.
             get_min_datetime() {

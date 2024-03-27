@@ -222,12 +222,13 @@ class UploadStates(RootModel[list[UploadState]]):
             return (-1, value)
         self.root = sorted(self.root, key=sort_by_order)
 
-    def to_multiple_select_field(self) -> MultipleSelectField:
+    def to_multiple_select_field(self) -> MultipleSelectField[UploadState]:
         """Converts the state collection to a MultipleSelectField."""
         rsl: list[SelectEntry] = []
         for entry in self.root:
-            rsl.append(SelectEntry(id=None, value=entry, color=None))
-        return MultipleSelectField(rsl)
+            rsl.append(SelectEntry[UploadState](
+                id=None, value=entry, color=None))
+        return MultipleSelectField[UploadState](rsl)
 
 
 class BaserowUpload(Table):
