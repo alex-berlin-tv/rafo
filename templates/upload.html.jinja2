@@ -132,7 +132,7 @@
                 <div class="control has-icons-left">
                     <div class="select">
                         <select x-model="show" id="show" name="show" required :disabled="upload_running"
-                            @change="auto_set_title()">
+                            @change="auto_set_title(); show_changed()">
                             <template x-if="available_shows.length > 1">
                                 <option disabled selected value="">Format auswählen</option>
                             </template>
@@ -146,7 +146,23 @@
                 </div>
             </div>
             <div class="field">
-                <label class="label" for="datetime">Geplantes Sendedatum- und Zeit</label>
+                <article x-show="current_show && current_show.medium === 'Podcast'"
+                    class="message is-warning is-size-7">
+                    <div class="message-header">
+                        <p>Hinweis Podcast</p>
+                    </div>
+                    <div class="message-body is-small">
+                        <p>Das von dir gewählte Format »<span x-text="current_show ? current_show.name : ''"></span>«
+                            ist
+                            ein Podcast. Im Gegensatz zu Radiosendungen musst du
+                            dich bei einem Podcast selbst um die korrekte Lizenzierung von Musik kümmern, da Podcasts
+                            langfristig online in der Mediathek verfügbar bleiben.</p>
+                    </div>
+                </article>
+            </div>
+            <div class="field">
+                <label class="label" for="datetime"
+                    x-text="current_show && current_show.medium === 'Podcast' ? 'Veröffentlichungsdatum' : 'Geplantes Sendedatum- und Zeit'"></label>
                 <div class="control has-icons-left">
                     <input class="input" id="datetime" name="datetime" type="datetime-local" x-model="datetime" required
                         :disabled="upload_running" :min="get_min_datetime()" :max="get_max_datetime()"
@@ -269,6 +285,7 @@
             producer_uuid: "",
             base_url: "",
             show: null,
+            current_show: null,
             available_shows: {},
             datetime: {},
             title: null,
@@ -291,7 +308,6 @@
             legacy_url_grace_date: null,
             within_legacy_url_grace: false,
             fetch_data() {
-                console.log("fnord");
                 fetch(`../api/producer_for_upload/{{ requested_uuid }}`)
                     .then(res => {
                         if (!res.ok) {
@@ -326,7 +342,8 @@
             // that the title can be suggested automatically in this case.
             init_show_selection() {
                 if (this.available_shows.length == 1) {
-                    this.show = this.available_shows[0].uuid;
+                    this.current_show = this.available_shows[0];
+                    this.show = this.current_show.show_id;
                 }
             },
             // Tries to set the title based on the selected show and broadcast date. Once the user
@@ -349,6 +366,15 @@
                 const day = String(date.getDate()).padStart(2, '0');
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 this.title = `${show_name} vom ${day}.${month}.${date.getFullYear()}`;
+            },
+            // Called when the selected show changed.
+            show_changed() {
+                for (let i = 0; i < this.available_shows.length; i++) {
+                    if (this.available_shows[i].show_id == parseInt(this.show)) {
+                        this.current_show = this.available_shows[i];
+                        return
+                    }
+                }
             },
             // Calculates the max value for the broadcast datetime field. 24h ago.
             get_min_datetime() {

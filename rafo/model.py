@@ -92,12 +92,14 @@ class BaserowShow(Table):
 class ShowFormData(BaseModel):
     show_id: int
     name: str
+    medium: Optional[ShowMedium]
 
     @classmethod
     def from_db_show(cls, show: BaserowShow):
         return cls(
             show_id=show.row_id,
             name=show.name,
+            medium=show.medium.value,
         )
 
 
