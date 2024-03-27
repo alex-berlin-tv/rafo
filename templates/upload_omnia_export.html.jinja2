@@ -37,6 +37,8 @@
                 </div>
             </article>
         </template>
+        <progress class="progress is-info" :value="current_step" :max="max_step" x-text="`${progress_percentage()}%`"
+            x-show="current_step !== max_step"></progress>
         <div id="scroll_target"></div>
 </div>
 </section>
@@ -55,6 +57,8 @@
                 description: "Upload-Eintrag wird von Baserow geladen...",
                 itmes: null,
             }],
+            current_step: 1,
+            max_step: 8,
             init() {
                 params = parameters();
                 const event_source = new EventSource(`/api/upload/${params.id}/omnia_export?key=${params.key}`);
@@ -80,12 +84,16 @@
                     }
                 }
                 this.notifications.push(data);
+                this.current_step++;
                 document.getElementById("scroll_target").scrollIntoView({
-                    behaviour: "smooth",
-                    block: "start",
-                    inline: "nearest"
+                    behavior: 'smooth',
+                    block: 'start',
+                    inline: 'nearest'
                 });
             },
+            progress_percentage() {
+                return Math.round((this.current_step / this.max_step) * 100);
+            }
         }
     }
     function parameters() {

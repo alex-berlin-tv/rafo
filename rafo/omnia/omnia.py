@@ -497,7 +497,6 @@ class Omnia:
                 params=params,
             ) as response:
                 response_json = await response.json()
-                print(response_json)
                 return Response.model_validate(response_json, strict=False)
 
     def __request_header(
