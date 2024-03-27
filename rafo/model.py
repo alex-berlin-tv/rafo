@@ -1,4 +1,4 @@
-from .baserow import DurationField, FileField, MultipleSelectEntry, MultipleSelectField, NoResultError, RowLink, SingleSelectField, Table, TableLinkField
+from .baserow import DurationField, FileField, MultipleSelectField, NoResultError, RowLink, SelectEntry, Table, TableLinkField
 from .config import settings
 
 from datetime import datetime, timedelta
@@ -209,9 +209,9 @@ class UploadStates(RootModel[list[UploadState]]):
 
     def to_multiple_select_field(self) -> MultipleSelectField:
         """Converts the state collection to a MultipleSelectField."""
-        rsl: list[MultipleSelectEntry] = []
+        rsl: list[SelectEntry] = []
         for entry in self.root:
-            rsl.append(MultipleSelectEntry(id=None, value=entry, color=None))
+            rsl.append(SelectEntry(id=None, value=entry, color=None))
         return MultipleSelectField(rsl)
 
 

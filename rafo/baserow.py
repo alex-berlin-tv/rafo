@@ -12,7 +12,7 @@ import abc
 from dataclasses import asdict
 import datetime
 from io import BufferedReader
-from typing import Any, Callable, ClassVar, Generic, Optional, Self, Type, TypeVar, Union
+from typing import Any, ClassVar, Generic, Optional, Self, Type, TypeVar, Union
 
 from baserow.client import ApiError, BaserowClient
 from baserow.filter import Column, Filter
@@ -83,8 +83,8 @@ class TableLinkField(RootModel[list[RowLink]]):
         return ",".join([str(link.row_id) for link in self.root])
 
 
-class SingleSelectEntry(BaseModel):
-    """A entry in a single select field."""
+class SelectEntry(BaseModel):
+    """A entry in a single or multiple select field."""
     entry_id: Optional[int] = Field(alias="id")
     value: Optional[str]
     color: Optional[str]
@@ -92,7 +92,7 @@ class SingleSelectEntry(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     @model_validator(mode="after")
-    def id_or_value_must_be_set(self: "SingleSelectEntry") -> "SingleSelectEntry":
+    def id_or_value_must_be_set(self: "SelectEntry") -> "SelectEntry":
         if self.entry_id is None and self.value is None:
             raise ValueError(
                 "At least one of the entry_id and value fields must be set"
@@ -118,47 +118,9 @@ class SingleSelectEntry(BaseModel):
         raise ValueError("both fields id and value are unset for this entry")
 
 
-SingleSelectField = Optional[SingleSelectEntry]
-"""Single select field in a table."""
-
-
-class MultipleSelectEntry(BaseModel):
-    """A entry in a multiple select field."""
-    entry_id: Optional[int] = Field(alias="id")
-    value: Optional[str]
-    color: Optional[str]
-
-    model_config = ConfigDict(populate_by_name=True)
-
-    @model_validator(mode="after")
-    def id_or_value_must_be_set(self: "MultipleSelectEntry") -> "MultipleSelectEntry":
-        if self.entry_id is None and self.value is None:
-            raise ValueError(
-                "At least one of the entry_id and value fields must be set"
-            )
-        return self
-
-    @model_serializer
-    def serialize(self) -> Union[int, str]:
-        """
-        Serializes the field into the data structure required by the Baserow
-        API. If an entry has both an id and a value set, the id is used.
-        Otherwise the set field is used.
-
-        From the Baserow API documentation: Accepts an array of mixed integer or
-        text values, each representing the selected option id or value. In the
-        case of a text value, the first matching option is selected. 
-        """
-        if self.entry_id is not None:
-            return self.entry_id
-        if self.value is not None:
-            return self.value
-        raise ValueError("both fields id and value are unset for this entry")
-
-
-class MultipleSelectField(RootModel[list[MultipleSelectEntry]]):
+class MultipleSelectField(RootModel[list[SelectEntry]]):
     """Multiple select field in a table."""
-    root: list[MultipleSelectEntry]
+    root: list[SelectEntry]
 
 
 class FileThumbnail(BaseModel):
