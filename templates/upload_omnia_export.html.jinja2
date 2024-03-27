@@ -34,12 +34,24 @@
                             <li><b><span x-text="key"></span>:</b> <span x-text="value"></span></li>
                         </template>
                     </ul>
+                    <div x-show="notification.copy_values">
+                        <template x-for="(value, key) in notification.copy_values">
+                            <p class="mt-2">
+                                <button class="button is-small is-success"
+                                    @click="navigator.clipboard.writeText(value)">
+                                    <span class="icon is-small">
+                                        <i class="fa-regular fa-clipboard"></i>
+                                    </span>
+                                    <span x-text="`${key} in die Zwischenablage kopieren`"></span>
+                                </button>
+                            </p>
+                        </template>
+                    </div>
                 </div>
             </article>
         </template>
         <progress class="progress is-info" :value="current_step" :max="max_step" x-text="`${progress_percentage()}%`"
             x-show="current_step !== max_step"></progress>
-        <div id="scroll_target"></div>
 </div>
 </section>
 </div>
@@ -56,6 +68,7 @@
                 state: "running",
                 description: "Upload-Eintrag wird von Baserow geladen...",
                 itmes: null,
+                copy_values: null,
             }],
             current_step: 1,
             max_step: 8,
@@ -87,8 +100,6 @@
                 this.current_step++;
                 document.getElementById("scroll_target").scrollIntoView({
                     behavior: 'smooth',
-                    block: 'start',
-                    inline: 'nearest'
                 });
             },
             progress_percentage() {

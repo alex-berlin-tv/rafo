@@ -259,6 +259,7 @@ class OmniaValidationNotification(Notification):
             "Eintrag auf Omnia wurde validiert",
             f"Es konnten keine Probleme mit dem neue Eintrag in Omnia (ID {omnia_id}) festgestellt werden. Der Export ist hiermit erfolgreich beendet. 🎉",
             None,
+            copy_values={"Omnia ID": str(omnia_id)},
         )
 
     @classmethod
