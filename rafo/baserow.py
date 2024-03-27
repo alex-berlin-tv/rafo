@@ -4,7 +4,10 @@ This module contains a thin wrapper around the Baserow Client library.
 
 
 import asyncio
+import enum
 import functools
+
+from typed_settings.types import OptionName
 from .config import settings
 from .log import logger
 
@@ -12,11 +15,11 @@ import abc
 from dataclasses import asdict
 import datetime
 from io import BufferedReader
-from typing import Any, ClassVar, Generic, Optional, Self, Type, TypeVar, Union
+from typing import Any, ClassVar, Generic, Optional, Self, Type, TypeVar, Union, get_args
 
 from baserow.client import ApiError, BaserowClient
 from baserow.filter import Column, Filter
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, root_validator
 from pydantic.root_model import RootModel
 from pydantic.functional_serializers import model_serializer
 from pydantic.functional_validators import model_validator
@@ -83,10 +86,17 @@ class TableLinkField(RootModel[list[RowLink]]):
         return ",".join([str(link.row_id) for link in self.root])
 
 
-class SelectEntry(BaseModel):
+SelectEnum = TypeVar("SelectEnum", bound=enum.Enum)
+"""
+Instances of a SelectEntry have to be bound to a enum which contain the possible
+values of the select entry.
+"""
+
+
+class SelectEntry(BaseModel, Generic[SelectEnum]):
     """A entry in a single or multiple select field."""
     entry_id: Optional[int] = Field(alias="id")
-    value: Optional[str]
+    value: Optional[SelectEnum]
     color: Optional[str]
 
     model_config = ConfigDict(populate_by_name=True)
@@ -114,13 +124,17 @@ class SelectEntry(BaseModel):
         if self.entry_id is not None:
             return self.entry_id
         if self.value is not None:
-            return self.value
+            return self.value.value
         raise ValueError("both fields id and value are unset for this entry")
 
 
-class MultipleSelectField(RootModel[list[SelectEntry]]):
+class SingleSelectField(SelectEntry[SelectEnum]):
+    pass
+
+
+class MultipleSelectField(RootModel[list[SelectEntry]], Generic[SelectEnum]):
     """Multiple select field in a table."""
-    root: list[SelectEntry]
+    root: list[SelectEntry[SelectEnum]]
 
 
 class FileThumbnail(BaseModel):

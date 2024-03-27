@@ -1,4 +1,5 @@
-from .baserow import DurationField, FileField, MultipleSelectField, NoResultError, RowLink, SelectEntry, Table, TableLinkField
+import enum
+from .baserow import DurationField, FileField, MultipleSelectField, NoResultError, RowLink, SelectEntry, SingleSelectField, Table, TableLinkField
 from .config import settings
 
 from datetime import datetime, timedelta
@@ -11,6 +12,11 @@ from pydantic.config import ConfigDict
 from pydantic.fields import PrivateAttr, computed_field
 
 
+class UploadFormState(str, enum.Enum):
+    ACTIVE = "Aktiviert"
+    INACTIVE = "Deaktiviert"
+
+
 class BaserowPerson(Table):
     """A person (formerly called Producer) in Baserow."""
     row_id: int = Field(alias=str("id"))
@@ -18,7 +24,7 @@ class BaserowPerson(Table):
     email: str = Field(alias=str("E-Mail"))
     shows: TableLinkField = Field(alias=str("Format"))
     uuid: str = Field(alias=str("UUID"))
-    upload_form_state: SingleSelectField = Field(
+    upload_form_state: SingleSelectField[UploadFormState] = Field(
         alias=str("Status Upload Form")
     )
     legacy_uuid: Optional[str] = Field(alias=str("Legacy UUID"), default=None)
@@ -43,6 +49,13 @@ class BaserowPerson(Table):
         return urljoin(settings.base_url, f"upload/{self.uuid}")
 
 
+class ShowMedium(str, enum.Enum):
+    """The different medium's a show can have."""
+    TV = "TV"
+    Radio = "Radio"
+    Podcast = "Podcast"
+
+
 class BaserowShow(Table):
     """
     A show (»Format«) has one or more producers and contains multiple episodes.
@@ -50,7 +63,7 @@ class BaserowShow(Table):
     row_id: int = Field(alias=str("id"))
     name: str = Field(alias=str("Name"))
     responsible: TableLinkField = Field(alias=str("Verantwortlich"))
-    medium: SingleSelectField = Field(alias=str("Medium"))
+    medium: SingleSelectField[ShowMedium] = Field(alias=str("Medium"))
     description: str = Field(alias=str("Beschreibung"))
     supervisors: TableLinkField = Field(alias=str("Betreuung"))
     cover: Optional[FileField] = Field(
@@ -247,7 +260,7 @@ class BaserowUpload(Table):
     duration: Optional[DurationField] = Field(
         alias=str("Dauer"), default=None
     )
-    state: MultipleSelectField = Field(
+    state: MultipleSelectField[UploadState] = Field(
         alias=str("Status"),
         default=UploadStates.all_pending_with_legacy_url_state(
             False).to_multiple_select_field(),
