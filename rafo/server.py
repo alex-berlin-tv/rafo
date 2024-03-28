@@ -7,17 +7,15 @@ from .mail import Mail
 from .model import BaserowPerson, BaserowShow, BaserowUpload, ProducerUploadData, UploadStates
 from .omnia.upload_export import OmniaUploadExport
 
-import asyncio
 import datetime
 from uuid import uuid4
 from pathlib import Path
 import tempfile
+from zoneinfo import ZoneInfo
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from nocodb.exceptions import NocoDBAPIError
-from pydantic.main import BaseModel
 from starlette.requests import ClientDisconnect
 from starlette.responses import StreamingResponse
 from streaming_form_data import StreamingFormDataParser
@@ -191,6 +189,10 @@ async def upload_file(
     try:
         planned_broadcast_at = datetime.datetime.fromisoformat(
             planned_broadcast_target.value.decode(),
+        )
+        # Interpret the given datetime in the configured timezone.
+        planned_broadcast_at = planned_broadcast_at.replace(
+            tzinfo=ZoneInfo(settings.time_zone),
         )
     except Exception as e:
         raise HTTPException(

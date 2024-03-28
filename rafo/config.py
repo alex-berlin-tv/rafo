@@ -46,6 +46,11 @@ class Settings:
     """Message to shown to the user if maintenance mode is enabled."""
     legacy_url_grace_date: Optional[datetime]
     """Defines a date until when users can use the legacy URL."""
+    time_zone: str
+    """
+    Timezone information in which the input from the upload from should be
+    handled in.
+    """
 
     baserow_api_key: str
     smtp_sender_address: str

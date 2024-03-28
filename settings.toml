@@ -21,3 +21,4 @@ shows_for_all_upload_exports = [4071]
 maintenance_mode = false
 maintenance_message = "Die Software wird aktualisiert und sollte um 15:00 wieder verfügbar sein."
 legacy_url_grace_date = "2024-03-01"
+time_zone = "CET"
