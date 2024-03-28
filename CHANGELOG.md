@@ -107,3 +107,8 @@ Detailed Changes:
     - If a user selects a show configured as a Podcast in Baserow (Medium) during Upload, a warning is displayed that the user must handle music rights clearance themselves.
     - If a user selects a Podcast show for Upload, the date field is labeled as "Publication Date."
     - When an Upload, whose linked show is marked as a Podcast, is exported to Omnia, no Depublication Date is set.
+
+
+## v1.4.1 – Timezone bug fixed
+
+Previously, the release date specified in the upload form was transmitted to Baserow in UTC time. As a result, the time entries in the Baserow table were incorrect. The time zone transmitted to Baserow can now be edited in the configuration settings (`time_zone`).
