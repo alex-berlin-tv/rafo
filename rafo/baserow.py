@@ -7,7 +7,6 @@ import asyncio
 import enum
 import functools
 
-from typed_settings.types import OptionName
 from .config import settings
 from .log import logger
 
@@ -15,11 +14,11 @@ import abc
 from dataclasses import asdict
 import datetime
 from io import BufferedReader
-from typing import Any, ClassVar, Generic, Optional, Self, Type, TypeVar, Union, get_args
+from typing import Any, ClassVar, Generic, Optional, Self, Type, TypeVar, Union
 
 from baserow.client import ApiError, BaserowClient
 from baserow.filter import Column, Filter
-from pydantic import BaseModel, ConfigDict, Field, root_validator
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.root_model import RootModel
 from pydantic.functional_serializers import model_serializer
 from pydantic.functional_validators import model_validator

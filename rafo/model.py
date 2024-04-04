@@ -1,4 +1,5 @@
 import enum
+from zoneinfo import ZoneInfo
 from .baserow import DurationField, FileField, MultipleSelectField, NoResultError, RowLink, SelectEntry, SingleSelectField, Table, TableLinkField
 from .config import settings
 
@@ -328,7 +329,10 @@ class BaserowUpload(Table):
 
     def file_name_prefix(self) -> str:
         """Canonical filename for a given Episode."""
-        date = self.planned_broadcast_at.strftime("%y%m%d-%H%M")
+        with_time_zone = self.planned_broadcast_at.astimezone(
+            ZoneInfo(settings.time_zone)
+        )
+        date = with_time_zone.strftime("%y%m%d-%H%M")
         return f"{date}_{self.row_id}"
         # show = normalize_for_filename(self.get_show().name)
         # return f"e-{self.noco_id:05d}_{date}_{show}"
