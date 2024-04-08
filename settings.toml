@@ -5,6 +5,9 @@ baserow_url = "https://data.alex-berlin.de/"
 base_url = "https://upload.alex-berlin.de"
 # The port on which rafo is running.
 port = 8000
+# Timezone information in which the input from the upload from should be handled
+# in.
+time_zone = "CET"
 
 # Unique ID of the person table in Baserow.
 person_table = 988
@@ -55,7 +58,5 @@ log_level = "debug"
 maintenance_mode = false
 # Message to shown to the user if maintenance mode is enabled.
 maintenance_message = "Die Software wird aktualisiert und sollte um 15:00 wieder verfügbar sein."
-# Date (in ISO format) until when 
-legacy_url_grace_date = "2024-03-01"
 # Date (in ISO format) until which the legacy URLs will be accepted.
-time_zone = "CET"
+legacy_url_grace_date = "2024-03-01"

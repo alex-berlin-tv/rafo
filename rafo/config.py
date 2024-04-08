@@ -86,6 +86,7 @@ class Settings:
     """Date (in ISO format) until which the legacy URLs will be accepted."""
 
     baserow_api_key: str
+    """CRUD API token for Baserow."""
     smtp_sender_address: str
     smtp_host: str
     smtp_user: str
