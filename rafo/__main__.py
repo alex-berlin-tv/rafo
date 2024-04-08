@@ -1,13 +1,10 @@
 from .config import settings
 
-import typer
+import argparse
+
 import uvicorn
 
 
-app = typer.Typer()
-
-
-@app.command()
 def run():
     """Starts the web-server."""
     uvicorn.run(
@@ -19,9 +16,19 @@ def run():
     )
 
 
-@app.command()
-def test():
-    raise NotImplementedError()
+def app():
+    parser = argparse.ArgumentParser(
+        description="The (radio) upload form for ALEX Berlin",
+    )
+    sub_parsers = parser.add_subparsers(
+        dest="command", help="Available commands")
+    run_parser = sub_parsers.add_parser("run", help="Starts the web-server.")
+    run_parser.set_defaults(func=run)
+    args = parser.parse_args()
+    if args.command:
+        args.func()
+    else:
+        parser.print_help()
 
 
 if __name__ == "__main__":
