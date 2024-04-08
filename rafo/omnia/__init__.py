@@ -3,13 +3,10 @@ Handles the interactions with Omnia.
 """
 
 import enum
-
-from pydantic.fields import computed_field
-from .omnia import *
-
 import abc
 from typing import ClassVar, Optional, Type, TypeVar
 
+from pydantic.fields import computed_field
 from pydantic.main import BaseModel
 
 

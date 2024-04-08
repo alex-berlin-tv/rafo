@@ -1,13 +1,13 @@
-from .config import settings
-from .log import logger
-from .model import BaserowPerson, BaserowShow, BaserowUpload
-
 from pathlib import Path
 import re
 import subprocess
 from typing import Optional
 
 import ffmpeg
+
+from rafo.config import settings
+from rafo.log import logger
+from rafo.model import BaserowPerson, BaserowShow, BaserowUpload
 
 
 class Waveform:

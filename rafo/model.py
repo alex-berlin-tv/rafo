@@ -1,16 +1,16 @@
-import enum
-from zoneinfo import ZoneInfo
-from .baserow import DurationField, FileField, MultipleSelectField, NoResultError, RowLink, SelectEntry, SingleSelectField, Table, TableLinkField
-from .config import settings
-
 from datetime import datetime, timedelta, timezone
-from enum import Enum
+import enum
 from typing import ClassVar, Optional
 from urllib.parse import urljoin
+from zoneinfo import ZoneInfo
 
+from fastapi.openapi.models import MediaType
 from pydantic import BaseModel, Field, RootModel
 from pydantic.config import ConfigDict
 from pydantic.fields import PrivateAttr, computed_field
+
+from rafo.baserow import DurationField, FileField, MultipleSelectField, NoResultError, RowLink, SelectEntry, SingleSelectField, Table, TableLinkField
+from rafo.config import settings
 
 
 class UploadFormState(str, enum.Enum):
@@ -56,6 +56,15 @@ class ShowMedium(str, enum.Enum):
     RADIO = "Radio"
     PODCAST = "Podcast"
 
+    def colloquial_inline_name(self) -> str:
+        if self == self.TV:
+            return "Fernsehsendung"
+        elif self == self.RADIO:
+            return "Rediosendung"
+        elif self == self.PODCAST:
+            return "Podcastepisode"
+        return "Sendung"
+
 
 class BaserowShow(Table):
     """
@@ -88,6 +97,16 @@ class BaserowShow(Table):
         if self.medium is None:
             return False
         return "Radio" == self.medium.value
+
+    def colloquial_inline_medium_name(self) -> str:
+        """
+        Colloquial designation of the media type for the body text in the mails.
+        """
+        if self.medium.value is None or not isinstance(self.medium.value, MediaType):
+            print("! ! ! ! ! ! !")
+            print(type(self.medium.value))
+            return "Sendung"
+        return self.medium.value.colloquial_inline_name()
 
 
 class ShowFormData(BaseModel):
@@ -143,7 +162,7 @@ class ProducerUploadData(BaseModel):
         )
 
 
-class UploadState(str, Enum):
+class UploadState(str, enum.Enum):
     """Indication of multiple long-running processes for upload entries."""
     WAVEFORM_PENDING = "Waveform: Ausstehend"
     WAVEFORM_RUNNING = "Waveform: Läuft"

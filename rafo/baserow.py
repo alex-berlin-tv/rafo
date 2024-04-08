@@ -3,16 +3,12 @@ This module contains a thin wrapper around the Baserow Client library.
 """
 
 
+import abc
 import asyncio
+from dataclasses import asdict
+from datetime import datetime
 import enum
 import functools
-
-from .config import settings
-from .log import logger
-
-import abc
-from dataclasses import asdict
-import datetime
 from io import BufferedReader
 from typing import Any, ClassVar, Generic, Optional, Self, Type, TypeVar, Union
 
@@ -22,6 +18,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic.root_model import RootModel
 from pydantic.functional_serializers import model_serializer
 from pydantic.functional_validators import model_validator
+
+from rafo.config import settings
+from rafo.log import logger
 
 
 T = TypeVar("T", bound="Table")
@@ -153,7 +152,7 @@ class File(BaseModel):
     is_image: Optional[bool] = None
     image_width: Optional[int] = None
     image_height: Optional[int] = None
-    uploaded_at: Optional[datetime.datetime] = None
+    uploaded_at: Optional[datetime] = None
     original_name: Optional[str] = None
 
     @classmethod

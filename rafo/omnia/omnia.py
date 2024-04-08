@@ -1,19 +1,16 @@
 import asyncio
 
-from attr import dataclass
-from baserow.filter import Date
-from typed_settings.types import OptionName
-from ..config import settings
-from ..log import logger
-
 from datetime import datetime
 from enum import Enum
 import hashlib
 from typing import Any, Optional, Union
 
 import aiohttp
+from baserow.filter import Date
 from pydantic import BaseModel, Field
-import requests
+
+from rafo.config import settings
+from rafo.log import logger
 
 
 BASE_URL: str = "https://api.nexx.cloud/v3.1/"

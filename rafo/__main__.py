@@ -1,8 +1,8 @@
-from .config import settings
-
 import argparse
 
 import uvicorn
+
+from rafo.config import settings
 
 
 def run():

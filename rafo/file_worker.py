@@ -1,12 +1,12 @@
-from rafo.baserow import File, FileField
-from .ffmpeg import Metadata, Optimize, Silence, Waveform
-from .log import logger
-from .model import BaserowPerson, BaserowShow, UploadState, UploadStates, BaserowUpload
-
 from pathlib import Path
 import shutil
 import threading
 from typing import Optional
+
+from rafo.baserow import File, FileField
+from rafo.ffmpeg import Metadata, Optimize, Silence, Waveform
+from rafo.log import logger
+from rafo.model import UploadState, UploadStates, BaserowUpload
 
 
 class FileWorker:

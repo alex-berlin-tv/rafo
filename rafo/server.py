@@ -1,16 +1,7 @@
-from . import VERSION
-from .baserow import TableLinkField
-from .config import settings
-from .file_worker import FileWorker
-from .log import logger
-from .mail import Mail
-from .model import BaserowPerson, BaserowShow, BaserowUpload, ProducerUploadData, UploadStates
-from .omnia.upload_export import OmniaUploadExport
-
 import datetime
-from uuid import uuid4
 from pathlib import Path
 import tempfile
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
@@ -22,10 +13,18 @@ from streaming_form_data import StreamingFormDataParser
 from streaming_form_data.targets import FileTarget, ValueTarget
 from streaming_form_data.validators import MaxSizeValidator, ValidationError
 
+from rafo import VERSION
+from rafo.baserow import TableLinkField
+from rafo.config import settings
+from rafo.file_worker import FileWorker
+from rafo.log import logger
+from rafo.mail import Mail
+from rafo.model import BaserowPerson, BaserowShow, BaserowUpload, ProducerUploadData, UploadStates
+from rafo.omnia.upload_export import OmniaUploadExport
+
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
-
 templates = Jinja2Templates(directory="templates")
 
 
