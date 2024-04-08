@@ -4,12 +4,11 @@ from typing import ClassVar, Optional
 from urllib.parse import urljoin
 from zoneinfo import ZoneInfo
 
-from fastapi.openapi.models import MediaType
 from pydantic import BaseModel, Field, RootModel
 from pydantic.config import ConfigDict
 from pydantic.fields import PrivateAttr, computed_field
 
-from rafo.baserow import DurationField, FileField, MultipleSelectField, NoResultError, RowLink, SelectEntry, SingleSelectField, Table, TableLinkField
+from rafo.baserow_orm import DurationField, FileField, MultipleSelectField, NoResultError, RowLink, SelectEntry, SingleSelectField, Table, TableLinkField
 from rafo.config import settings
 
 
@@ -60,7 +59,7 @@ class ShowMedium(str, enum.Enum):
         if self == self.TV:
             return "Fernsehsendung"
         elif self == self.RADIO:
-            return "Rediosendung"
+            return "Radiosendung"
         elif self == self.PODCAST:
             return "Podcastepisode"
         return "Sendung"
@@ -102,8 +101,7 @@ class BaserowShow(Table):
         """
         Colloquial designation of the media type for the body text in the mails.
         """
-        if self.medium.value is None or not isinstance(self.medium.value, MediaType):
-            print("! ! ! ! ! ! !")
+        if self.medium.value is None or not isinstance(self.medium.value, ShowMedium):
             print(type(self.medium.value))
             return "Sendung"
         return self.medium.value.colloquial_inline_name()

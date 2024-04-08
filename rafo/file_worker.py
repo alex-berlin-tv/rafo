@@ -3,8 +3,8 @@ import shutil
 import threading
 from typing import Optional
 
-from rafo.baserow import File, FileField
-from rafo.ffmpeg import Metadata, Optimize, Silence, Waveform
+from rafo.baserow_orm import File, FileField
+from rafo.ffmpeg_worker import Metadata, Optimize, Silence, Waveform
 from rafo.log import logger
 from rafo.model import UploadState, UploadStates, BaserowUpload
 

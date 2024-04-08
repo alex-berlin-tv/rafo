@@ -14,7 +14,7 @@ from streaming_form_data.targets import FileTarget, ValueTarget
 from streaming_form_data.validators import MaxSizeValidator, ValidationError
 
 from rafo import VERSION
-from rafo.baserow import TableLinkField
+from rafo.baserow_orm import TableLinkField
 from rafo.config import settings
 from rafo.file_worker import FileWorker
 from rafo.log import logger
