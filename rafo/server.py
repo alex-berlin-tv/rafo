@@ -102,7 +102,14 @@ async def api_upload_omnia_export(
             detail="operation forbidden"
         )
     export = OmniaUploadExport(id)
-    return StreamingResponse(export.run(), media_type="text/event-stream")
+    return StreamingResponse(
+        export.run(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 class MaxBodySizeException(Exception):
