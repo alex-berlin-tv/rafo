@@ -1,24 +1,61 @@
 [rafo]
+# URL of the Baserow instance serving as the data backend.
 baserow_url = "https://data.alex-berlin.de/"
+# Public URL of the rafo instance. Used to enable correct linking to the site.
 base_url = "https://upload.alex-berlin.de"
+# The port on which rafo is running.
 port = 8000
-project_name = "Radioupload"
+
+# Unique ID of the person table in Baserow.
 person_table = 988
+# Unique ID of the show table in Baserow.
 show_table = 1174
+# Unique ID of the upload table in Baserow.
 upload_table = 1175
+
+# The maximum allowed file size for media uploads. In GB.
 max_file_size = 2
+# The sender's email address for confirmation emails.
 on_upload_mail = "sendeabwicklung@alex-berlin.de"
+# Sender's name for the confirmation emails.
 on_upload_sender_name = "Sendeabwicklung ALEX Berlin"
+# The contact email address is shared with producers in the email and on the
+# website, serving as a point of contact for any inquiries.
 contact_mail = "sendeabwicklung@alex-berlin.de"
-dev_mode = true
-log_level = "debug"
+
+# Noise levels below this threshold are considered silence. Can be specified in
+# dB (in case "dB" is appended to the specified value) or amplitude ratio.
 noise_tolerance = "-60dB"
+# Minimal duration of a silence in seconds to be reported.
 silence_duration = 1
+# Bit rate for optimized audio. Use the suffix "k" for kilobits per second
+# (kBit/s) and "m" for megabits per second (mBit/s), adhering to the syntax for
+# specifying bit rate in ffmpeg. For example, "128k" indicates a bit rate of 128
+# kBit/s.
 bit_rate = "320k"
+# Sample rate for optimized audio.
 sample_rate = 44100
+# When automatically trimming silence, a specified duration of silence in
+# seconds will be preserved. This approach prevents cuts from being too abrupt
+# or rapid.
 audio_crop_allowance = 0.5
+
+# A list of Omnia Show id's which each upload export to Omnia should be linked to.
 shows_for_all_upload_exports = [4071]
+# When development mode is enabled, the form displays a button that allows for
+# quick filling with test data. Additionally, the test mode is noted in the
+# email, marking them clearly as test entries for all recipients.
+dev_mode = true
+# Set the log level as specified by Python's built-in logging package.
+log_level = "debug"
+# Specifies whether maintenance mode should be activated. If enabled, uploading
+# new files is not possible, and a notification is displayed (the content of
+# which can be configured). This mode is advisable during backend (Baserow)
+# updates.
 maintenance_mode = false
+# Message to shown to the user if maintenance mode is enabled.
 maintenance_message = "Die Software wird aktualisiert und sollte um 15:00 wieder verfügbar sein."
+# Date (in ISO format) until when 
 legacy_url_grace_date = "2024-03-01"
+# Date (in ISO format) until which the legacy URLs will be accepted.
 time_zone = "CET"
