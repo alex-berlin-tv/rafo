@@ -16,6 +16,17 @@ from ..model import BaserowUpload, UploadState, UploadStates
 DATE_FORMAT = "%d.%m.%Y %H:%M"
 
 
+class OmniaIDNotEmptyError(Exception):
+    """
+    Thrown when a Baserow entry to be exported to Omnia already contains a ID.
+    """
+
+    def __init__(self, baserow_id: int, baserow_name: str, omnia_id: Optional[int]):
+        self.baserow_id = baserow_id
+        self.baserow_name = baserow_name
+        self.omnia_id = omnia_id
+
+
 class OmniaShow(BaseModel):
     """Information related to a show which is needed."""
     item_id: int
@@ -79,6 +90,18 @@ class InitNotification(Notification):
                 "Baserow ID": str(upload.row_id),
                 "Name": upload.name,
                 "Geplante Ausstrahlung": upload.planned_broadcast_at.strftime(DATE_FORMAT),
+            },
+        )
+
+    @classmethod
+    def omnia_id_not_empty(cls, e: OmniaIDNotEmptyError):
+        return cls._error(
+            "Der Eintrag scheint bereits nach Omnia exportiert worden zu sein.",
+            "Das Feld 'Omnia ID' des zu exportierenden Uploads ist bereits gesetzt. Dies ist ein Hinweis darauf, dass für diesen Upload bereits ein Export nach Omnia durchgeführt wurde. Soll der Export erneut gestartet werden, muss das Feld 'Omnia ID' in Baserow manuell gelöscht werden.",
+            {
+                "Baserow ID": str(e.baserow_id),
+                "Name": e.baserow_name,
+                "Omnia ID": str(e.omnia_id),
             },
         )
 
@@ -284,6 +307,7 @@ class OmniaUploadExport:
 
     async def run(self):
         ntf_class = InitNotification
+        init_ntf_class = ntf_class
         try:
             upload = await self.__fetch_baserow_upload()
             yield ntf_class.done(upload).to_message()
@@ -330,15 +354,19 @@ class OmniaUploadExport:
                 yield ntf_class.warning(omnia_item_id, validation_rsl).to_message()
             else:
                 yield ntf_class.done(omnia_item_id).to_message()
-
+        except OmniaIDNotEmptyError as e:
+            yield init_ntf_class.omnia_id_not_empty(e).to_message()
         except Exception as e:
             yield ntf_class.error(e).to_message()
 
         yield self.__close_connection()
 
     async def __fetch_baserow_upload(self) -> BaserowUpload:
-        rsl = await BaserowUpload.by_id(self.row_id)
-        return rsl.one()
+        rsp = await BaserowUpload.by_id(self.row_id)
+        rsl = rsp.one()
+        if rsl.omnia_id is not None or (rsl.omnia_id is not None and rsl.omnia_id < 1):
+            raise OmniaIDNotEmptyError(self.row_id, rsl.name, rsl.omnia_id)
+        return rsl
 
     async def __fetch_omnia_show(self, upload: BaserowUpload) -> OmniaShow:
         show = await upload.cached_show
