@@ -112,3 +112,19 @@ Detailed Changes:
 ## v1.4.1 – Timezone bug fixed
 
 Previously, the release date specified in the upload form was transmitted to Baserow in UTC time. As a result, the time entries in the Baserow table were incorrect. The time zone transmitted to Baserow can now be edited in the configuration settings (`time_zone`).
+
+
+## v1.4.2 – Updates on Omnia Export Behavior, Dark Mode, Refactoring, and Bug Fixes
+
+This version introduces a series of minor bug fixes, changes, and refactoring efforts. Here are the details:
+
+- Omnia Export: Entries that already have an Omnia ID set in Baserow can no longer be exported to Omnia. This prevents unintentional multiple exports of uploads. To re-export an upload to Omnia, simply delete the Omnia ID of the upload in Baserow.
+- Added headers to the Server Sent Events for Export Notifications: The SSE response now includes headers to prevent them from being cached in nginx.
+- Date and times in filenames are now correctly set in the timezone defined in the config.
+- Replaced Typer with argparse: The CLI framework Typer has been replaced with the built-in argparse module, as the complexity of Typer was not justified for this application.
+- Removed the legacy module noco_upload from the codebase.
+- Cleaned up import statements in all files and replaced all relative paths with absolute import paths.
+- Confirmation emails reflect the medium of the show (Radio, Podcasts, TV). This improves differentiation between different types and simplifies working with uploads. The medium type is explicitly listed as a property in internal emails.
+- Internal confirmation email after upload: Internal confirmation emails now include comments from the uploader to ALEX.
+- Our frontend framework Bulma has been updated to version 1. This enables the frontend to display in Dark Mode when the user's system is set to Dark Mode.
+- Refactoring and Documentation of Configuration: Both the Python module and config files have been cleaned up and now include comments.

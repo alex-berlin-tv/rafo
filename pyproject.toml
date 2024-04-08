@@ -4,7 +4,7 @@ authors = [
     {name = "Irvin Hostettler, ALEX Berlin", email = "hostettler@alex-berlin.de"}
 ]
 description = "Collect files and metadata for a radio show uses Baserow as backend"
-version = "1.4.1"
+version = "1.4.2"
 dependencies = [
     "aiohttp",
     "baserow-client@git+https://github.com/alex-berlin-tv/python-baserow-client.git#egg=develop",
