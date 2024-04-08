@@ -15,7 +15,8 @@ legacy_url_grace_date }} wird es nicht mehr möglich sein, über den alten Link 
 
 Hallo {{ uploader.name }},
 
-wir haben den Upload deiner Sendung erhalten. Vielen Dank! Hier nochmals eine Zusammenfassung:
+wir haben den Upload deiner {{ show.colloquial_inline_medium_name() }} erhalten. Vielen Dank! Hier nochmals eine
+Zusammenfassung:
 
 ID: u-{{ "%05d" % upload.row_id }}
 FORMAT: {{ show.name }}
@@ -23,7 +24,7 @@ PRODUZENT:IN: {{ uploader.name }}
 SENDEDATUM: {{ upload.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}
 TITEL: {{ upload.name }}
 ÖFFENTLICHE BESCHREIBUNG: {{ upload.description }}
-{%- if upload.comment_uploader %}KOMMENTAR AN ALEX: {{ upload.comment_uploader }}{% endif %}
+{%- if upload.comment_producer %}KOMMENTAR AN ALEX: {{ upload.comment_producer }}{% endif %}
 
 Bitte melde dich bei Fragen bei {{ contact_mail }}.
 

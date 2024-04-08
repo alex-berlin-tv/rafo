@@ -22,7 +22,8 @@
 
     <p>Hallo {{ uploader.name }},</p>
 
-    <p>wir haben den Upload deiner Sendung erhalten. Vielen Dank! Hier nochmals eine Zusammenfassung:</p>
+    <p>wir haben den Upload deiner {{ show.colloquial_inline_medium_name() }} erhalten. Vielen Dank! Hier nochmals eine
+        Zusammenfassung:</p>
 
     <ul>
         <li><b>ID:</b> u-{{ "%05d" % upload.row_id }}</li>
@@ -31,7 +32,7 @@
         <li><b>Sendedatum:</b> {{ upload.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}</li>
         <li><b>Titel:</b> {{ upload.name }}</li>
         <li><b>Öffentliche Beschreibung:</b> {{ upload.description }}</li>
-        {%- if upload.comment_uploader %}<li><b>Kommentar an ALEX:</b> {{ upload.comment_uploader }}</li>{% endif %}
+        {%- if upload.comment_producer %}<li><b>Kommentar an ALEX:</b> {{ upload.comment_producer }}</li>{% endif %}
     </ul>
 
     <p>Bitte melde dich bei Fragen bei <a href="mailto:{{ contact_mail }}">{{ contact_mail }}</a>.</p>

@@ -8,7 +8,7 @@
     <p>Hallo {{ recipient }},</p>
 
     <p>es wurde am {{ upload.created_at.strftime("%d.%m.%Y") }} um {{ upload.created_at.strftime("%H:%M") }} von {{
-        uploader.name }} eine neue Sendung auf {{ site_url }} hochgeladen:</p>
+        uploader.name }} eine neue {{ show.colloquial_inline_medium_name() }} auf {{ site_url }} hochgeladen:</p>
 
     <ul>
         <li><b>ID:</b> e-{{ "%05d" % upload.row_id }}</ /i>
@@ -17,7 +17,8 @@
         <li><b>Sendedatum:</b> {{ upload.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}</li>
         <li><b>Titel:</b> {{ upload.name }}</li>
         <li><b>Öffentliche Beschreibung:</b> {{ upload.description }}</li>
-        {%- if upload.comment_uploader %}<li><b>Kommentar an ALEX:</b> {{ upload.comment_uploader }}</li>{% endif %}
+        <li><b>Medium:</b> {{ show.medium.value.value }}</li>
+        {%- if upload.comment_producer %}<li><b>Kommentar an ALEX:</b> {{ upload.comment_producer }}</li>{% endif %}
         {%- if legacy_url_used %}<li><b>URL:</b> Legacy URL wurde benutzt.</li>{% endif %}
     </ul>
     {% if is_supervisor_message %}

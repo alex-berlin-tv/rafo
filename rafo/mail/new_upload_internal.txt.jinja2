@@ -3,7 +3,7 @@
 Hallo {{ recipient }},
 
 es wurde am {{ upload.created_at.strftime("%d.%m.%Y") }} um {{ upload.created_at.strftime("%H:%M") }} von {{
-uploader.name }} eine neue Sendung auf {{ site_url }} hochgeladen:
+uploader.name }} eine neue {{ show.colloquial_inline_medium_name() }} auf {{ site_url }} hochgeladen:
 
 ID: u-{{ "%05d" % upload.row_id }}
 FORMAT: {{ show.name }} (s-{{ "%03d" % show.row_id }})
@@ -11,7 +11,8 @@ PRODUZENT:IN: {{ uploader.name }} (p-{{ "%03d" % uploader.row_id }})
 SENDEDATUM: {{ upload.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}
 TITEL: {{ upload.name }}
 ÖFFENTLICHE BESCHREIBUNG: {{ upload.description }}
-{%- if upload.comment_uploader %}KOMMENTAR AN ALEX: {{ upload.comment_uploader }}{% endif %}
+MEDIUM: {{ show.medium.value.value }}
+{%- if upload.comment_producer %}KOMMENTAR AN ALEX: {{ upload.comment_producer }}{% endif %}
 {%- if legacy_url_used %}URL: Legacy URL wurde benutzt.{% endif %}
 
 {% if is_supervisor_message %}
