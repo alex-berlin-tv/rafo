@@ -128,3 +128,8 @@ This version introduces a series of minor bug fixes, changes, and refactoring ef
 - Internal confirmation email after upload: Internal confirmation emails now include comments from the uploader to ALEX.
 - Our frontend framework Bulma has been updated to version 1. This enables the frontend to display in Dark Mode when the user's system is set to Dark Mode.
 - Refactoring and Documentation of Configuration: Both the Python module and config files have been cleaned up and now include comments.
+
+
+## v1.4.3 – Fix time zone bug in mail notifications
+
+Time zones of the broadcast time are now correctly taken into account in mails 
