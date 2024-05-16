@@ -133,3 +133,8 @@ This version introduces a series of minor bug fixes, changes, and refactoring ef
 ## v1.4.3 – Fix time zone bug in mail notifications
 
 Time zones of the broadcast time are now correctly taken into account in mails 
+
+
+## v1.4.3a – Fix invalid newlines by autopep8
+
+autopep broke the `baserow_orm.py` file by adding invalid newline within the format string.
