@@ -231,11 +231,13 @@ class Result(Generic[T]):
         """
         if len(self.__value) == 0:
             raise NoResultError(
-                f"empty result when {self.__query_description}, exactly one result expected"
+                f"empty result when {
+                    self.__query_description}, exactly one result expected"
             )
         if len(self.__value) > 1:
             raise NoSingleResultFoundError(
-                f"more than one result when {self.__query_description}, exactly one result expected"
+                f"more than one result when {
+                    self.__query_description}, exactly one result expected"
             )
         return self.__value[0]
 
@@ -243,7 +245,8 @@ class Result(Generic[T]):
         """Returns the result(s) as a list if there is at least one record present."""
         if len(self.__value) == 0:
             raise NoResultError(
-                f"expected at least one record when {self.__query_description}, zero results were returned"
+                f"expected at least one record when {
+                    self.__query_description}, zero results were returned"
             )
         return self.__value
 
@@ -314,7 +317,8 @@ class Table(BaseModel, abc.ABC):
             for alias in aliases:
                 if alias not in field_names and alias != "id":
                     raise RuntimeError(
-                        f"Field '{alias}' not found in Baserow {cls.table_name} table {cls.table_id}"
+                        f"Field '{alias}' not found in Baserow {
+                            cls.table_name} table {cls.table_id}"
                     )
         except ApiError as e:
             if e.args[0] == "ERROR_TABLE_DOES_NOT_EXIST":
@@ -359,7 +363,8 @@ class Table(BaseModel, abc.ABC):
             logger.debug(response)
         return Result(
             [cls.model_validate(result) for result in response.results],
-            f"querying  table {cls.table_id} ({cls.table_name}) with filter '{filter}'",
+            f"querying  table {cls.table_id} ({cls.table_name}) with filter '{
+                filter}'",
         )
 
     @classmethod
@@ -407,7 +412,8 @@ class Table(BaseModel, abc.ABC):
             logger.debug(response)
         return Result(
             [cls.model_validate(response)],
-            f"querying the table with the unique ID '{row_id}' for {cls.table_name} ({cls.table_id})",
+            f"querying the table with the unique ID '{
+                row_id}' for {cls.table_name} ({cls.table_id})",
         )
 
     @staticmethod
@@ -432,7 +438,8 @@ class Table(BaseModel, abc.ABC):
                 record. Will throw a `NoResultError' if the query returns an
                 empty result.Cannot be set at the same time as `one`.
         """
-        description = f"query in {cls.table_name} for linked fields with ID's [{link_field.id_str()}]"
+        description = f"query in {
+            cls.table_name} for linked fields with ID's [{link_field.id_str()}]"
         logger.debug(
             f"baserow {description}"
         )

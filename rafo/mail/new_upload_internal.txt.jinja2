@@ -8,7 +8,7 @@ uploader.name }} eine neue {{ show.colloquial_inline_medium_name() }} auf {{ sit
 ID: u-{{ "%05d" % upload.row_id }}
 FORMAT: {{ show.name }} (s-{{ "%03d" % show.row_id }})
 PRODUZENT:IN: {{ uploader.name }} (p-{{ "%03d" % uploader.row_id }})
-SENDEDATUM: {{ upload.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}
+SENDEDATUM: {{ upload.broadcast_with_time_zone.strftime("%d.%m.%Y %H:%M") }}
 TITEL: {{ upload.name }}
 ÖFFENTLICHE BESCHREIBUNG: {{ upload.description }}
 MEDIUM: {{ show.medium.value.value }}

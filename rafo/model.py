@@ -324,6 +324,16 @@ class BaserowUpload(Table):
             self._uploader_cache = rsl.one()
         return self._uploader_cache
 
+    @computed_field
+    @property
+    def broadcast_with_time_zone(self) -> datetime:
+        """
+        Calculates the planned broadcast datetime with the configured time zone.
+        """
+        return self.planned_broadcast_at.astimezone(
+            ZoneInfo(settings.time_zone)
+        )
+
     @property
     async def cached_show(self) -> BaserowShow:
         """

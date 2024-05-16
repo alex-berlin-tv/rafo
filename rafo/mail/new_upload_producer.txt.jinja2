@@ -21,7 +21,7 @@ Zusammenfassung:
 ID: u-{{ "%05d" % upload.row_id }}
 FORMAT: {{ show.name }}
 PRODUZENT:IN: {{ uploader.name }}
-SENDEDATUM: {{ upload.planned_broadcast_at.strftime("%d.%m.%Y %H:%M") }}
+SENDEDATUM: {{ upload.broadcast_with_time_zone.strftime("%d.%m.%Y %H:%M") }}
 TITEL: {{ upload.name }}
 ÖFFENTLICHE BESCHREIBUNG: {{ upload.description }}
 {%- if upload.comment_producer %}KOMMENTAR AN ALEX: {{ upload.comment_producer }}{% endif %}
