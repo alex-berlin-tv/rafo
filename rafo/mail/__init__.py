@@ -139,8 +139,7 @@ class Mail:
                 "new_upload_internal.html.jinja2").render(data)
             self.send(
                 supervisor.email,
-                f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload für {
-                    show.name} (Information für Betreuungsperson)",
+                f"{self.__test()}u-{upload.row_id:05d}: Neuer Upload für {show.name} (Information für Betreuungsperson)",  # noqa
                 html,
                 plain,
             )
