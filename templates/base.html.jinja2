@@ -49,6 +49,27 @@
     <div class="columns is-flex-direction-column" style="flex:1">
         <main class="column">
             <section class="section">
+                {% if notification.show %}
+                <article class="message
+                {% if notification.level == 'success' %}
+                is-success
+                {% elif notification.level == 'warn' %}
+                is-warning
+                {% elif notification.level == 'error' %}
+                is-danger
+                {% else %}
+                is-primary
+                {% endif %}
+            ">
+                    <div class="message-header">
+                        <p>{{ notification.title }}</p>
+                    </div>
+                    <div class="message-body">
+                        {{ notification.message }}
+                    </div>
+                </article>
+                {% endif %}
+
                 {% block content %}
                 {% endblock %}
             </section>

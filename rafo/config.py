@@ -1,4 +1,5 @@
 from datetime import datetime
+import enum
 from typing import Optional
 
 import typed_settings
@@ -99,14 +100,34 @@ class Settings:
     """Arbitrary secret for webhook calls from Baserow."""
 
 
+class NotificationLevel(str, enum.Enum):
+    INFO = "info"
+    SUCCESS = "success"
+    WARN = "warn"
+    ERROR = "error"
+
+
 @typed_settings.settings
-class PersonTable:
-    id: int
-    name: str
+class Notification:
+    show: bool = False
+    level: NotificationLevel | None = None
+    title: str | None = None
+    message: str | None = None
+
+
+app_name = "rafo"
+config_files = ["settings.toml", ".secrets.toml"]
 
 
 settings = typed_settings.load(
     Settings,
-    appname="rafo",
-    config_files=["settings.toml", ".secrets.toml"]
+    appname=app_name,
+    config_files=config_files,
+)
+
+notification = typed_settings.load(
+    Notification,
+    appname=app_name,
+    config_files=config_files,
+    config_file_section="notification",
 )

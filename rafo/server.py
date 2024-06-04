@@ -15,7 +15,7 @@ from streaming_form_data.validators import MaxSizeValidator, ValidationError
 
 from rafo import VERSION
 from rafo.baserow_orm import TableLinkField
-from rafo.config import settings
+from rafo.config import notification, settings
 from rafo.file_worker import FileWorker
 from rafo.log import logger
 from rafo.mail import Mail
@@ -30,12 +30,12 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/")
 async def root(request: Request):
-    return templates.TemplateResponse("index.html.jinja2", {"request": request, "version": VERSION})
+    return templates.TemplateResponse("index.html.jinja2", {"request": request, "version": VERSION, "notification": notification})
 
 
 @app.get("/help")
 async def help(request: Request):
-    return templates.TemplateResponse("help.html.jinja2", {"request": request, "version": VERSION})
+    return templates.TemplateResponse("help.html.jinja2", {"request": request, "version": VERSION, "notification": notification})
 
 
 @app.get("/upload/{uuid}")
@@ -48,6 +48,7 @@ async def upload(
         "requested_uuid": uuid,
         "base_url": settings.base_url,
         "version": VERSION,
+        "notification": notification,
     }
     return templates.TemplateResponse("upload.html.jinja2", data)
 
@@ -67,6 +68,7 @@ async def upload_omnia_export(
         "request": request,
         "base_url": settings.base_url,
         "version": VERSION,
+        "notification": notification,
     }
     return templates.TemplateResponse("upload_omnia_export.html.jinja2", data)
 
