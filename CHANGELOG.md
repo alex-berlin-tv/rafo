@@ -138,3 +138,8 @@ Time zones of the broadcast time are now correctly taken into account in mails
 ## v1.4.3a – Fix invalid newlines by autopep8
 
 autopep broke the `baserow_orm.py` file by adding invalid newline within the format string.
+
+
+## v1.4.4 – Global Notification
+
+Adds the option to globally display a notification to the user. The notification is themed to match the levels (info, success, warn, error). The notification is displayed on all pages. The rendering is done on the server side and is therefore also displayed without Javascript.
