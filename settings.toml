@@ -61,6 +61,8 @@ maintenance_message = "Die Software wird aktualisiert und sollte um 15:00 wieder
 # Date (in ISO format) until which the legacy URLs will be accepted.
 legacy_url_grace_date = "2024-03-01"
 
+# URL of the ntfy instance.
+ntfy_url = "https://push.tchncs.de"
 
 [notification]
 show = false

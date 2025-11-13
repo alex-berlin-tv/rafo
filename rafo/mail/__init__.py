@@ -2,6 +2,7 @@ from datetime import datetime
 
 from rafo import VERSION
 from ..config import settings
+from ..log import logger
 from ..model import BaserowPerson, BaserowUpload, UploadState, ShowMedium
 
 import emails

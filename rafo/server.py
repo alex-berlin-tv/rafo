@@ -20,6 +20,7 @@ from rafo.file_worker import FileWorker
 from rafo.log import logger
 from rafo.mail import Mail
 from rafo.model import BaserowPerson, BaserowShow, BaserowUpload, ProducerUploadData, UploadStates
+from rafo.ntfy import Ntfy
 from rafo.omnia.upload_export import OmniaUploadExport
 
 
@@ -229,6 +230,7 @@ async def upload_file(
     upload = new_upload.create()
     worker = FileWorker(file_path, cover_path, temp_folder, upload)
     mail = Mail.from_settings()
+    ntfy = Ntfy.from_settings()
     background_tasks.add_task(worker.upload_raw)
     background_tasks.add_task(worker.upload_cover)
     background_tasks.add_task(worker.generate_waveform)
@@ -237,6 +239,7 @@ async def upload_file(
     background_tasks.add_task(mail.send_on_upload_internal, upload)
     background_tasks.add_task(mail.send_on_upload_external, upload)
     background_tasks.add_task(mail.send_on_upload_supervisor, upload)
+    background_tasks.add_task(ntfy.send_on_upload_internal, upload)
     return {
         "success": True,
     }

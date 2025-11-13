@@ -98,6 +98,10 @@ class Settings:
     omnia_session_id: str
     webhook_secret: str
     """Arbitrary secret for webhook calls from Baserow."""
+    ntfy_url: str
+    """URL of the ntfy instance."""
+    ntfy_topic: str
+    """Topic of the ntfy instance."""
 
 
 class NotificationLevel(str, enum.Enum):
