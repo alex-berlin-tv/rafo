@@ -148,3 +148,9 @@ Adds the option to globally display a notification to the user. The notification
 ## v1.4.5 – ???
 
 - The text in the logo is now exported as a path. The logo is now displayed correctly regardless of locally installed fonts.
+
+
+## v1.5.0 – News segments and ntfy notifications
+
+- Supports new media type »News« for news segments.
+- Infrastructure added for sending notifications via Ntfy.sh. Currently only used for internal notification on newly uploaded news segments.
