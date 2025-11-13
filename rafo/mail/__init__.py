@@ -2,7 +2,7 @@ from datetime import datetime
 
 from rafo import VERSION
 from ..config import settings
-from ..model import BaserowPerson, BaserowUpload, UploadState
+from ..model import BaserowPerson, BaserowUpload, UploadState, ShowMedium
 
 import emails
 import jinja2
@@ -66,6 +66,10 @@ class Mail:
     async def send_on_upload_internal(self, upload: BaserowUpload):
         uploader = await upload.cached_uploader
         show = await upload.cached_show
+        # We do not send internal notifications for news uploads.
+        if show.medium.value is ShowMedium.NEWS:
+            logger.info(f"Skipping internal notification for news upload {upload.row_id}.")
+            return
         data = {
             "recipient": "Sendeabwicklung",
             "is_supervisor_message": False,
