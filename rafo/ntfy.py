@@ -19,11 +19,13 @@ class Message:
         self,
         title: str,
         message: str,
+        tags: list[str] = [],
         priority: MessagePriority = MessagePriority.DEFAULT,
     ):
         self.title = title
         self.message = message
         self.priority = priority
+        self.tags = tags
 
 
 class Ntfy:
@@ -53,7 +55,7 @@ class Ntfy:
             return
         title = f"u-{upload.row_id:05d}: Neuer Nachrichtensendung {show.name}"
         message = f"Ein neuer Nachrichtensendung für {show.name} von {uploader.name} wurde eingereicht."
-        self._send(Message(title, message, MessagePriority.LOW))
+        self._send(Message(title, message, priority=MessagePriority.LOW, tags=["newspaper"]))
 
     def _send(self, message: Message):
         import requests
@@ -64,5 +66,6 @@ class Ntfy:
             headers={
                 "Title": message.title,
                 "Priority": str(message.priority.value),
+                "Tags": ",".join(message.tags),
             }
         )
