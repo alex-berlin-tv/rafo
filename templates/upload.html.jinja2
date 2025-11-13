@@ -381,7 +381,13 @@
             },
             // Set the title of a news show.
             auto_news_title() {
-                return `Nachrichtensendung für den ${this.current_show.name} von ${this.producer_name}`;
+                let showName = this.current_show.name;
+                // Extract day from format "DAY (Nachrichten)"
+                const match = showName.match(/^(.+?)\s*\(Nachrichten\)$/);
+                if (match) {
+                    showName = match[1];
+                }
+                return `Nachrichtensendung für den ${showName} von ${this.producer_name}`;
             },
             // Called when the selected show changed.
             show_changed() {
