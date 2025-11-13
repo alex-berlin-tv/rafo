@@ -65,6 +65,6 @@ legacy_url_grace_date = "2024-03-01"
 [notification]
 show = false
 # Available: info, success, warn, error
-level = ""
+level = "INFO"
 title = ""
 message = ""

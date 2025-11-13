@@ -162,25 +162,27 @@
             </div>
             <div class="field">
                 <label class="label" for="datetime"
-                    x-text="current_show && current_show.medium === 'Podcast' ? 'Veröffentlichungsdatum' : 'Geplantes Sendedatum- und Zeit'"></label>
+                    x-text="datetime_field_label()"></label>
                 <div class="control has-icons-left">
-                    <input class="input" id="datetime" name="datetime" type="datetime-local" x-model="datetime" required
+                    <input class="input" id="datetime" name="datetime" :type="current_show && current_show.medium === 'Nachrichten' ? 'date' : 'datetime-local'" x-model="datetime" required
                         :disabled="upload_running" :min="get_min_datetime()" :max="get_max_datetime()"
                         @change="auto_set_title()">
                     <div class="icon is-small is-left"><i class="fa-solid fa-calendar-days"></i></div>
                 </div>
-                <p class="help">
+                <p class="help" x-show="current_show && current_show.medium !== 'Nachrichten'">
                     Trage hier die Sendezeit der Erstausstrahlung ein. Sollte dir diese nicht bekannt sein wende dich
                     bitte an deine Bezugsperson bei ALEX Berlin oder direkt an <a
                         href="mailto:dispo@alex-berlin.de">dispo@alex-berlin.de</a> bevor du die Datei hochlädst.
                     <i>Pflichtfeld.</i>
                 </p>
-            </div>
-            <div class="field">
+                <p class="help" x-show="current_show && current_show.medium === 'Nachrichten'">
+                    Trag hier der Sendetag der Nachrichtensendung ein.
+                </p>
+                
                 <label class="label" for="title">Sendungstitel</label>
                 <div class="control has-icons-left">
                     <input class="input" id="title" name="title" type="text" x-model="title" minlength="8"
-                        maxlength="200" :disabled="upload_running" @input="title_changed_manually = true">
+                        maxlength="200" :disabled="upload_running || (current_show && current_show.medium === 'Nachrichten')" @input="title_changed_manually = true">
                     <div class="icon is-small is-left"><i class="fa-solid fa-pen"></i></div>
                 </div>
                 <p class="help">Der Titel deiner Episode. Dieses Feld bestimmt, wie die Sendung öffentlich in der
@@ -189,7 +191,7 @@
                     oder Thema. <i>Pflichtfeld, zwischen 8 und 200 Zeichen lang</i>.
                 </p>
             </div>
-            <div class="field">
+            <div class="field" x-show="current_show === null || current_show.medium !== 'Nachrichten'">
                 <label class="label" for="description"><em>Öffentliche</em> Beschreibung</label>
                 <div class="control">
                     <textarea class="textarea" id="description" name="description" type="text" x-model="description"
@@ -223,7 +225,7 @@
                     59:30min
                     und die unterstützen Audioformate MP3 oder WAV. <i>Pflichtfeld.</i></p>
             </div>
-            <div class="field">
+            <div class="field" x-show="current_show === null || current_show.medium !== 'Nachrichten'">
                 <label class="label" for="cover">Coverfoto</label>
                 <div class="file has-name is-small is-fullwidth">
                     <label class="file-label">
@@ -346,10 +348,25 @@
                     this.show = this.current_show.show_id;
                 }
             },
+            // Label for the datetime field based on the media type of the selected show.
+            datetime_field_label() {
+                if (this.current_show === null) {
+                    return "Geplantes Sendedatum- und Zeit";
+                }
+                if (this.current_show.medium === "Nachrichten" || this.current_show.medium === "Podcast") {
+                    return "Veröffentlichungsdatum";
+                }
+                return "Geplantes Sendedatum- und Zeit."
+            },
             // Tries to set the title based on the selected show and broadcast date. Once the user
             // has edited the title field themselves, the value will no longer be overwritten
             auto_set_title() {
                 console.log(this.current_show);
+                if (this.current_show && this.current_show.medium === "Nachrichten") {
+                    console.log("auto_set_news_title");
+                    this.title = this.auto_news_title();
+                    return;
+                }
                 if (this.title_changed_manually || this.show === null) {
                     return;
                 }
@@ -361,6 +378,10 @@
                 const day = String(date.getDate()).padStart(2, '0');
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 this.title = `${this.current_show.name} vom ${day}.${month}.${date.getFullYear()}`;
+            },
+            // Set the title of a news show.
+            auto_news_title() {
+                return `Nachrichtensendung für den ${this.current_show.name} von ${this.producer_name}`;
             },
             // Called when the selected show changed.
             show_changed() {
@@ -432,6 +453,9 @@
 
                 const xhr = new XMLHttpRequest();
                 var data = new FormData(form);
+                if (this.current_show && this.current_show.medium === "Nachrichten") {
+                    data.append("title", this.auto_news_title());
+                }
                 data.append("producer", this.producer_uuid);
                 data.append("legacy_url_used", this.legacy_url_used);
 

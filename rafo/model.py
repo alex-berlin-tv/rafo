@@ -54,6 +54,7 @@ class ShowMedium(str, enum.Enum):
     TV = "TV"
     RADIO = "Radio"
     PODCAST = "Podcast"
+    NEWS = "Nachrichten"
 
     def colloquial_inline_name(self) -> str:
         if self == self.TV:
@@ -62,6 +63,8 @@ class ShowMedium(str, enum.Enum):
             return "Radiosendung"
         elif self == self.PODCAST:
             return "Podcastepisode"
+        elif self == self.NEWS:
+            return "Nachrichtensendung"
         return "Sendung"
 
 
