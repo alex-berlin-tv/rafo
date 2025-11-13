@@ -6,3 +6,10 @@
     background-color: #f0f0f0ed;
     color: black;
 }
+
+@media (prefers-color-scheme: dark) {
+    .custom-footer {
+        background-color: #353535ed;
+        color: white;
+    }
+}
