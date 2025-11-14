@@ -99,9 +99,11 @@ class Settings:
     webhook_secret: str
     """Arbitrary secret for webhook calls from Baserow."""
     ntfy_url: str
-    """URL of the ntfy instance."""
-    ntfy_topic: str
-    """Topic of the ntfy instance."""
+    """URL of the ntfy instance for internal notifications."""
+    ntfy_internal_topic: str
+    """Ntfy topic for internal notifications."""
+    ntfy_news_topic: str
+    """Ntfy topic for the project coordinator for news segments."""
 
 
 class NotificationLevel(str, enum.Enum):

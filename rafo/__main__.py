@@ -20,8 +20,7 @@ def app():
     parser = argparse.ArgumentParser(
         description="The (radio) upload form for ALEX Berlin",
     )
-    sub_parsers = parser.add_subparsers(
-        dest="command", help="Available commands")
+    sub_parsers = parser.add_subparsers(dest="command", help="Available commands")
     run_parser = sub_parsers.add_parser("run", help="Starts the web-server.")
     run_parser.set_defaults(func=run)
     args = parser.parse_args()
