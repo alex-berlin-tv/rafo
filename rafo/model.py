@@ -178,6 +178,9 @@ class UploadState(str, enum.Enum):
     OMNIA_RUNNING = "Omnia: Upload läuft"
     OMNIA_COMPLETE = "Omnia: Liegt auf Omnia"
     OMNIA_ERROR = "Omnia: Fehler während Upload"
+    NEWS_EXPORT_PENDING = "Nachricht in mAirList: Ausstehend"
+    NEWS_EXPORT_CURRENT = "Nachricht in mAirList: Aktuell"
+    NEWS_EXPORT_REPLACED = "Nachricht in mAirList: Ersetzt"
     INTERNAL_LEGACY_URL_USED = "Intern: Legacy URL benutzt"
     INTERNAL_NOCODB_IMPORT = "Intern: NocoDB Import"
 
@@ -191,6 +194,7 @@ class UploadStates(RootModel[list[UploadState]]):
     WAVEFORM_PREFIX: ClassVar[str] = "Waveform"
     OPTIMIZATION_PREFIX: ClassVar[str] = "Optimierung"
     OMNIA_PREFIX: ClassVar[str] = "Omnia"
+    NEWS_EXPORT_PREFIX: ClassVar[str] = "Nachricht in mAirList"
     INTERNAL_PREFIX: ClassVar[str] = "URL"
     ORDER: ClassVar[list[str]] = [
         WAVEFORM_PREFIX, OPTIMIZATION_PREFIX, OMNIA_PREFIX, INTERNAL_PREFIX,
@@ -209,10 +213,11 @@ class UploadStates(RootModel[list[UploadState]]):
         return rsl
 
     @classmethod
-    def all_pending_with_legacy_url_state(cls, legacy_url_used: bool) -> "UploadStates":
+    def initial_states(cls, legacy_url_used: bool, show_medium: ShowMedium | None) -> "UploadStates":
         """
-        Returns all states to be pending. When a legacy URL is used the
-        appropriate state will be added as well.
+        Returns the initial states combination for newly uploaded entries.
+        Waveform, optimization and Omnia are pending. Pending of the media type
+        the mAirList export state(s) are added.
         """
         rsl = [
             UploadState.WAVEFORM_PENDING,
@@ -221,6 +226,8 @@ class UploadStates(RootModel[list[UploadState]]):
         ]
         if legacy_url_used:
             rsl.append(UploadState.INTERNAL_LEGACY_URL_USED)
+        if show_medium is not None and show_medium == ShowMedium.NEWS:
+            rsl.append(UploadState.NEWS_EXPORT_PENDING)
         return cls(root=rsl)
 
     def values(self) -> list[str]:
@@ -286,8 +293,7 @@ class BaserowUpload(Table):
     )
     state: MultipleSelectField[UploadState] = Field(
         alias=str("Status"),
-        default=UploadStates.all_pending_with_legacy_url_state(
-            False).to_multiple_select_field(),
+        default=UploadStates.initial_states(False, None).to_multiple_select_field(),
     )
     optimization_log: Optional[str] = Field(
         alias=str("Log Optimierung"), default=None

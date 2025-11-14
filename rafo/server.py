@@ -223,14 +223,15 @@ async def upload_file(
         description=description_target.value.decode(),
         planned_broadcast_at=planned_broadcast_at,
         comment_producer=comment,
-        state=UploadStates.all_pending_with_legacy_url_state(
+        state=UploadStates.initial_states(
             legacy_url_used,
+            show.medium.value,
         ).to_multiple_select_field(),
     )
     upload = new_upload.create()
     worker = FileWorker(file_path, cover_path, temp_folder, upload)
     mail = Mail.from_settings()
-    ntfy = Ntfy.from_settings()
+    ntfy = Ntfy()
     background_tasks.add_task(worker.upload_raw)
     background_tasks.add_task(worker.upload_cover)
     background_tasks.add_task(worker.generate_waveform)

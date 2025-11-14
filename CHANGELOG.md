@@ -155,6 +155,7 @@ Adds the option to globally display a notification to the user. The notification
 - Supports new media type »News« for news segments.
 - Infrastructure added for sending notifications via Ntfy.sh. Currently only used for internal notification on newly uploaded news segments.
 
+
 ## v1.5.1 – Minor tweaks
 
 - feat: ntfy messages now support tags
