@@ -161,3 +161,10 @@ Adds the option to globally display a notification to the user. The notification
 - feat: ntfy messages now support tags
 - feat: newspaper emoji on ntfy notifications for newly uploadednews segments
 - fix: `secrets.tpl.toml` updated (now includes the ntfy topic)
+
+
+## v1.5.2 – States for news segments
+
+- States for news segments export to mAirList are now correctly set.
+- improvement: ntfy module is now more ergonomic to use.
+- improvement: Technical preparation for switching internal notification to ntfy.sh
