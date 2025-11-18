@@ -181,6 +181,10 @@ class UploadState(str, enum.Enum):
     NEWS_EXPORT_PENDING = "Nachricht in mAirList: Ausstehend"
     NEWS_EXPORT_CURRENT = "Nachricht in mAirList: Aktuell"
     NEWS_EXPORT_REPLACED = "Nachricht in mAirList: Ersetzt"
+    MAIRLIST_PENDING = "mAirList: Ausstehend"
+    MAIRLIST_RUNNING = "mAirList: Läuft"
+    MAIRLIST_COMPLETE = "mAirList: Liegt auf \\\\Distribution"
+    MAIRLIST_ERROR = "mAirList: Fehler"
     INTERNAL_LEGACY_URL_USED = "Intern: Legacy URL benutzt"
     INTERNAL_NOCODB_IMPORT = "Intern: NocoDB Import"
 

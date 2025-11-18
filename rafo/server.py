@@ -19,6 +19,7 @@ from rafo.config import notification, settings
 from rafo.file_worker import FileWorker
 from rafo.log import logger
 from rafo.mail import Mail
+from rafo.mairlist import MAirListExport
 from rafo.model import BaserowPerson, BaserowShow, BaserowUpload, ProducerUploadData, UploadStates
 from rafo.ntfy import Ntfy
 from rafo.omnia.upload_export import OmniaUploadExport
@@ -113,6 +114,26 @@ async def api_upload_omnia_export(
         },
     )
 
+@app.get("/api/upload/{id}/mairlist_export")
+async def api_upload_mairlist_export(
+    request: Request,
+    id: int,
+    key: str,
+):
+    if key != settings.webhook_secret:
+        raise HTTPException(
+            status_code=403,
+            detail="operation forbidden"
+        )
+    export = MAirListExport(id)
+    return StreamingResponse(
+        export.run(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 class MaxBodySizeException(Exception):
     def __init__(self, body_len: int):
