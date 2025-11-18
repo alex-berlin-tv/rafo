@@ -8,7 +8,7 @@ from typing import Any, Optional
 
 from pydantic.main import BaseModel
 
-from rafo.omnia import Notification
+from rafo.utils import Notification
 from rafo.omnia.omnia import ManagementResult, MediaResult, MediaResultGeneral, Response, Omnia, StreamType
 from rafo.config import settings
 from rafo.model import BaserowUpload, UploadState, UploadStates
