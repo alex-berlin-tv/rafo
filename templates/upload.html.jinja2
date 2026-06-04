@@ -161,12 +161,12 @@
                 </article>
             </div>
             <div class="field">
-                <label class="label" for="datetime"
-                    x-text="datetime_field_label()"></label>
+                <label class="label" for="datetime" x-text="datetime_field_label()"></label>
                 <div class="control has-icons-left">
-                    <input class="input" id="datetime" name="datetime" :type="current_show && current_show.medium === 'Nachrichten' ? 'date' : 'datetime-local'" x-model="datetime" required
-                        :disabled="upload_running" :min="get_min_datetime()" :max="get_max_datetime()"
-                        @change="auto_set_title()">
+                    <input class="input" id="datetime" name="datetime"
+                        :type="current_show && current_show.medium === 'Nachrichten' ? 'date' : 'datetime-local'"
+                        x-model="datetime" required :disabled="upload_running" :min="get_min_datetime()"
+                        :max="get_max_datetime()" @change="auto_set_title()">
                     <div class="icon is-small is-left"><i class="fa-solid fa-calendar-days"></i></div>
                 </div>
                 <p class="help" x-show="current_show && current_show.medium !== 'Nachrichten'">
@@ -178,11 +178,13 @@
                 <p class="help" x-show="current_show && current_show.medium === 'Nachrichten'">
                     Trag hier der Sendetag der Nachrichtensendung ein.
                 </p>
-                
+
                 <label class="label" for="title">Sendungstitel</label>
                 <div class="control has-icons-left">
                     <input class="input" id="title" name="title" type="text" x-model="title" minlength="8"
-                        maxlength="200" :disabled="upload_running || (current_show && current_show.medium === 'Nachrichten')" @input="title_changed_manually = true">
+                        maxlength="200"
+                        :disabled="upload_running || (current_show && current_show.medium === 'Nachrichten')"
+                        @input="title_changed_manually = true">
                     <div class="icon is-small is-left"><i class="fa-solid fa-pen"></i></div>
                 </div>
                 <p class="help">Der Titel deiner Episode. Dieses Feld bestimmt, wie die Sendung öffentlich in der
@@ -222,7 +224,7 @@
                     </label>
                 </div>
                 <p class="help">Lade hier deine Audiodatei der Sendung hoch. Bedenke bitte eine Länge von max.
-                    59:30min
+                    57:00min
                     und die unterstützen Audioformate MP3 oder WAV. <i>Pflichtfeld.</i></p>
             </div>
             <div class="field" x-show="current_show === null || current_show.medium !== 'Nachrichten'">
@@ -253,9 +255,12 @@
                     <textarea class="textarea" id="comment" name="comment" type="text" x-model="comment"
                         maxlength="1000" :disabled="upload_running"></textarea>
                 </div>
-                <p class="help">Hier kann eine Nachricht an die Sendeabwicklung verfasst werden, sollte es
+                <p class="help">
+                    Hier kann eine Nachricht an die Sendeabwicklung verfasst werden, sollte es
                     Abweichungen
-                    oder wichtige Kommentare geben.</p>
+                    oder wichtige Kommentare geben.<br>
+                    <b>Auf diese Nachrichte wird nicht geantwortet.</b>
+                </p>
             </div>
             <div class="field mb-5" x-show="upload_running">
                 <p class="label">Bitte warten, Upload läuft... <b>Seite nicht schließen.</b></p>

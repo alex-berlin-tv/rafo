@@ -168,3 +168,6 @@ Adds the option to globally display a notification to the user. The notification
 - States for news segments export to mAirList are now correctly set.
 - improvement: ntfy module is now more ergonomic to use.
 - improvement: Technical preparation for switching internal notification to ntfy.sh
+
+
+## v1.5.3 – Updated form texts
