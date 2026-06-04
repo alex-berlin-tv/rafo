@@ -7,8 +7,6 @@ import re
 from typing import ClassVar, Optional, Type, TypeVar
 
 
-
-
 normalize_char_map = {
     ord("ä"): "ae",
     ord("Â"): "Ae",

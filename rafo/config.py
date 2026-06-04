@@ -105,6 +105,11 @@ class Settings:
     ntfy_news_topic: str
     """Ntfy topic for the project coordinator for news segments."""
 
+    mairlist_media_share: str
+    """File path to the media share on the mAirList server."""
+    display_media_share_path: str
+    """Path to the media share as on a Windows machine within the network."""
+
 
 class NotificationLevel(str, enum.Enum):
     INFO = "info"

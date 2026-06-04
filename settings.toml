@@ -62,10 +62,14 @@ maintenance_message = "Die Software wird aktualisiert und sollte um 15:00 wieder
 legacy_url_grace_date = "2024-03-01"
 # URL of the ntfy instance.
 ntfy_url = "https://push.tchncs.de"
+# File path to the media share on the mAirList server.
+mairlist_media_share = "stub/test"
+# Path to the media share as on a Windows machine within the network.
+display_media_share_path = "\\\\Distribution\\radio\\Sendungen"
 
 [notification]
 show = false
 # Available: info, success, warn, error
-level = "INFO"
+level = "info"
 title = ""
 message = ""

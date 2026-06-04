@@ -171,3 +171,5 @@ Adds the option to globally display a notification to the user. The notification
 
 
 ## v1.5.3 – Updated form texts
+
+- improvement: Updated form texts.

@@ -8,7 +8,17 @@ from pydantic import BaseModel, Field, RootModel
 from pydantic.config import ConfigDict
 from pydantic.fields import PrivateAttr, computed_field
 
-from rafo.baserow_orm import DurationField, FileField, MultipleSelectField, NoResultError, RowLink, SelectEntry, SingleSelectField, Table, TableLinkField
+from rafo.baserow_orm import (
+    DurationField,
+    FileField,
+    MultipleSelectField,
+    NoResultError,
+    RowLink,
+    SelectEntry,
+    SingleSelectField,
+    Table,
+    TableLinkField,
+)
 from rafo.config import settings
 
 
@@ -19,6 +29,7 @@ class UploadFormState(str, enum.Enum):
 
 class BaserowPerson(Table):
     """A person (formerly called Producer) in Baserow."""
+
     row_id: int = Field(alias=str("id"))
     name: str = Field(alias=str("Name"))
     email: str = Field(alias=str("E-Mail"))
@@ -42,7 +53,10 @@ class BaserowPerson(Table):
 
     def is_form_enabled(self) -> bool:
         """Returns whether the upload form is enabled for this person."""
-        return self.upload_form_state is not None and self.upload_form_state.value == "Aktiviert"
+        return (
+            self.upload_form_state is not None
+            and self.upload_form_state.value == "Aktiviert"
+        )
 
     def upload_url(self) -> str:
         """Returns the URL of the personalized upload form for this person."""
@@ -51,6 +65,7 @@ class BaserowPerson(Table):
 
 class ShowMedium(str, enum.Enum):
     """The different medium's a show can have."""
+
     TV = "TV"
     RADIO = "Radio"
     PODCAST = "Podcast"
@@ -72,15 +87,14 @@ class BaserowShow(Table):
     """
     A show (»Format«) has one or more producers and contains multiple episodes.
     """
+
     row_id: int = Field(alias=str("id"))
     name: str = Field(alias=str("Name"))
     responsible: TableLinkField = Field(alias=str("Verantwortlich"))
     medium: SingleSelectField[ShowMedium] = Field(alias=str("Medium"))
     description: str = Field(alias=str("Beschreibung"))
     supervisors: TableLinkField = Field(alias=str("Betreuung"))
-    cover: Optional[FileField] = Field(
-        alias=str("Cover"), default=None
-    )
+    cover: Optional[FileField] = Field(alias=str("Cover"), default=None)
     omnia_id: Optional[int] = Field(alias=str("Omnia ID"), default=None)
 
     table_id: ClassVar[int] = settings.show_table
@@ -126,6 +140,7 @@ class ShowFormData(BaseModel):
 
 class ProducerUploadData(BaseModel):
     """Contains all information needed to display the upload form frontend."""
+
     producer_name: str
     producer_uuid: str
     base_url: str
@@ -165,6 +180,7 @@ class ProducerUploadData(BaseModel):
 
 class UploadState(str, enum.Enum):
     """Indication of multiple long-running processes for upload entries."""
+
     WAVEFORM_PENDING = "Waveform: Ausstehend"
     WAVEFORM_RUNNING = "Waveform: Läuft"
     WAVEFORM_COMPLETE = "Waveform: Fertig"
@@ -193,15 +209,22 @@ class UploadStates(RootModel[list[UploadState]]):
     """
     Handles the replacement of a single status within the Multi Select Field.
     """
+
     root: list[UploadState]
 
     WAVEFORM_PREFIX: ClassVar[str] = "Waveform"
     OPTIMIZATION_PREFIX: ClassVar[str] = "Optimierung"
     OMNIA_PREFIX: ClassVar[str] = "Omnia"
     NEWS_EXPORT_PREFIX: ClassVar[str] = "Nachricht in mAirList"
+    MAIRLIST_PREFIX: ClassVar[str] = "mAirList"
     INTERNAL_PREFIX: ClassVar[str] = "URL"
     ORDER: ClassVar[list[str]] = [
-        WAVEFORM_PREFIX, OPTIMIZATION_PREFIX, OMNIA_PREFIX, INTERNAL_PREFIX,
+        WAVEFORM_PREFIX,
+        OPTIMIZATION_PREFIX,
+        OMNIA_PREFIX,
+        MAIRLIST_PREFIX,
+        NEWS_EXPORT_PREFIX,
+        INTERNAL_PREFIX,
     ]
 
     @classmethod
@@ -217,7 +240,9 @@ class UploadStates(RootModel[list[UploadState]]):
         return rsl
 
     @classmethod
-    def initial_states(cls, legacy_url_used: bool, show_medium: ShowMedium | None) -> "UploadStates":
+    def initial_states(
+        cls, legacy_url_used: bool, show_medium: ShowMedium | None
+    ) -> "UploadStates":
         """
         Returns the initial states combination for newly uploaded entries.
         Waveform, optimization and Omnia are pending. Pending of the media type
@@ -240,76 +265,61 @@ class UploadStates(RootModel[list[UploadState]]):
 
     def update_state(self, prefix: str, new_state: UploadState):
         """Replaces the state with the given prefix."""
-        keep = [
-            state for state in self.root if not state.value.startswith(prefix)
-        ]
+        keep = [state for state in self.root if not state.value.startswith(prefix)]
         self.root = [new_state] + keep
 
     def sort(self):
         """Ensures that the statuses are always sorted in the same order."""
+
         def sort_by_order(value):
             for index, prefix in enumerate(self.ORDER):
                 if value.startswith(prefix):
                     return (index, value)
             return (-1, value)
+
         self.root = sorted(self.root, key=sort_by_order)
 
     def to_multiple_select_field(self) -> MultipleSelectField[UploadState]:
         """Converts the state collection to a MultipleSelectField."""
         rsl: list[SelectEntry] = []
         for entry in self.root:
-            rsl.append(SelectEntry[UploadState](
-                id=None, value=entry, color=None))
+            rsl.append(SelectEntry[UploadState](id=None, value=entry, color=None))
         return MultipleSelectField[UploadState](rsl)
 
 
 class BaserowUpload(Table):
     """A upload of an episode for a show by a person."""
+
     row_id: int = Field(alias=str("id"))
     name: str = Field(alias=str("Name"))
     uploader: TableLinkField = Field(alias=str("Eingereicht von"))
     show: TableLinkField = Field(alias=str("Format"))
-    planned_broadcast_at: datetime = Field(
-        alias=str("Geplante Ausstrahlung"))
-    description: Optional[str] = Field(
-        alias=str("Beschreibung"), default=None
-    )
+    planned_broadcast_at: datetime = Field(alias=str("Geplante Ausstrahlung"))
+    description: Optional[str] = Field(alias=str("Beschreibung"), default=None)
     comment_producer: Optional[str] = Field(
         alias=str("Kommentar Produzent"), default=None
     )
-    waveform: Optional[FileField] = Field(
-        alias=str("Waveform"), default=None
-    )
-    source_file: Optional[FileField] = Field(
-        alias=str("Quelldatei"), default=None
-    )
+    waveform: Optional[FileField] = Field(alias=str("Waveform"), default=None)
+    source_file: Optional[FileField] = Field(alias=str("Quelldatei"), default=None)
     optimized_file: Optional[FileField] = Field(
         alias=str("Optimierte Datei"), default=None
     )
-    manual_file: Optional[FileField] = Field(
-        alias=str("Manuelle Datei"), default=None
-    )
-    cover: Optional[FileField] = Field(
-        alias=str("Cover"), default=None
-    )
-    duration: Optional[DurationField] = Field(
-        alias=str("Dauer"), default=None
-    )
+    manual_file: Optional[FileField] = Field(alias=str("Manuelle Datei"), default=None)
+    cover: Optional[FileField] = Field(alias=str("Cover"), default=None)
+    duration: Optional[DurationField] = Field(alias=str("Dauer"), default=None)
     state: MultipleSelectField[UploadState] = Field(
         alias=str("Status"),
         default=UploadStates.initial_states(False, None).to_multiple_select_field(),
     )
-    optimization_log: Optional[str] = Field(
-        alias=str("Log Optimierung"), default=None
-    )
-    created_at: Optional[datetime] = Field(
-        alias=str("Hochgeladen am"), default=None
-    )
+    optimization_log: Optional[str] = Field(alias=str("Log Optimierung"), default=None)
+    created_at: Optional[datetime] = Field(alias=str("Hochgeladen am"), default=None)
     legacy_uuid: Optional[str] = Field(
-        alias=str("Legacy UUID"), default=None,
+        alias=str("Legacy UUID"),
+        default=None,
     )
     omnia_id: Optional[int] = Field(
-        alias=str("Omnia ID"), default=None,
+        alias=str("Omnia ID"),
+        default=None,
     )
     table_id: ClassVar[int] = settings.upload_table
     table_name: ClassVar[str] = "Upload"
@@ -343,9 +353,7 @@ class BaserowUpload(Table):
         """
         Calculates the planned broadcast datetime with the configured time zone.
         """
-        return self.planned_broadcast_at.astimezone(
-            ZoneInfo(settings.time_zone)
-        )
+        return self.planned_broadcast_at.astimezone(ZoneInfo(settings.time_zone))
 
     @property
     async def cached_show(self) -> BaserowShow:
@@ -414,7 +422,7 @@ class BaserowUpload(Table):
         Returns the UNIX epoch if the item should stay online infinitely (aka
         1.1.1970 00:00:00 UTC). For Omnia the UNIX epoch value is used to state
         that no point in time is set at all. (Radio: First transmission time
-        plus seven days and one hour. Podcasts: No default de-publication date.) 
+        plus seven days and one hour. Podcasts: No default de-publication date.)
         """
         if (await self.cached_show).medium.value is ShowMedium.PODCAST:
             return datetime.fromtimestamp(0, timezone.utc)
